@@ -21,7 +21,7 @@ class Grid:
     - :math:`0 < \theta < \pi`
     - :math:`0 < \phi < 2\pi`
     """
-    
+
     def __init__(self, ns, nphi, nr, rss):
         self.ns = ns
         self.nphi = nphi
@@ -55,6 +55,13 @@ class Grid:
         Location of the centre of cells in log(r).
         """
         return np.linspace(0.5 * self.dr, np.log(self.rss) - 0.5 * self.dr, self.nr)
+
+    @property
+    def rcx(self):
+        """
+        Location of the centre of cells in log(r), plus ghosts either side.
+        """
+        return np.linspace(-0.5 * self.dr, np.log(self.rss) + 0.5 * self.dr, self.nr + 2)
 
     @property
     def sc(self):

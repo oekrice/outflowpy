@@ -37,7 +37,7 @@ class Input:
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
     """
-    def __init__(self, br, nr, rss, corona_temp = 10e6, mf_constant = 1e-18):
+    def __init__(self, br, nr, rss, corona_temp = 2e6, mf_constant = 5e-17):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):
@@ -69,9 +69,10 @@ class Input:
         self.r_c = (6.6743e-11*1.989e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
         self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
 
-        self.vg, self.vdg = self._get_parker_wind_speed()
+        self.vg, self.vcx, self.vdg = self._get_parker_wind_speed()
         #Then finally multiply by the 'wind speed' constant calculated using physics.
         self.vg = self.vg*self.c_s
+        self.vcx = self.vcx*self.c_s
         self.vdg = self.vdg*self.c_s
         
     def _parker_implicit_fn(self, r, v):
@@ -81,6 +82,8 @@ class Input:
         The 'sound speed' here is set to zero as this will be scaled in the function _get_parker_wind_speed (makes the numerics more stable)
         """
         _c_s = 1.0; r_c = self.r_c
+        if np.abs(v/_c_s) < 1e-12:
+            return 1e12
         res = v**2/_c_s**2
         res -= 2*np.log(abs(v/_c_s))
         res -= 4*(np.log(abs(r/r_c)) + r_c/r)
@@ -89,70 +92,65 @@ class Input:
     
     def _get_parker_wind_speed(self):
         """
-        Algorithm to find the zeros of the implicit function defined in _parker_implicit_fn.
-        Originally used a lambda function and a scalar minimisation routine, but now will attempt to do the same using contours
-        This will hopefully be faster and more reliable.
+        Given up on the meshgrid approach as it just doesn't work very well for low velocities. 
+        Instead doing the original options approach but with the linear prediction option if things are ambiguous
         """
-        #Create a meshgrid in r, v and find the zero contours of it. 
-        # Note that r here is actually the log values, and this will need to be taken into account in the implicit function.
-
-        r_interp = np.linspace(0.0, 5*self._grid.rg[-1], self._grid.nr*20)
-        v_interp = np.linspace(1e-6, 2.0, self._grid.nr*20)
-        R, V = np.meshgrid(r_interp, v_interp)
-        outflow_speed_grid = self._parker_implicit_fn(np.exp(R), V)
-
-        # plt.pcolormesh(np.exp(R), V, outflow_speed_grid)
-        cs = plt.contour(R,V,outflow_speed_grid, levels = [0])
-        #Extract monotonic (in x) sections of these contours for interpolation
-        all_lines = []
-        for contour in cs.get_paths():
-            section = [[contour.vertices[0,0], contour.vertices[0,1]]]
-            ddir = np.sign(contour.vertices[1,0] - contour.vertices[0,0])   #Direction at the start of this section
-            for i in range(len(contour.vertices[:,0]) - 1):
-                if np.sign(contour.vertices[i+1,0] - contour.vertices[i,0]) == ddir:
-                    section.append([contour.vertices[i+1,0], contour.vertices[i+1,1]])
+        #Find initial point, assuming that the velocity is small here
+        min_r = 0.0; max_r = self._grid.rg[-1]*2.0
+        vtest_min = 1e-6
+        dr = (max_r - min_r)/2000
+        #Log two solutions
+        vslows = []; vfasts = []
+        r0s = []; vfinals = []
+        r0 = min_r
+        while r0 <= max_r:
+            #Find the minimum value of the fn at this point? Would probably be more reliable for more complex functions.
+            #Also could put a check in to make sure everything is the right way around?
+            #Must be an inbuilt for the minimum of a function within a range?
+            minimum = minimize_scalar(lambda v: self._parker_implicit_fn(np.exp(r0), v))
+            p0 = vtest_min; p1 = minimum.x; p2 = 10.0*minimum.x
+            #If the three points have a crossing, then find the actual minimum using the standard root finding thing
+            if  self._parker_implicit_fn(np.exp(r0), p0)* self._parker_implicit_fn(np.exp(r0), p1) < 0.0 and  self._parker_implicit_fn(np.exp(r0), p1)* self._parker_implicit_fn(np.exp(r0), p2) < 0.0:
+                #This is valid -- find the roots
+                vslow = root_scalar((lambda v: self._parker_implicit_fn(np.exp(r0), v)), bracket = [p0, p1]).root
+                vfast = root_scalar((lambda v: self._parker_implicit_fn(np.exp(r0), v)), bracket = [p1, p2]).root
+                vslows.append(vslow); vfasts.append(vfast)
+                if len(vfinals) < 2:  #For the first two, it's probably safe to assume that this is the slow solution
+                    vfinals.append(vslows[-1])
+                    r0s.append(r0)
                 else:
-                    all_lines.append(section)
-                    section = [[contour.vertices[i+1,0], contour.vertices[i+1,1]]]
-                    if i < len(contour.vertices[:,0]) - 1:
-                        ddir = np.sign(contour.vertices[i+2,0] - contour.vertices[i+1,0])
+                    prediction = 2*vfinals[-1] - vfinals[-2]
+                    diffslow = np.abs(vslows[-1] - prediction)
+                    difffast = np.abs(vfasts[-1] - prediction)
+                    if diffslow < difffast:
+                        vfinals.append(vslows[-1])
+                        r0s.append(r0)
                     else:
-                        break
-
-            all_lines.append(section)
-
-        #Find the appropriate section by ensuring it is monotonically increasing. 
-        #Picks the smallest value that is larger than the last
-        
-        r_options = np.zeros((len(self._grid.rg), len(all_lines)))
-        for si, section in enumerate(all_lines[:]):
-            f_interp = interpolate.interp1d(np.array(section)[:,0], np.array(section)[:,1], fill_value = 0, bounds_error = False)
-            interp_section = f_interp(self._grid.rg)
-            r_options[:,si] = interp_section
-
-        #Now options have been established, run through and pick the ones which make the most sense
-        vfinals = 0.0*self._grid.rg
-        vfinals[0] = np.min(r_options[0,:][np.nonzero(r_options[0,:])])
-        for i in range(1,len(vfinals)):
-            actual_options = r_options[i,:][np.nonzero(r_options[i,:])][r_options[i,:][np.nonzero(r_options[i,:])] > vfinals[i-1]]                
-            if i == 1:
-                if len(actual_options) == 0:
-                    vfinals[i] = vfinals[i-1]
+                        vfinals.append(vfasts[-1])
+                        r0s.append(r0)
+            else:
+                #If r is reasonably small, it is probably zero, so add something to that effect at the start
+                if r0 < np.log(2.5):
+                    vfinals.append(0.0)
+                    r0s.append(r0)
                 else:
-                    vfinals[i] = np.min(actual_options)
-            else:   #Predict based on the derivative and choose the closest option (if one is available)
-                prediction =  (2*vfinals[i-1] - vfinals[i-2])
-                if len(actual_options) == 0:
-                    vfinals[i] = prediction
-                else:
-                    choice = np.argmin(np.abs(actual_options - prediction))
-                    vfinals[i] = actual_options[choice]
+                    raise Exception('A sensible solution to the implicit wind speed equation could not be found')
+            r0 = r0 + dr
 
-        vdiffs = (vfinals[1:] - vfinals[:-1]) / (self._grid.rg[1:] -  self._grid.rg[:-1])
+        vfinals = np.array(vfinals); r0s = np.array(r0s)   
 
-        return vfinals, vdiffs
+        #Interpolate these values onto the desired grid points, then differentiate (in RHO)
+        vf = interpolate.interp1d(r0s, vfinals,bounds_error=False, fill_value='extrapolate')
+        vg = vf(self._grid.rg)
 
-    #These things are meant to be viewed outside the class -- everything else is kept within
+        vcx = vf(self._grid.rcx)
+
+        vdg = np.zeros(len(vg))
+        vdg = (vcx[1:] - vcx[:-1]) / (self._grid.rcx[1:] - self._grid.rcx[:-1])
+
+        return vg, vcx, vdg
+
+    #These things are meant to be viewed outside the class -- everything else is kept within.
     @property
     def map(self):
         """

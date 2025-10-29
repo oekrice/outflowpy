@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import sunpy.map
 from sunpy.net import Fido
 from sunpy.net import attrs as a
+import numpy as np
 
 import outflowpy
 import outflowpy.utils
@@ -31,10 +32,12 @@ hmi_map = hmi_map.resample([180, 90] * u.pix)   #This is the default PFSSpy resa
 print('New shape: ', hmi_map.data.shape)
 
 #Calculate pfss field, for now. So I don't have to write any code to do the basic testing
-nrho = 35
+nrho = 40
 rss = 2.5
-pfss_in = outflowpy.Input(hmi_map, nrho, rss)
-# pfss_out = outflowpy.pfss(pfss_in)
+
+
+outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
+pfss_out = outflowpy.outflow(outflow_in)
 
 # ss_br = pfss_out.source_surface_br  #This is a sunpy map, so the below plotting works nicely. Will need to adapt the outflow code so it does this too.
 # # Create the figure and axes

@@ -16,8 +16,9 @@ import outflowpy.obtain_data
 from .input import Input
 from .output import Output
 from .pfss import pfss
+from .outflow import outflow
 
-__all__ = ['Input', 'Output', 'pfss']
+__all__ = ['Input', 'Output', 'pfss', 'outflow']
 
 
 from ._version import get_versions
