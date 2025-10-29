@@ -18,12 +18,12 @@ class Output:
 
     Parameters
     ----------
-    alr :
-        Vector potential * grid spacing in radial direction.
-    als :
-        Vector potential * grid spacing in elevation direction.
-    alp :
-        Vector potential * grid spacing in azimuth direction.
+    br :
+        Magnetic field strengths in radial direction.
+    bs :
+        Magnetic field strengths in elevation direction.
+    bp :
+        Magnetic field strengths in azimuth direction.
     grid : Grid
         Grid that the output was caclulated on.
     input_map : sunpy.map.GenericMap
@@ -31,15 +31,16 @@ class Output:
 
     Notes
     -----
-    Instances of this class are intended to be created by `pfsspy.pfss`, and
+    Instances of this class are intended to be created by `outflowpy.outflow`, and
     not by users.
     '''
-    def __init__(self, alr, als, alp, grid, input_map=None):
-        self._alr = alr
-        self._als = als
-        self._alp = alp
+    def __init__(self, br, bs, bp, grid, input_map=None):
         self.grid = grid
         self.input_map = input_map
+
+        self.br = np.swapaxes(br, 0, 2)
+        self.bs = np.swapaxes(bs, 0, 2)
+        self.bp = np.swapaxes(bp, 0, 2)
 
         # Cache attributes
         self._common_b_cache = None
@@ -338,8 +339,6 @@ class Output:
         rg = self.grid.rg
         sg = self.grid.sg
 
-        alr, als, alp = self._al
-
         # Centre of cells in rho (including ghost cells)
         rc = np.linspace(-0.5 * dr, np.log(rss) + 0.5 * dr, nr + 2)
         rrc = np.exp(rc)
@@ -389,9 +388,9 @@ class Output:
         br = np.zeros((nphi + 2, ns + 2, nr + 1))
         bs = np.zeros((nphi + 2, ns + 1, nr + 2))
         bp = np.zeros((nphi + 1, ns + 2, nr + 2))
-        br[1:-1, 1:-1, :] = als[1:, :, :] - als[:-1, :, :] + alp[:, :-1, :] - alp[:, 1:, :]
-        bs[1:-1, :, 1:-1] = alp[:, :, 1:] - alp[:, :, :-1]
-        bp[:, 1:-1, 1:-1] = als[:, :, :-1] - als[:, :, 1:]
+        br[1:-1, 1:-1, :] = self.br*Sbr[np.newaxis,1:-1,:]
+        bs[1:-1, :, 1:-1] = self.bs*Sbs[np.newaxis,:,1:-1]
+        bp[:, 1:-1, 1:-1] = self.bp*Sbp[np.newaxis,1:-1,1:-1]
 
         # Fill ghost values with boundary conditions:
         # - zero-gradient at outer boundary:

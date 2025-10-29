@@ -16,6 +16,10 @@ import numpy as np
 
 import outflowpy
 import outflowpy.utils
+
+import pfsspy
+import pfsspy.utils
+
 import drms
 
 """
@@ -28,25 +32,30 @@ hmi_map = outflowpy.obtain_data.download_hmi_crot(2210)   #Outputs the set of da
 
 print('Data shape: ', hmi_map.data.shape)
     
-hmi_map = hmi_map.resample([180, 90] * u.pix)   #This is the default PFSSpy resampling, but it looks a bit rubbish compared to Anthony's method.
+hmi_map = hmi_map.resample([90, 60] * u.pix)   #This is the default PFSSpy resampling, but it looks a bit rubbish compared to Anthony's method.
 print('New shape: ', hmi_map.data.shape)
 
 #Calculate pfss field, for now. So I don't have to write any code to do the basic testing
-nrho = 40
+nrho = 30
 rss = 2.5
 
 
-outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
-pfss_out = outflowpy.outflow(outflow_in)
 
-# ss_br = pfss_out.source_surface_br  #This is a sunpy map, so the below plotting works nicely. Will need to adapt the outflow code so it does this too.
-# # Create the figure and axes
-# fig = plt.figure()
-# ax = plt.subplot(projection=ss_br)
-# # Plot the source surface map
-# ss_br.plot()
-# # Plot formatting
-# plt.colorbar()
-# ax.set_title('Source surface magnetic field')
+pfss_in = pfsspy.Input(hmi_map, nrho, rss)
+pfss_out = pfsspy.pfss(pfss_in)
+ss_br = pfss_out.source_surface_br
 
-# plt.show()
+# outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
+# outflow_out = outflowpy.outflow(outflow_in)
+# outflow_br = outflow_out.source_surface_br
+
+# Create the figure and axes
+fig = plt.figure()
+ax = plt.subplot(projection=ss_br)
+# Plot the source surface map
+ss_br.plot()
+# Plot formatting
+plt.colorbar()
+ax.set_title('Source surface magnetic field')
+
+plt.show()
