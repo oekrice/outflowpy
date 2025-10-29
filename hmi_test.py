@@ -22,6 +22,7 @@ import pfsspy.utils
 
 import drms
 
+
 """
 Going to run through the HMI example from the readthedocs, checking all the code and modifying as necessary. Not sure how far to go here.
 
@@ -41,14 +42,16 @@ rss = 2.5
 
 
 
-pfss_in = pfsspy.Input(hmi_map, nrho, rss)
-pfss_out = pfsspy.pfss(pfss_in)
-ss_br = pfss_out.source_surface_br
+#pfss_in = pfsspy.Input(hmi_map, nrho, rss)
+#pfss_out = pfsspy.pfss(pfss_in)
+#ss_br = pfss_out.source_surface_br
 
-# outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
-# outflow_out = outflowpy.outflow(outflow_in)
-# outflow_br = outflow_out.source_surface_br
+outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
+#outflow_out = outflowpy.outflow(outflow_in)
+outflow_out = outflowpy.outflow_fortran(outflow_in)
+ss_br = outflow_out.source_surface_br
 
+print(np.max(ss_br), np.min(ss_br))
 # Create the figure and axes
 fig = plt.figure()
 ax = plt.subplot(projection=ss_br)

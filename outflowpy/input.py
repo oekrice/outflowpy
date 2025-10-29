@@ -70,11 +70,11 @@ class Input:
         self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
         self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
 
-        self.vg, self.vcx, self.vdg = self._get_parker_wind_speed()
+        self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
         #Then finally multiply by the 'wind speed' constant calculated using physics.
         self.vg = self.vg*self.c_s
         self.vcx = self.vcx*self.c_s
-        self.vdg = self.vdg*self.c_s
+        self.vdcx = self.vdcx*self.c_s
         
     def _parker_implicit_fn(self, r, v):
         """
@@ -146,10 +146,11 @@ class Input:
 
         vcx = vf(self._grid.rcx)
 
-        vdg = np.zeros(len(vg))
-        vdg = (vcx[1:] - vcx[:-1]) / (self._grid.rcx[1:] - self._grid.rcx[:-1])
+        vdcx = np.zeros(len(vcx))
+        vdcx[1:-1] = (vg[1:] - vg[:-1]) / (self._grid.rg[1:] - self._grid.rg[:-1])
+        vdcx[0] = vdcx[1]; vdcx[-1] = vdcx[-2]
 
-        return vg, vcx, vdg
+        return vg, vcx, vdcx
 
     #These things are meant to be viewed outside the class -- everything else is kept within.
     @property

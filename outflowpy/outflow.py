@@ -11,6 +11,7 @@ from astropy.io import fits
 #from scipy.interpolate import interp2d
 from scipy.interpolate import RegularGridInterpolator
 import outflowpy
+from outflow_calc import compute_outflow
 
 
 def findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appropriate derivative
@@ -244,5 +245,29 @@ def outflow(input):
     
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 
+def outflow_fortran(input):
+    r"""
+    Compute outflow field using the precompiled Fortran routine -- this is just a python wrapper.
 
+    Extrapolates a 3D outflow field using an eigenfunction method in :math:`r,s,p`
+    coordinates, on the dumfric grid
+    (equally spaced in :math:`\rho = \ln(r/r_{sun})`,
+    :math:`s= \cos(\theta)`, and :math:`p=\phi`).
+
+    Parameters
+    ----------
+    input : :class:`Input`
+        Input parameters.
+
+    Returns
+    -------
+    out : :class:`Output`
+
+    """
+
+    print(input.vdcx)
+    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx)
+
+    print(np.max(br), np.min(br))
+    return outflowpy.Output(br, bs, bp, input.grid, input.map)
 
