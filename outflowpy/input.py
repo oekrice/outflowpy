@@ -65,13 +65,13 @@ class Input:
 
         #Assuming the solution for the isothermal corona, calculate the sound speed and critical radius etc.
         #Could import these from astopy.constants but I don't think they're going to change any time soon, so I'll assume it's fine
-        mf_in_sensible_units = mf_constant*(6.957e10)**2   #In seconds/solar radius
+        mf_in_sensible_units = mf_constant*(6.957e10)**2 #In seconds/solar radius
         sound_speed = np.sqrt(1.38064852e-23*corona_temp/1.67262192e-27) #Sound speed in m/s
         self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
         self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
 
         self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
-        #Then finally multiply by the 'wind speed' constant calculated using physics.
+        #Then finally multiply by the 'wind speed' constant calculated using physics. Should all be roughly order of magnitude 1/10 after this.
         self.vg = self.vg*self.c_s
         self.vcx = self.vcx*self.c_s
         self.vdcx = self.vdcx*self.c_s

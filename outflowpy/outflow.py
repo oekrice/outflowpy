@@ -89,7 +89,7 @@ def coeff(br0, q,p):
 Calculate the required functions in the radial direction. Not an eigenvalue problem, unlike in the other directions.
 """
 
-def findh(l, rcx, vcx, vdg, dr):  #finds the H function, normalised to satisfy the lower boundary conditionp.
+def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy the lower boundary conditionp.
     #The exact calculation here shouldn't affect the solenoidal condition on B (that is ensured when calculating Q).
     hcx = np.zeros(len(rcx)) #Initialise grid. Hc is the only function with on-centre grid points
 
@@ -99,7 +99,7 @@ def findh(l, rcx, vcx, vdg, dr):  #finds the H function, normalised to satisfy t
         #Calculate quantities A, B, C according to scheme described in the code
         A = 1
         B = 3 - vcx[i+1]*np.exp(rcx[i+1])
-        C = 2 - l - 3*vcx[i+1]*np.exp(rcx[i+1]) - vdg[i+1]*np.exp(rcx[i+1])
+        C = 2 - l - 3*vcx[i+1]*np.exp(rcx[i+1]) - vdcx[i+1]*np.exp(rcx[i+1])
         top = hcx[i+1] * (2*A/(dr**2) - C) + hcx[i+2] * (-A/(dr**2) - B/(2*dr))
         bottom = (A/(dr**2) - B/(2*dr))
         hcx[i] = top/bottom
@@ -192,12 +192,12 @@ def outflow(input):
 
     _ms, _trigs = (findms(input.grid.pc, input.grid.dp))
 
-
     _ls = np.zeros((len(_ms),len(input.grid.sg)-1))
     _legs = np.zeros((len(_ms),input.grid.ns,input.grid.ns))
 
     for i in range(len(_ms)):
         _ls[i],_legs[i]  = findls(_ms[i], input.grid.sc, input.grid.sg, input.grid.ds, input.grid.ns)
+
     print('Eigenthing sizes', np.shape(_ms), np.shape(_ls), np.shape(_legs))
 
     print('Eigenthings calculated')
@@ -215,17 +215,24 @@ def outflow(input):
             count += 1
             _cml[i][j] = coeff(br0, _legs[i,:,j], _trigs[:,i])  #Calculate boundary coefficients (based on orthogonality)
 
-            if abs(_cml[i][j]) < 1e-10:
+
+            if abs(_cml[i][j]) < 1e-9:
                 _cml[i][j] = 0
             else:  
+                print('python coeffs', i, j, _cml[i][j])
+
                 _q = np.zeros((input.grid.ns+2))
                 _q[1:-1] = _legs[i,:,j]  # Legendre functions
                 _q[0] = _q[1]; _q[-1] = _q[-2]
                 _p = np.zeros((input.grid.nphi + 2))
                 _p[1:-1] = _trigs[:,i]     # Trig functions
                 _p[0] = _p[-2]; _p[-1] = _p[1]
-                _hcx = findh(_ls[i][j], input.grid.rcx, input.vcx, input.vdg, input.grid.dr)     # Radial functions
+                _hcx = findh(_ls[i][j], input.grid.rcx, input.vcx, input.vdcx, input.grid.dr)     # Radial functions
+
+                print('python h input sums', np.sum(input.grid.rcx), np.sum(input.vcx), np.sum(input.vdcx))
+                print('python hc sum and base', np.sum(_hcx), _hcx[0])
                 _gg = findg(_hcx,_ls[i][j],input.grid.rg)
+                print('python g sum and top', np.sum(_gg), _gg[-1], np.shape(_gg))
 
                 #Then add on each mode to the magnetic fields, differentiating as appropriate. THIS IS THE SLOW BIT! Not sure how it can be improved in python though              
                 br += _cml[i,j] * _gg[:, np.newaxis, np.newaxis] * _q[np.newaxis, 1:-1, np.newaxis] * _p[np.newaxis, np.newaxis, 1:-1]
@@ -237,6 +244,10 @@ def outflow(input):
                 oferror = np.abs(100.0*(np.sum(np.abs(check))-np.sum(np.abs(br0)))/np.sum(np.abs(br0)))
                 if count%100 == 0:
                     print('Calculating... Lower Boundary Absolute Error: %06.2f%%, Approx Max. Open Flux Error: %06.2f%%, Modes calculated: %d/%d' % (pcerror,oferror,count,input.grid.ns*input.grid.nphi), end='\r')
+
+    print('Python br sum', np.sum(np.abs(br)))
+    print('Python bs sum', np.sum(np.abs(bs)))
+    print('Python bp sum', np.sum(np.abs(bp)))
 
     print('Calculating... Lower Boundary Absolute Error: %06.2f%%, Approx Max. Open Flux Error: %06.2f%%, Modes calculated: %d/%d' % (pcerror,oferror,count,input.grid.ns*input.grid.nphi))
 
@@ -265,7 +276,6 @@ def outflow_fortran(input):
 
     """
 
-    print(input.vdcx)
     br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx)
 
     print(np.max(br), np.min(br))
