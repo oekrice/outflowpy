@@ -35,7 +35,7 @@ Going to run through the HMI example from the readthedocs, checking all the code
 I think (unlike pfsspy, I think?) I'll provide a means to create such a map without any faffing around? Don't need emails etc. the way I do it!
 """
 
-hmi_map = outflowpy.obtain_data.download_hmi_crot(2210)   #Outputs the set of data corresponding to this particular Carrington rotation.
+hmi_map = outflowpy.obtain_data.download_hmi_crot(2210, smooth = 1.0)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
 print('Data shape: ', hmi_map.data.shape)
     

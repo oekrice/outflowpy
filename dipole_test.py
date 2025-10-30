@@ -29,7 +29,7 @@ import outflowpy.utils
 
 import drms
 
-if True: #Dipole test
+if False: #Dipole test
     nphi = 180
     ns = 90
 
@@ -49,24 +49,23 @@ if True: #Dipole test
     input_map = sunpy.map.Map((br.T, header))
 
 else:   #Hmi test
-    hmi_map = outflowpy.obtain_data.download_hmi_crot(2210)   #Outputs the set of data corresponding to this particular Carrington rotation.
-    input_map = hmi_map.resample([90, 60] * u.pix)   #This is the default PFSSpy resampling, but it looks a bit rubbish compared to Anthony's method.
+    ns_target = 90; nphi_target = 180
+    input_map = outflowpy.obtain_data.prepare_hmi_crot(2210, ns_target, nphi_target, smooth = 5e-2/nphi_target)   #Outputs the set of data corresponding to this particular Carrington rotation.
     #Calculate pfss field, for now. So I don't have to write any code to do the basic testing
     nrho = 30
     rss = 2.5
 
-outflow_in = outflowpy.Input(input_map, nrho, rss)
+outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 5e-17)
 
 outflow_out = outflowpy.outflow(outflow_in)
 python_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
-outflow_out = outflowpy.outflow_fortran(outflow_in)
-fortran_test = outflow_out.br, outflow_out.bs, outflow_out.bp
+# outflow_out = outflowpy.outflow_fortran(outflow_in)
+# fortran_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
-for ti, test_field in enumerate(python_test):
-    print(np.allclose(test_field, fortran_test[ti], atol = 1e-8))
+# for ti, test_field in enumerate(python_test):
+#     print(np.allclose(test_field, fortran_test[ti], atol = 1e-8))
 
-sys.exit()
 if False:  #Plot the outflow function
     plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg)
     plt.plot(np.exp(outflow_in.grid.rcx), outflow_in.vcx)
@@ -84,7 +83,7 @@ ss_br.plot()
 plt.colorbar()
 ax.set_title('Source surface magnetic field')
 
-plt.close()
+plt.show()
 #
 # fig, ax = plt.subplots()
 # ax.set_aspect('equal')

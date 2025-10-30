@@ -11,7 +11,6 @@ from astropy.io import fits
 #from scipy.interpolate import interp2d
 from scipy.interpolate import RegularGridInterpolator
 import outflowpy
-from .outflow_calc import compute_outflow
 
 def findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appropriate derivative
     vc = self.rc*0
@@ -267,6 +266,7 @@ def outflow_fortran(input):
     out : :class:`Output`
 
     """
+    from .outflow_calc import compute_outflow
 
     br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx)
 
