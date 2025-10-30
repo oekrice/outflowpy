@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "numpy>=1.26"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "outflowpy"
+version = "0.0.1"
+description = "Outflow field modelling with Fortran"
+authors = [{name = "Oliver Rice", email = "oliverricesolar@gmail.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy", "astropy", "matplotlib","sunpy","reproject","mpl_animators","bs4","lxml","zeep","drms","scikit-image"]
+
+[tool.setuptools]
+packages = ["outflowpy"]

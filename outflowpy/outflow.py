@@ -11,8 +11,7 @@ from astropy.io import fits
 #from scipy.interpolate import interp2d
 from scipy.interpolate import RegularGridInterpolator
 import outflowpy
-from outflow_calc import compute_outflow
-
+from .outflow_calc import compute_outflow
 
 def findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appropriate derivative
     vc = self.rc*0
