@@ -6,6 +6,7 @@ Will need to learn how that actually works though
 
 
 import os
+import sys
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -40,25 +41,31 @@ print('New shape: ', hmi_map.data.shape)
 nrho = 30
 rss = 2.5
 
-
-
 #pfss_in = pfsspy.Input(hmi_map, nrho, rss)
 #pfss_out = pfsspy.pfss(pfss_in)
 #ss_br = pfss_out.source_surface_br
 
-outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 2e6, mf_constant = 0.0)
+outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = 3e6, mf_constant = 5e-17)
+
+if False:  #Plot the outflow function
+    plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg)
+    plt.plot(np.exp(outflow_in.grid.rcx), outflow_in.vcx)
+    plt.plot(np.exp(outflow_in.grid.rcx), outflow_in.vdcx)
+    plt.show()
+
 #outflow_out = outflowpy.outflow(outflow_in)
 outflow_out = outflowpy.outflow_fortran(outflow_in)
 ss_br = outflow_out.source_surface_br
 
-print(np.max(ss_br), np.min(ss_br))
-# Create the figure and axes
-fig = plt.figure()
-ax = plt.subplot(projection=ss_br)
-# Plot the source surface map
-ss_br.plot()
-# Plot formatting
-plt.colorbar()
-ax.set_title('Source surface magnetic field')
 
-plt.show()
+print(np.max(ss_br), np.min(ss_br))
+# # Create the figure and axes
+# fig = plt.figure()
+# ax = plt.subplot(projection=ss_br)
+# # Plot the source surface map
+# ss_br.plot()
+# # Plot formatting
+# plt.colorbar()
+# ax.set_title('Source surface magnetic field')
+#
+# plt.show()

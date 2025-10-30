@@ -91,66 +91,87 @@ class Input:
         res += 3
         return res
     
-    def _get_parker_wind_speed(self):
+    def _test_fn(self, r):
+        """
+        This is a test function to make sure the logged and unlogged radial coordinates don't get mixed up at any point.
+        Should approximate a quadratic with velocity 1 at the upper boundary (2.5 here).
+        """
+        self.c_s = 1.0
+        return (r/2.5)**2
+
+    def _get_parker_wind_speed(self, implicit_fn = None):
         """
         Given up on the meshgrid approach as it just doesn't work very well for low velocities. 
         Instead doing the original options approach but with the linear prediction option if things are ambiguous
         """
         #Find initial point, assuming that the velocity is small here
-        min_r = 0.0; max_r = self._grid.rg[-1]*2.0
+        min_r = -1.0; max_r = self._grid.rg[-1]*2.0
         vtest_min = 1e-6
         dr = (max_r - min_r)/2000
         #Log two solutions
         vslows = []; vfasts = []
         r0s = []; vfinals = []
         r0 = min_r
-        while r0 <= max_r:
-            #Find the minimum value of the fn at this point? Would probably be more reliable for more complex functions.
-            #Also could put a check in to make sure everything is the right way around?
-            #Must be an inbuilt for the minimum of a function within a range?
-            minimum = minimize_scalar(lambda v: self._parker_implicit_fn(np.exp(r0), v))
-            p0 = vtest_min; p1 = minimum.x; p2 = 10.0*minimum.x
-            #If the three points have a crossing, then find the actual minimum using the standard root finding thing
-            if  self._parker_implicit_fn(np.exp(r0), p0)* self._parker_implicit_fn(np.exp(r0), p1) < 0.0 and  self._parker_implicit_fn(np.exp(r0), p1)* self._parker_implicit_fn(np.exp(r0), p2) < 0.0:
-                #This is valid -- find the roots
-                vslow = root_scalar((lambda v: self._parker_implicit_fn(np.exp(r0), v)), bracket = [p0, p1]).root
-                vfast = root_scalar((lambda v: self._parker_implicit_fn(np.exp(r0), v)), bracket = [p1, p2]).root
-                vslows.append(vslow); vfasts.append(vfast)
-                if len(vfinals) < 2:  #For the first two, it's probably safe to assume that this is the slow solution
-                    vfinals.append(vslows[-1])
-                    r0s.append(r0)
-                else:
-                    prediction = 2*vfinals[-1] - vfinals[-2]
-                    diffslow = np.abs(vslows[-1] - prediction)
-                    difffast = np.abs(vfasts[-1] - prediction)
-                    if diffslow < difffast:
+        if not implicit_fn:
+            implicit_fn = self._parker_implicit_fn
+
+        if implicit_fn == self._test_fn:
+            print("Doing test outflow profile, which doesn't involve any root finding")
+            while r0 <= max_r:
+                vfinals.append(self._test_fn(np.exp(r0)))
+                r0s.append(r0)
+                r0 = r0 + dr
+
+        else:
+            while r0 <= max_r:
+                #Find the minimum value of the fn at this point? Would probably be more reliable for more complex functions.
+                #Also could put a check in to make sure everything is the right way around?
+                #Must be an inbuilt for the minimum of a function within a range?
+                minimum = minimize_scalar(lambda v: implicit_fn(np.exp(r0), v))
+                p0 = vtest_min; p1 = minimum.x; p2 = 10.0*minimum.x
+                #If the three points have a crossing, then find the actual minimum using the standard root finding thing
+                if  implicit_fn(np.exp(r0), p0)* implicit_fn(np.exp(r0), p1) < 0.0 and  implicit_fn(np.exp(r0), p1)* implicit_fn(np.exp(r0), p2) < 0.0:
+                    #This is valid -- find the roots
+                    vslow = root_scalar((lambda v: implicit_fn(np.exp(r0), v)), bracket = [p0, p1]).root
+                    vfast = root_scalar((lambda v: implicit_fn(np.exp(r0), v)), bracket = [p1, p2]).root
+                    vslows.append(vslow); vfasts.append(vfast)
+                    if len(vfinals) < 2:  #For the first two, it's probably safe to assume that this is the slow solution
                         vfinals.append(vslows[-1])
                         r0s.append(r0)
                     else:
-                        vfinals.append(vfasts[-1])
-                        r0s.append(r0)
-            else:
-                #If r is reasonably small, it is probably zero, so add something to that effect at the start
-                if r0 < np.log(2.5):
-                    vfinals.append(0.0)
-                    r0s.append(r0)
+                        prediction = 2*vfinals[-1] - vfinals[-2]
+                        diffslow = np.abs(vslows[-1] - prediction)
+                        difffast = np.abs(vfasts[-1] - prediction)
+                        if diffslow < difffast:
+                            vfinals.append(vslows[-1])
+                            r0s.append(r0)
+                        else:
+                            vfinals.append(vfasts[-1])
+                            r0s.append(r0)
                 else:
-                    raise Exception('A sensible solution to the implicit wind speed equation could not be found')
-            r0 = r0 + dr
+                    #If r is reasonably small, it is probably zero, so add something to that effect at the start
+                    if r0 < np.log(2.5):
+                        vfinals.append(0.0)
+                        r0s.append(r0)
+                    else:
+                        raise Exception('A sensible solution to the implicit wind speed equation could not be found')
+                r0 = r0 + dr
 
-        vfinals = np.array(vfinals); r0s = np.array(r0s)   
+        vfinals = np.array(vfinals); r0s = np.array(r0s)
 
         #Interpolate these values onto the desired grid points, then differentiate (in RHO)
+        #To find the values on the extended inner cells, extend the grid cells (briefly) and do central differences
         vf = interpolate.interp1d(r0s, vfinals,bounds_error=False, fill_value='extrapolate')
-        vg = vf(self._grid.rg)
+        rgx = np.zeros((len(self._grid.rg) + 2))
+        rgx[1:-1] = self._grid.rg
+        rgx[0] = 2*rgx[1] - rgx[2]; rgx[-1] = 2*rgx[-2] - rgx[-3]
 
+        vgx = vf(rgx)
         vcx = vf(self._grid.rcx)
-
         vdcx = np.zeros(len(vcx))
-        vdcx[1:-1] = (vg[1:] - vg[:-1]) / (self._grid.rg[1:] - self._grid.rg[:-1])
-        vdcx[0] = vdcx[1]; vdcx[-1] = vdcx[-2]
+        vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
 
-        return vg, vcx, vdcx
+        return vgx[1:-1], vcx, vdcx
 
     #These things are meant to be viewed outside the class -- everything else is kept within.
     @property
