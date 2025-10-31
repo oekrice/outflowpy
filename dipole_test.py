@@ -24,8 +24,8 @@ import numpy as np
 import outflowpy
 import outflowpy.utils
 
-# import pfsspy
-# import pfsspy.utils
+import pfsspy
+import pfsspy.utils
 
 if False: #Dipole test
     nphi = 180
@@ -36,7 +36,7 @@ if False: #Dipole test
     s, phi = np.meshgrid(s, phi)
 
     def dipole_Br(r, s):
-        return 2 * s / r**3
+        return s**7#2 * s / r**3
 
     br = dipole_Br(1, s)
 
@@ -47,19 +47,22 @@ if False: #Dipole test
     input_map = sunpy.map.Map((br.T, header))
 
 else:   #Hmi test
-    ns_target = 90; nphi_target = 180
+    ns_target = 180; nphi_target = 360
     input_map = outflowpy.obtain_data.prepare_hmi_crot(2210, ns_target, nphi_target, smooth = 5e-2/nphi_target)   #Outputs the set of data corresponding to this particular Carrington rotation.
     #Calculate pfss field, for now. So I don't have to write any code to do the basic testing
-    nrho = 30
+    nrho = 60
     rss = 2.5
 
-outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 5e-17)
+outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 0.0)
 
 # outflow_out = outflowpy.outflow(outflow_in)
 # python_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
 outflow_out = outflowpy.outflow_fortran(outflow_in)
 fortran_test = outflow_out.br, outflow_out.bs, outflow_out.bp
+
+#outflow_out = pfsspy.pfss(outflow_in)
+# pfsspy_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
 # for ti, test_field in enumerate(python_test):
 #     print(np.max(np.abs(test_field - fortran_test[ti])))
