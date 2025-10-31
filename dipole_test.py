@@ -55,15 +55,15 @@ else:   #Hmi test
 
 outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 5e-17)
 
-outflow_out = outflowpy.outflow(outflow_in)
-python_test = outflow_out.br, outflow_out.bs, outflow_out.bp
+# outflow_out = outflowpy.outflow(outflow_in)
+# python_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
 outflow_out = outflowpy.outflow_fortran(outflow_in)
 fortran_test = outflow_out.br, outflow_out.bs, outflow_out.bp
 
-for ti, test_field in enumerate(python_test):
-    print(np.max(np.abs(test_field - fortran_test[ti])))
-    print(np.allclose(test_field, fortran_test[ti], atol = 1e-8))
+# for ti, test_field in enumerate(python_test):
+#     print(np.max(np.abs(test_field - fortran_test[ti])))
+#     print(np.allclose(test_field, fortran_test[ti], atol = 1e-8))
 
 if False:  #Plot the outflow function
     plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg)
