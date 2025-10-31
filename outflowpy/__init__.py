@@ -16,7 +16,7 @@ import outflowpy.obtain_data
 from .input import Input
 from .output import Output
 from .pfss import pfss
-from .outflow import outflow
+from .outflow import outflow, findls, findms
 from .outflow import outflow_fortran
 
 __all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc']

@@ -188,14 +188,9 @@ def outflow(input):
     bs = np.zeros((input.grid.nr,input.grid.ns+1,input.grid.nphi))
     bp = np.zeros((input.grid.nr,input.grid.ns,input.grid.nphi+1))
 
-    _ms, _trigs = (findms(input.grid.pc, input.grid.dp))
+    _ms, _trigs = input.grid.ms, input.grid.trigs
 
-    _ls = np.zeros((len(_ms),len(input.grid.sg)-1))
-    _legs = np.zeros((len(_ms),input.grid.ns,input.grid.ns))
-
-    for i in range(len(_ms)):
-        _ls[i],_legs[i]  = findls(_ms[i], input.grid.sc, input.grid.sg, input.grid.ds, input.grid.ns)
-
+    _ls, _legs = input.grid.ls, input.grid.legs
     print('Eigenthings calculated')
 
     _cml = _ls*0 #Fourier coefficient matrices
@@ -268,8 +263,7 @@ def outflow_fortran(input):
     """
     from .outflow_calc import compute_outflow
 
-    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx)
+    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ms, input.grid.ls, input.grid.trigs, input.grid.legs)
 
-    print(np.max(br), np.min(br))
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 

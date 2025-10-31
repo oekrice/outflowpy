@@ -1,7 +1,7 @@
 import functools
 
 import numpy as np
-
+from outflowpy.outflow import findls, findms
 
 class Grid:
     r"""
@@ -20,6 +20,8 @@ class Grid:
     - :math:`1 < r < r_{ss}`
     - :math:`0 < \theta < \pi`
     - :math:`0 < \phi < 2\pi`
+
+    Now to include the eigenvalues and functions so these can be passed directly to the fortran code, avoiding the need to install lapack, and to ensure more accurate numerics.
     """
 
     def __init__(self, ns, nphi, nr, rss):
@@ -27,6 +29,43 @@ class Grid:
         self.nphi = nphi
         self.nr = nr
         self.rss = rss
+        #Calculate eigenvalues and functions on this grid, so it doesn't need to be done again'
+        self.ms, self.trigs = findms(self.pc, self.dp)
+        self.ls = np.zeros((len(self.ms),len(self.sg)-1))
+        self.legs = np.zeros((len(self.ms),self.ns,self.ns))
+        for i in range(len(self.ms)):
+            self.ls[i],self.legs[i]  = findls(self.ms[i], self.sc, self.sg, self.ds, self.ns)
+
+    # @property
+    # def ms(self):
+    #     """
+    #     Eigenvalues in the azimuthal direction
+    #     """
+    #     return self.ms
+    #
+    # @property
+    # def ls(self):
+    #     """
+    #     Eigenvalues in the latitudinal direction
+    #     """
+    #     return self.ls
+    #
+    # @property
+    # def trigs(self):
+    #     """
+    #     Eigenfunctions in the azimuthal direction.
+    #     The second index is the eigenvalue number.
+    #     """
+    #     return self.trigs
+    #
+    # @property
+    # def legs(self):
+    #     """
+    #     Eigenvalues in the latitudinal direction.
+    #     The first index is the eigenvalue number in the azimuthal direction (m),
+    #     and the THIRD index is the eigenvalue number in the latitudinal direction (l)
+    #     """
+    #     return self.legs
 
     @property
     def ds(self):
