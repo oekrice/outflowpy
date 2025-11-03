@@ -102,7 +102,7 @@ def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy 
         bottom = (A/(dr**2) - B/(2*dr))
         hcx[i] = top/bottom
 
-    grad = (hcx[1]*np.exp(rcx[1]) - hcx[0]*np.exp(rcx[0]))/dr - vcx[0]*np.exp(rcx[0])*hcx[0]
+    grad = (hcx[1]*np.exp(rcx[1]) - hcx[0]*np.exp(rcx[0]))/dr - 0.5*(vcx[0]*np.exp(rcx[0])*hcx[0] + vcx[1]*np.exp(rcx[1])*hcx[1])
 
     return hcx/grad
 
@@ -266,7 +266,7 @@ def outflow_fortran(input):
     """
     from .outflow_calc import compute_outflow
 
-    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ms, input.grid.ls, input.grid.trigs, input.grid.legs)
+    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ls, input.grid.trigs, input.grid.legs)
     br = np.swapaxes(br, 0, 2)
     bs = np.swapaxes(bs, 0, 2)
     bp = np.swapaxes(bp, 0, 2)

@@ -41,7 +41,7 @@ def _Ynm(l, m, theta, phi):
     """
     # Note swapped arguments phi, theta, as scipy has a different
     # definition of these
-    return -scipy.special.sph_harm(m, l, phi, theta)
+    return -scipy.special.sph_harm_y(l, m, theta, phi)
 
 
 def _cot(theta):

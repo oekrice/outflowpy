@@ -19,6 +19,10 @@ from .pfss import pfss
 from .outflow import outflow, findls, findms
 from .outflow import outflow_fortran
 
+import sys, types
+sys.modules['sunpy.tests'] = types.ModuleType('sunpy.tests')
+sys.modules['sunpy.tests.self_test'] = types.ModuleType('sunpy.tests.self_test')
+
 __all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc']
 
 

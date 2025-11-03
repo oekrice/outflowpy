@@ -38,9 +38,12 @@ class Output:
         self.grid = grid
         self.input_map = input_map
 
-        self.br = np.swapaxes(br, 0, 2)
-        self.bs = np.swapaxes(bs, 0, 2)
-        self.bp = np.swapaxes(bp, 0, 2)
+        self.br = br
+        self.bs = bs
+        self.bp = bp
+        # self.br = np.swapaxes(br, 0, 2)
+        # self.bs = np.swapaxes(bs, 0, 2)
+        # self.bp = np.swapaxes(bp, 0, 2)
 
         # Cache attributes
         self._common_b_cache = None
@@ -48,7 +51,7 @@ class Output:
 
     def _wcs_header(self):
         """
-        Construct a world coordinate system describing the pfsspy solution.
+        Construct a world coordinate system describing the outflowpy solution.
         """
         return self.input_map.wcs
 
@@ -85,7 +88,7 @@ class Output:
 
         If no metadata is available, returns dimensionless units.
         """
-        # Note that this can be removed once pfsspy depends on sunpy>=2.1, see
+        # Note that this can be removed once outflowpy depends on sunpy>=2.1, see
         # https://github.com/sunpy/sunpy/pull/4451
         unit_str = self.input_map.meta.get('bunit', None)
         if unit_str is None:
@@ -186,7 +189,7 @@ class Output:
         """
         x, y, z = coord
         # (ph, s, rh) coordinates of current point:
-        rho, s, phi = pfsspy.coords.cart2strum(x, y, z)
+        rho, s, phi = outflowpy.coords.cart2strum(x, y, z)
 
         # Check if position vector is outside the data limits
         if rho < 0 or rho > np.log(self.grid.rss):
@@ -234,15 +237,6 @@ class Output:
 
         xout = res.y
         return xout
-
-    @property
-    def _al(self):
-        """
-        Vector potential times cell edge lenghts.
-
-        Returns ar*Lr, as*Ls, ap*Lp on cell edges.
-        """
-        return self._alr, self._als, self._alp
 
     @property
     def bc(self):
@@ -484,7 +478,7 @@ class Output:
             warnings.warn("The obstime of one of more input coordinates "
                           "do not match the pfss model obstime.")
 
-        # Convert SkyCoord to pfsspy.Output coordinate frame
+        # Convert SkyCoord to outflowpy.Output coordinate frame
         coords.transform_to(self.coordinate_frame)
 
         # Do interpolation (returns cartesian vector)

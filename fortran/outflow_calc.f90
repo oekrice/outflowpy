@@ -2,7 +2,7 @@ module compute_outflow
     implicit none
     contains
 
-    subroutine compute_outeqm(brsurf, rg, ss, p, rcx, sc, vc_in, dv_in, ms, ls, trigs, legs, nr, ns, np, br, bs, bp)
+    subroutine compute_outeqm(brsurf, rg, ss, p, rcx, sc, vc_in, dv_in, ls, trigs, legs, nr, ns, np, br, bs, bp)
 !     !   v1 is the speed parameter (in km/s), but this is irrelevant as python will do that calculation to allow for more complex inputs than Fortran would allow with ease
 !     ! ---
     integer,parameter :: rk=selected_real_kind(15,100)
@@ -14,7 +14,7 @@ module compute_outflow
 
     !Then all the various dummy variables
     real(rk):: dp, ds, dr
-    real(rk), intent(in):: ms(0:np-1), trigs(0:np-1,0:np-1)
+    real(rk), intent(in):: trigs(0:np-1,0:np-1)
     real(rk), intent(in):: ls(0:np-1,0:ns-1), legs(0:np-1,0:ns-1,0:ns-1)
     real(rk):: sig(0:ns),  sigc(0:ns-1)
     real(rk):: cml, grad

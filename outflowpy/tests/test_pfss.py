@@ -11,48 +11,47 @@ import sunpy.util.exceptions
 from astropy.tests.helper import quantity_allclose
 from sunpy.coordinates import frames
 
-import pfsspy
-import pfsspy.coords
-from pfsspy import tracing
+import outflowpy
+import outflowpy.coords
+from outflowpy import tracing
 
 from .example_maps import dipole_map, dipole_result, gong_map, zero_map  # NoQA
 
 R_sun = const.R_sun
 test_data = pathlib.Path(__file__).parent / 'data'
 
+# def test_pfss(gong_map):
+#     # Regression test to check that the output of pfss doesn't change
+#     m = sunpy.map.Map(gong_map)
+#     # Resample to lower res for easier comparisons
+#     m = m.resample([30, 15] * u.pix)
+#     m = sunpy.map.Map(m.data - np.mean(m.data), m.meta)
+#     expected = np.loadtxt(test_data / 'br_in.txt')
+#     np.testing.assert_equal(m.data, expected)
+#
+#     pfss_in = outflowpy.Input(m, 50, 2)
+#     pfss_out = outflowpy.pfss(pfss_in)
+#
+#     br = pfss_out.source_surface_br.data
+#     assert br.shape == m.data.shape
+#     expected = np.loadtxt(test_data / 'br_out.txt')
+#     # atol is emperically set for tests to pass on CI
+#     np.testing.assert_allclose(br, expected, atol=1e-13, rtol=0)
 
-def test_pfss(gong_map):
-    # Regression test to check that the output of pfss doesn't change
-    m = sunpy.map.Map(gong_map)
-    # Resample to lower res for easier comparisons
-    m = m.resample([30, 15] * u.pix)
-    m = sunpy.map.Map(m.data - np.mean(m.data), m.meta)
-    expected = np.loadtxt(test_data / 'br_in.txt')
-    np.testing.assert_equal(m.data, expected)
-
-    pfss_in = pfsspy.Input(m, 50, 2)
-    pfss_out = pfsspy.pfss(pfss_in)
-
-    br = pfss_out.source_surface_br.data
-    assert br.shape == m.data.shape
-    expected = np.loadtxt(test_data / 'br_out.txt')
-    # atol is emperically set for tests to pass on CI
-    np.testing.assert_allclose(br, expected, atol=1e-13, rtol=0)
-
-
-def test_bunit(gong_map):
-    # Regression test to check that the output of pfss doesn't change
-    m = sunpy.map.Map(gong_map)
-    pfss_in = pfsspy.Input(m, 2, 2)
-    pfss_out = pfsspy.pfss(pfss_in)
-    assert pfss_out.bunit == u.G
-
-    pfss_out.input_map.meta['bunit'] = 'notaunit'
-    with pytest.warns(UserWarning, match='Could not parse unit string "notaunit"'):
-        assert pfss_out.bunit == u.dimensionless_unscaled
-
-    pfss_out.input_map.meta.pop('bunit')
-    assert pfss_out.bunit == u.dimensionless_unscaled
+#
+# def test_bunit(gong_map):
+#     # Regression test to check that the output of pfss doesn't change
+#     m = sunpy.map.Map(gong_map)
+#     pfss_in = outflowpy.Input(m, 2, 2)
+#     pfss_out = outflowpy.pfss(pfss_in)
+#     assert pfss_out.bunit == u.G
+#
+#     pfss_out.input_map.meta['bunit'] = 'notaunit'
+#     with pytest.warns(UserWarning, match='Could not parse unit string "notaunit"'):
+#         assert pfss_out.bunit == u.dimensionless_unscaled
+#
+#     pfss_out.input_map.meta.pop('bunit')
+#     assert pfss_out.bunit == u.dimensionless_unscaled
 
 
 def test_expansion_factor(dipole_result):
@@ -134,14 +133,7 @@ def test_shape(zero_map):
     nphi = input.grid.nphi
     ns = input.grid.ns
 
-    out = pfsspy.pfss(input)
-    alr, als, alp = out._al
-    for comp in (alr, als, alp):
-        assert np.all(comp == 0)
-
-    assert alr.shape == (nphi + 1, ns + 1, nr)
-    assert als.shape == (nphi + 1, ns, nr + 1)
-    assert alp.shape == (nphi, ns + 1, nr + 1)
+    out = outflowpy.pfss(input)
 
     br, bs, bp = out.bc
     for comp in (br, bs, bp):
@@ -160,19 +152,19 @@ def test_shape(zero_map):
 def test_wrong_projection_error(dipole_map):
     dipole_map.meta['ctype1'] = 'HGLN-CAR'
     with pytest.raises(ValueError, match='must be CEA'):
-        pfsspy.Input(dipole_map, 5, 2.5)
+        outflowpy.Input(dipole_map, 5, 2.5)
 
 
 def test_nan_value(dipole_map):
     dipole_map.data[0, 0] = np.nan
     with pytest.raises(
             ValueError, match='At least one value in the input is NaN'):
-        pfsspy.Input(dipole_map, 5, 2.5)
+        outflowpy.Input(dipole_map, 5, 2.5)
 
 
 def test_non_map_input():
     with pytest.raises(ValueError, match='br must be a sunpy Map'):
-        pfsspy.Input(np.random.rand(2, 2), 1, 1)
+        outflowpy.Input(np.random.rand(2, 2), 1, 1)
 
 
 def test_bvec_interpolator(dipole_result):

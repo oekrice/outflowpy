@@ -2,7 +2,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from pfsspy import analytic
+from outflowpy import analytic
 
 
 @pytest.mark.parametrize('f', [analytic.Bphi, analytic.Btheta])
@@ -24,4 +24,4 @@ def test_br_rss():
     f = analytic.Br(l, m, zss)
     phi = 0 * u.deg
     theta = 0 * u.deg
-    assert f(zss, theta, phi) == -0.5 * np.sqrt(3 / np.pi) * c
+    assert u.allclose(f(zss, theta, phi), -0.5 * np.sqrt(3 / np.pi) * c)

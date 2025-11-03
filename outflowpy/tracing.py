@@ -21,8 +21,8 @@ class Tracer(abc.ABC):
         ----------
         seeds : astropy.coordinates.SkyCoord
             Coordinaes of the magnetic field seed points.
-        output : pfsspy.Output
-            pfss output.
+        output : outflowpy.Output
+            outflow field output.
 
         Returns
         -------
@@ -55,7 +55,7 @@ class Tracer(abc.ABC):
         Parameters
         ----------
         seeds : astropy.coordinates.SkyCoord
-        output : pfsspy.Output
+        output : outflowpy.Output
         """
         seeds = seeds.transform_to(output.coordinate_frame)
         # In general the phi value of the magnetic field array can differ from
@@ -113,7 +113,7 @@ class FortranTracer(Tracer):
     @staticmethod
     def vector_grid(output):
         """
-        Create a `streamtracer.VectorGrid` object from an `~pfsspy.Output`.
+        Create a `streamtracer.VectorGrid` object from an `~outflowpy.Output`.
         """
         from streamtracer import VectorGrid
 
@@ -182,7 +182,7 @@ class FortranTracer(Tracer):
                 'You should probably increase max_steps '
                 f'(currently set to {self.max_steps}) and try again.')
 
-        xs = [np.stack(pfsspy.coords.strum2cart(x[:, 2], x[:, 1], x[:, 0]), axis=-1) for x in xs]
+        xs = [np.stack(outflowpy.coords.strum2cart(x[:, 2], x[:, 1], x[:, 0]), axis=-1) for x in xs]
         flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in xs]
         return fieldline.FieldLines(flines)
 
@@ -213,7 +213,7 @@ class PythonTracer(Tracer):
             xforw = output._integrate_one_way(1, seed, self.rtol, self.atol)
             xback = output._integrate_one_way(-1, seed, self.rtol, self.atol)
             xback = np.flip(xback, axis=1)
-            xout = np.row_stack((xback.T, xforw.T))
+            xout = np.vstack((xback.T, xforw.T))
             fline = fieldline.FieldLine(xout[:, 0], xout[:, 1], xout[:, 2], output)
 
             flines.append(fline)

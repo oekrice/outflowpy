@@ -1,6 +1,6 @@
 import pytest
 
-from pfsspy.fieldline import (
+from outflowpy.fieldline import (
     ClosedFieldLines,
     FieldLine,
     FieldLines,
