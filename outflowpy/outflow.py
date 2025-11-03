@@ -91,7 +91,7 @@ def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy 
     #The exact calculation here shouldn't affect the solenoidal condition on B (that is ensured when calculating Q).
     hcx = np.zeros(len(rcx)) #Initialise grid. Hc is the only function with on-centre grid points
 
-    hcx[-1] = 1; hcx[-2] = -1. #I've changed this slightly as I'm not sure I was correct about this being the best numerical option. But that was a long time ago...
+    hcx[-1] = 1; hcx[-2] = 0. #I've fiddled around with this a bit and this is the best numerical option -- matches almost exactly with PFSSpy (will include this in a test)
 
     for i in range(len(rcx) - 3, -1, -1): #work backwards from the top boundary
         #Calculate quantities A, B, C according to scheme described in the code
@@ -101,8 +101,9 @@ def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy 
         top = hcx[i+1] * (2*A/(dr**2) - C) + hcx[i+2] * (-A/(dr**2) - B/(2*dr))
         bottom = (A/(dr**2) - B/(2*dr))
         hcx[i] = top/bottom
-    grad = (hcx[1] - hcx[0])/dr + (1.0 - vcx[0]*np.exp(rcx[0]))*hcx[0]  #New boundary condition here
-    #grad = (hcx[1]*np.exp(rcx[1]) - hcx[0]*np.exp(rcx[0]))/dr  #to ensure the lower boundary condition is correct. THIS NEEDS UPDATING FOR NONZERO!    
+
+    grad = (hcx[1]*np.exp(rcx[1]) - hcx[0]*np.exp(rcx[0]))/dr - vcx[0]*np.exp(rcx[0])*hcx[0]
+
     return hcx/grad
 
 def findg(hc,l, rg): #finds the G function from H using the specified scheme from the notes.
@@ -224,7 +225,7 @@ def outflow(input):
                 br += _cml[i,j] * _gg[:, np.newaxis, np.newaxis] * _q[np.newaxis, 1:-1, np.newaxis] * _p[np.newaxis, np.newaxis, 1:-1]
                 bs += _cml[i,j] * _sigs[np.newaxis, :, np.newaxis] * _hcx[1:-1, np.newaxis, np.newaxis] * ((_q[1:] - _q[:-1])/input.grid.ds)[np.newaxis, :, np.newaxis] * _p[np.newaxis, np.newaxis, 1:-1]
                 bp += _cml[i,j] * (1.0/_sigc)[np.newaxis, :, np.newaxis] * _hcx[1:-1, np.newaxis, np.newaxis] *  _q[np.newaxis, 1:-1, np.newaxis] * ((_p[1:] - _p[:-1])/input.grid.dp)[np.newaxis, np.newaxis, :]
-                    
+
                 check += _q[1:-1, np.newaxis]*_p[np.newaxis, 1:-1]*_cml[i,j]   #calculating the lower boundary after each mode, to check against the target
                 pcerror = 100.0*np.sum(np.abs(check-br0))/np.sum(np.abs(br0))
                 oferror = np.abs(100.0*(np.sum(np.abs(check))-np.sum(np.abs(br0)))/np.sum(np.abs(br0)))
@@ -238,7 +239,9 @@ def outflow(input):
     print('Calculating... Lower Boundary Absolute Error: %06.2f%%, Approx Max. Open Flux Error: %06.2f%%, Modes calculated: %d/%d' % (pcerror,oferror,count,input.grid.ns*input.grid.nphi))
 
     print('Magnetic field calculated. ')                
-    
+    br = np.swapaxes(br, 0, 2)
+    bs = np.swapaxes(bs, 0, 2)
+    bp = np.swapaxes(bp, 0, 2)
     
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 
@@ -264,6 +267,9 @@ def outflow_fortran(input):
     from .outflow_calc import compute_outflow
 
     br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ms, input.grid.ls, input.grid.trigs, input.grid.legs)
+    br = np.swapaxes(br, 0, 2)
+    bs = np.swapaxes(bs, 0, 2)
+    bp = np.swapaxes(bp, 0, 2)
 
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 

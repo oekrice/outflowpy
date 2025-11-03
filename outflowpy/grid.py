@@ -36,37 +36,6 @@ class Grid:
         for i in range(len(self.ms)):
             self.ls[i],self.legs[i]  = findls(self.ms[i], self.sc, self.sg, self.ds, self.ns)
 
-    # @property
-    # def ms(self):
-    #     """
-    #     Eigenvalues in the azimuthal direction
-    #     """
-    #     return self.ms
-    #
-    # @property
-    # def ls(self):
-    #     """
-    #     Eigenvalues in the latitudinal direction
-    #     """
-    #     return self.ls
-    #
-    # @property
-    # def trigs(self):
-    #     """
-    #     Eigenfunctions in the azimuthal direction.
-    #     The second index is the eigenvalue number.
-    #     """
-    #     return self.trigs
-    #
-    # @property
-    # def legs(self):
-    #     """
-    #     Eigenvalues in the latitudinal direction.
-    #     The first index is the eigenvalue number in the azimuthal direction (m),
-    #     and the THIRD index is the eigenvalue number in the latitudinal direction (l)
-    #     """
-    #     return self.legs
-
     @property
     def ds(self):
         """

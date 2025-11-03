@@ -41,6 +41,56 @@ def _A_diag(A, ns, Vg, Uc, mu, m):
         A[j, j] = Vg[j] + Vg[j + 1] + Uc[j] * mu[m]
     return A
 
+def _bfield_from_afield(input, alr, als, alp):
+    r"""
+    Script originally from pfspy.output which calculate the magnetic field vectors from the vector potential. The outflow code does not calculate the vector potential at all, and doing it this way is simpler than writing a script to do that.
+    """
+    dr = input.grid.dr
+    ds = input.grid.ds
+    dp = input.grid.dp
+
+    nr = input.grid.nr
+    ns = input.grid.ns
+    nphi = input.grid.nphi
+
+    rss = input.grid.rss
+
+    rc = input.grid.rcx
+
+    rg = input.grid.rg
+    sg = input.grid.sg
+
+    # Required area factors:
+    Sbr = np.zeros((ns + 2, nr + 1))
+    for k in range(nr + 1):
+        Sbr[1:-1, k] = np.exp(2 * rg[k]) * ds * dp
+    Sbs = np.zeros((ns + 1, nr + 2))
+    for k in range(nr + 2):
+        for j in range(1, ns):
+            Sbs[j, k] = 0.5 * np.exp(2 * rc[k] - dr) * dp * (np.exp(2 * dr) - 1) * np.sqrt(1 - sg[j]**2)
+        Sbs[0, k] = Sbs[1, k]
+        Sbs[-1, k] = Sbs[-2, k]
+    Sbp = np.zeros((ns + 2, nr + 2))
+    for k in range(nr + 2):
+        for j in range(1, ns + 1):
+            Sbp[j, k] = 0.5 * np.exp(2 * rc[k] - dr) * (np.exp(2 * dr) - 1) * (np.arcsin(sg[j]) - np.arcsin(sg[j - 1]))
+        Sbp[0, k] = Sbp[1, k]
+        Sbp[-1, k] = Sbp[-2, k]
+
+    # Compute br*Sbr, bs*Sbs, bp*Sbp at cell centres by Stokes theorem:
+    br = np.zeros((nphi, ns, nr + 1))
+    bs = np.zeros((nphi, ns + 1, nr))
+    bp = np.zeros((nphi + 1, ns, nr))
+    br[:, :, :] = als[1:, :, :] - als[:-1, :, :] + alp[:, :-1, :] - alp[:, 1:, :]
+    bs[:, :, :] = alp[:, :, 1:] - alp[:, :, :-1]
+    bp[:, :, :] = als[:, :, :-1] - als[:, :, 1:]
+
+    br = br/Sbr[np.newaxis,1:-1,:]
+    bs = bs/Sbs[np.newaxis,:,1:-1]
+    bp = bp/Sbp[np.newaxis,1:-1,1:-1]
+
+    return br, bs, bp
+
 def pfss(input):
     r"""
     Compute PFSS model.
@@ -144,4 +194,6 @@ def pfss(input):
 
     als, alp = _als_alp(nr, nphi, Fs, psi, Fp, als, alp)
 
-    return outflowpy.Output(alr, als, alp, input.grid, input.map)
+    br, bs, bp = _bfield_from_afield(input, alr, als, alp)
+
+    return outflowpy.Output(br, bs, bp, input.grid, input.map)
