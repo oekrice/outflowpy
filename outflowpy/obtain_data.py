@@ -46,7 +46,7 @@ def _correct_flux_multiplicative(f):
 
     return f1
 
-def _sh_smooth(raw_data, smooth, ns_target, nphi_target, cutoff=10):
+def sh_smooth(raw_data, smooth, ns_target, nphi_target, cutoff=10):
     """
     Parameters
     ----------
@@ -70,6 +70,13 @@ def _sh_smooth(raw_data, smooth, ns_target, nphi_target, cutoff=10):
     smooth -- coefficient of filter exp(-smooth * lam) [set cutoff=0 to include all eigenvalues. This is quicker for small matrices.]
     cutoff -- largest value of smooth*lam to include [so 10 means ignore blm multiplied by exp(-10)]
     """
+
+    if ns_target%2 == 1 or nphi_target == 1:
+        raise Exception("Attempting to interpolate onto a grid with an odd number of cells in at least one dimension. This will likely cause errors, so don't do it.")
+
+    if smooth > 0.0:
+        if cutoff/smooth <= 1.5:
+            raise Exception("Smoothing value is too high, try reducing it.")
 
     print('Initial Data Shape', np.shape(raw_data))
     #Initially apply a crude downscale so the smoothing can happen at a reasonable pace.
@@ -142,14 +149,32 @@ def _sh_smooth(raw_data, smooth, ns_target, nphi_target, cutoff=10):
         data_target[i,:] = bri(sc_target[i], pc_target).flatten()
     del(data_smooth, bri)
 
+    if np.sum(np.abs(data_target)) < 1e-10:
+        raise Exception('Smoothing has resulted in a zero map. Try reducing the smoothing factor?')
+
     data_target = _correct_flux_multiplicative(data_target)
 
     return data_target
 
+def _scale_mdi(mdi_input):
+    #Converts each pixel of the MDI magnetogram so it matches HMI (which I'm assuming is more accurate, but that's up for debate).
+    #Doesn't apply the different corrections at the poles, but they're not too different
+    #Will now try to make this work more properly. The strong field behaves differently to this, and we can probably deal with that rather than ignoring it...
+    #Treat regions with strenth of more than 600 Mx/cm^2 differently, as these are 'strong-field'.
+    def scale_pixel(value):
+        strong_value = (mdi_input - 10.2) /1.31
+        weak_value = (mdi_input + 0.18) /1.4
+        prop = np.clip((value - 400) / 200.0, 0.0, 1.0)
 
-def prepare_hmi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
+        return prop*strong_value + (1. - prop)*weak_value
+
+    mdi_input = scale_pixel(mdi_input)
+
+    return mdi_input
+
+def download_hmi_mdi_crot(crot_number):
     r"""
-    Downloads (without email etc.) the HMI data matching the rotation number above
+    Downloads the raw HMI data with Carrington rotation number 'crot_number'.
 
     Parameters
     ----------
@@ -158,50 +183,66 @@ def prepare_hmi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
 
     Returns
     -------
-    map : sunpy.map.Map
+    data : array
+    Array corresponding to the magnetic field strength on the solar surface
+
+    header: sunpy.header object
+    Object containing some metadata about the downloaded data. May not be quite accurate.
+
+    Notes
+    -----
+    If the specified rotation is less than 2098, the data downloaded willl be from MDI. If not, HMI.
+    This information will hopefully be contained within the header so it can be 'corrected' in due course.
+    """
+
+    if crot_number < 1909 or crot_number > 2299:
+        raise Exception("This Carrington rotation does not exist in the MDI/HMI database. Need a rotation in range 2097-2298 (as of July 2025).")
+
+    if crot_number < 2098:
+        mdi_flag = True
+    else:
+        mdi_flag = False
+
+    c = drms.Client()
+    if mdi_flag:
+        seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
+        data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
+        data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
+    else:
+        seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
+        data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
+        #np.savetxt(f'./tests/data/hmi_2210.txt', data)
+
+    return data, header
+
+def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
+    r"""
+    Downloads (without email etc.) the HMI or MDI data matching the rotation number above
+
+    Parameters
+    ----------
+    crot_number : int
+        Carrington rotation number
+
+    Returns
+    -------
+    data : sunpy.map.Map
     A sunpy map object corresponding to the requested rotation number
 
     Notes
     -----
-    Must be in the allowable range of numbers (post-2010 ish). The first acceptable one is 2098.
-    Outputs a list of THREE sunpy map objects -- those for the three crots near the required dates. 
-    Left comes first, then right. So the order is [crot_number, crot_number+1, crot_number-1]
+    Must be in the allowable range of Carrington rotations
+    Outputs a sunpy map object
     """
-
-    if crot_number < 2098 or crot_number > 2299:
-        raise Exception("This Carrington rotation does not exist in the HMI database. Need to specify a rotation in the range 2097-2298 (as of July 2025).")
-
-    #Get fits file locations
-    try:
-        print('Attempting to download data...')
-        c = drms.Client()
-        seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
-        # segr = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % (crot_number-1)), seg='Mr_polfil')
-        # segl = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % (crot_number+1)), seg='Mr_polfil')
-    except:
-        raise Exception(f'Failed to find the data source for Carrington Rotation {crot_number}')
     
+    data, header = download_hmi_mdi_crot(crot_number)
     print('Data downloaded...')
-    
-    try:
-        data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
+    #Add smoothing in here
+    data = sh_smooth(data, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
 
-        #Add smoothing in here
-        data = _sh_smooth(data, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
+    header = carr_cea_wcs_header(None, np.shape(data.T))
+    brm = sunpy.map.Map(data, header)
 
-        header = carr_cea_wcs_header(None, np.shape(data.T))
-        brm = sunpy.map.Map(data, header)
-
-        print('Data successfully downloaded, smoothed, interpolated and balanced.')
-        # data, header = fits.getdata('http://jsoc.stanford.edu' + segl.Mr_polfil[0], header=True)
-        # header = fix_hmi_metadata(header)
-        # brm_l = Map(data, header)
-
-        # data, header = fits.getdata('http://jsoc.stanford.edu' + segr.Mr_polfil[0], header=True)
-        # header = fix_hmi_metadata(header)
-        # brm_r = Map(data, header)
-    except:
-        raise Exception(f'Failed to download the required Carrington rotation {crot_number}, required urls {'http://jsoc.stanford.edu' + seg.Mr_polfil[0]}')
-
+    print('Data successfully downloaded, smoothed, interpolated and balanced.')
 
     return brm

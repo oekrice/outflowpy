@@ -7,7 +7,6 @@ from outflowpy.fieldline import (
     OpenFieldLines,
 )
 
-
 @pytest.mark.parametrize('x, open, pol',
                          [[[1, 2.5], True, 1],
                           [[2.5, 1], True, -1],

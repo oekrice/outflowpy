@@ -23,5 +23,7 @@ def get_gong_map():
                  'adapt40311_03k012_202001010000_i00005600n1.fts.gz',
                  'fd8f3a23059b2118d0097c448df3cc'
                  'bdb5388a0031536dd3a6f61fa0e08a9bb5')
+
 def get_adapt_map():
     return manager.get('adapt_map')
+

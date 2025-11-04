@@ -3,7 +3,10 @@ import pytest
 from astropy.time import Time
 from sunpy.map import Map
 
+import pathlib
 import outflowpy
+
+test_data = pathlib.Path(__file__).parent / 'data'
 
 @pytest.fixture
 def zero_map():
@@ -62,3 +65,20 @@ def adapt_map():
     Automatically download and unzip a sample GONG synoptic map.
     """
     return outflowpy.sample_data.get_adapt_map()
+
+@pytest.fixture
+def hmi_map():
+    """
+    Loads the HMI data for rotation 2210 directly from 'data', where it is saved as a .txt array
+    """
+    data = np.loadtxt(f'{test_data}/hmi_2210.txt')
+    return data
+
+@pytest.fixture
+def mdi_map():
+    """
+    Loads the MDI data for rotation 2000 directly from 'data', where it is saved as a .txt array
+    """
+    data = np.loadtxt(f'{test_data}/mdi_2000.txt')
+    return data
+

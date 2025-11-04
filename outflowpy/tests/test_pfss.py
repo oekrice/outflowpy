@@ -15,7 +15,7 @@ import outflowpy
 import outflowpy.coords
 from outflowpy import tracing
 
-from .example_maps import dipole_map, dipole_result, gong_map, zero_map  # NoQA
+from .example_maps import dipole_map, dipole_result, gong_map, zero_map, hmi_map, mdi_map
 
 R_sun = const.R_sun
 test_data = pathlib.Path(__file__).parent / 'data'
