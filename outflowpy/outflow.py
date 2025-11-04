@@ -48,12 +48,23 @@ def findms(pc, dp):
     evals = -np.ones((num-1))
     dvals[0] = 1; dvals[-1] = 1
     w1,v1 = eigh_tridiagonal(dvals,evals)  #calculate sine eigenvalues
-    ms = []
-    for i in range(0,len(w1)): 
-        ms.append(np.sqrt(abs(w1[i])/dp**2))
+    ms1 = []
+    for i in range(0,len(w1)):
+        ms1.append(np.sqrt(abs(w1[i])/dp**2))
+    dvals[0] = 3; dvals[-1] = 3
+    w2,v2 = eigh_tridiagonal(dvals,evals)  #calculate cosine eigenvalues
+    ms2 = []
+    for i in range(0,len(w2)):
+        ms2.append(np.sqrt(abs(w2[i])/dp**2))
     v = v1*0
-    for i in range(len(ms)):
-        v[:,i] = v1[:,i]/np.sign(v1[0,i])
+    ms = ms1*0
+    for i in range(len(ms1)):  #combine the two sets of eigenvalues as necessary, discarding the ones correspoinding to half-integers (which do not satisfy the boundary condition)
+        if i%2 == 0:
+            ms.append(ms1[i])
+            v[:,i] = v1[:,i]
+        else:
+            ms.append(ms2[i])
+            v[:,i] = v2[:,i]
 
     return np.array(ms), np.array(v)
 

@@ -24,9 +24,6 @@ import numpy as np
 import outflowpy
 import outflowpy.utils
 
-import pfsspy
-import pfsspy.utils
-
 colors = plt.get_cmap("tab10")
 
 nrs = [30]
@@ -36,10 +33,10 @@ nrs = [30]
 
 def find_oflux_profile(outflow_out):
     br_out = outflow_out.br
-    ofluxes = np.zeros(np.shape(br_out)[0])
-    for ri in range(np.shape(br_out)[0]):
+    ofluxes = np.zeros(np.shape(br_out)[2])
+    for ri in range(np.shape(br_out)[2]):
         surface_area = 4*np.pi*np.exp(outflow_in.grid.rg[ri])**2
-        oflux = np.sum(np.abs(br_out)[ri,:,:])*surface_area
+        oflux = np.sum(np.abs(br_out)[:,:,ri])*surface_area
         ofluxes[ri] = oflux
     return ofluxes
 
@@ -57,7 +54,7 @@ for count, nrho in enumerate(nrs):
     s, phi = np.meshgrid(s, phi)
 
     def dipole_Br(r, s):
-        return 2 * s
+        return 2 * s**7
 
     br = dipole_Br(1, s)
 
@@ -67,7 +64,7 @@ for count, nrho in enumerate(nrs):
     header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.shape)
     input_map = sunpy.map.Map((br.T, header))
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 5e-17)
+    outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 0.0)
 
     pfss_out = outflowpy.pfss(outflow_in)
     pfss_profile = find_oflux_profile(pfss_out)

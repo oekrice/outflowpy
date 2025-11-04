@@ -244,5 +244,6 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
     brm = sunpy.map.Map(data, header)
 
     print('Data successfully downloaded, smoothed, interpolated and balanced.')
+    #np.savetxt(f'./tests/data/mdi_2000_smooth.txt', data)
 
     return brm
