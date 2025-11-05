@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "outflowpy"
 version = "0.0.1"
-description = "Outflow field modelling with Fortran"
+description = "Outflow field modelling"
 authors = [{name = "Oliver Rice", email = "oliverricesolar@gmail.com"}]
 license = {text = "MIT"}
 readme = "README.md"

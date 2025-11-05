@@ -76,3 +76,23 @@ def test_prepare_script(crot_number):
         expected_data = np.loadtxt(f'{test_data}/hmi_2210_smooth.txt')
     np.testing.assert_allclose(data_map.data, expected_data, atol=1e-13, rtol=0)
 
+@pytest.mark.parametrize(['obs_time','expected_crot','expected_frac'],
+                         [["2005-04-13T10:00:00",2028,0.7099823230844563],
+                          ["2020-04-13T10:00:00",2229,0.588236841937736],
+                          ])
+def test_crot_numbers(obs_time, expected_crot, expected_frac):
+    #Checks that the correct rotation numbers and fractions are obtained for a given set of times
+    rot, crot_fraction = obtain_data._find_crot_numbers(obs_time)
+    print(rot, crot_fraction)
+    assert rot == expected_crot
+    assert crot_fraction == expected_frac
+
+def test_time_errors():
+    #Makes sure that times outside the reasonable range give expected test_smoothing_errors
+    with pytest.raises(Exception) as excinfo:
+        rot, crot_fraction = obtain_data._find_crot_numbers("2030-04-13T10:00:00")
+    assert 'Failed to find a Carrington rotation corresponding to this observation time' in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        rot, crot_fraction = obtain_data._find_crot_numbers("1900-04-13T10:00:00")
+    assert "Data for this Carrington rotation"  in str(excinfo.value)

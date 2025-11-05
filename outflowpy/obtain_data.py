@@ -16,6 +16,8 @@ from scipy.interpolate import RectBivariateSpline
 import matplotlib.pyplot as plt
 import scipy.linalg as la
 
+from datetime import datetime
+
 def _crudely_downscale(data, downscale_factor = 4):
     """
     Function to speed up the smoothing algorithm by downscaling the input data by a factor of 'downscale_factor' in each dimension
@@ -172,7 +174,7 @@ def _scale_mdi(mdi_input):
 
     return mdi_input
 
-def download_hmi_mdi_crot(crot_number):
+def download_hmi_mdi_crot(crot_number, source = None):
     r"""
     Downloads the raw HMI data with Carrington rotation number 'crot_number'.
 
@@ -180,7 +182,8 @@ def download_hmi_mdi_crot(crot_number):
     ----------
     crot_number : int
         Carrington rotation number
-
+    source (optional): string
+        If specified, ensures that the data comes from either 'MDI' or 'HMI'. This stops a mismatch if the maps are stitched together.
     Returns
     -------
     data : array
@@ -198,10 +201,15 @@ def download_hmi_mdi_crot(crot_number):
     if crot_number < 1909 or crot_number > 2299:
         raise Exception("This Carrington rotation does not exist in the MDI/HMI database. Need a rotation in range 2097-2298 (as of July 2025).")
 
-    if crot_number < 2098:
+    if source == 'MDI':
         mdi_flag = True
-    else:
+    elif source == 'HMI':
         mdi_flag = False
+    else:
+        if crot_number < 2098:
+            mdi_flag = True
+        else:
+            mdi_flag = False
 
     c = drms.Client()
     if mdi_flag:
@@ -247,3 +255,125 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
     #np.savetxt(f'./tests/data/mdi_2000_smooth.txt', data)
 
     return brm
+
+def _find_crot_numbers(obs_time):
+    r"""
+    Outputs the three Carrington rotation numbers around the time of the requested observation.
+    Obtains this data from the online data series, so it should stay up to date
+
+    Parameters
+    ----------
+    obs_time : string
+        String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss.
+
+    Returns
+    -------
+    crot_number : int
+    Integer corresponding to the required Carrington rotation
+    crot_fraction: float
+    Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
+    """
+
+    if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
+        mdi_flag = True
+    else:
+        mdi_flag = False
+
+    c = drms.Client()
+    #Find the correct Carrington Rotation for this date.
+    if mdi_flag:
+        crot_times = c.query(('mdi.synoptic_mr_polfil_96m'), key = ["T_START","T_STOP","CAR_ROT"])
+    else:
+        crot_times = c.query(('hmi.synoptic_mr_polfil_720s'), key = ["T_START","T_STOP","CAR_ROT"])
+    #"T_START" and "T_STOP" are the useful things
+    start_times_raw = list(crot_times.pop("T_START"))
+    for i in range(len(start_times_raw)):
+        if start_times_raw[i][-6:-4] == "60":
+            start_times_raw[i] = start_times_raw[i][:-6] + "00" + start_times_raw[i][-4:]
+    end_times_raw = list(crot_times.pop("T_STOP"))
+    for i in range(len(end_times_raw)):
+        if end_times_raw[i][-6:-4] == "60":
+            end_times_raw[i] = end_times_raw[i][:-6] + "00" + end_times_raw[i][-4:]
+
+    start_times = [datetime.strptime(s.split('_TAI')[0], "%Y.%m.%d_%H:%M:%S") for s in start_times_raw]
+    end_times = [datetime.strptime(s.split('_TAI')[0], "%Y.%m.%d_%H:%M:%S") for s in end_times_raw]
+    crots = crot_times.pop("CAR_ROT")
+    if np.max(end_times) < datetime.fromisoformat(obs_time):
+        raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
+
+    time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
+    rot = int(crots[time_index])   #This is the rotation at this time
+    success = True
+
+
+    crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
+
+    if rot < 1909 or rot > 2299:
+        raise Exception(f"Data for this Carrington rotation ({rot}) does not exist")
+
+    return rot, crot_fraction
+
+def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0):
+    r"""
+    Downloads (without email etc.) the HMI or MDI data corresponding to the specified time
+    Obtains three HMI/MDI magnetograms and stiches them together as appropriate.
+    Then applies smoothing etc. as for the single crot script.
+
+    Parameters
+    ----------
+    obs_time : string
+        String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss
+
+    Returns
+    -------
+    data : sunpy.map.Map
+    A sunpy map object corresponding to the requested time
+
+    Notes
+    -----
+    Must be in the allowable range of Carrington rotations
+    Outputs a sunpy map object
+    """
+
+    #Determine the rotation number and the fraction of time through this rotation
+    crot_number, crot_fraction = _find_crot_numbers(obs_time)
+
+    if crot_number < 2098:
+        source = 'MDI'
+    else:
+        source = 'HMI'
+
+    print(f"Obtaining data from {source}, downloading rotations, {crot_number-1, crot_number, crot_number+1}")
+    #Download the respective sets of data
+    brm  , header   = download_hmi_mdi_crot(crot_number  , source = source)
+    brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source)
+    brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source)
+
+    brm_shift = 0.0*brm
+    nphi = np.shape(brm_shift)[1]
+
+    #Select the correct part of this map based on the fraction through this particular rotation
+    #Shift amounts:
+    #0.5 -> 0
+    #0.0 -> nphi//2
+    #1.0 -> -nphi//2
+    brm3 = np.concatenate((brm_l, brm, brm_r), axis=1)
+
+    ncells_shift = round(nphi*(0.5-crot_fraction))   #This tells it where to position the synoptic map
+    ncells_start = nphi + ncells_shift
+
+    brm_shift[:,:] = brm3[:, ncells_start:ncells_start + nphi]
+
+    del(brm, brm_l, brm_r)
+
+    data = sh_smooth(brm_shift, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
+
+    header = carr_cea_wcs_header(obs_time, np.shape(data.T))
+    brm = sunpy.map.Map(data, header)
+
+    print('Data successfully downloaded, smoothed, interpolated and balanced.')
+
+    return brm
+
+
+
