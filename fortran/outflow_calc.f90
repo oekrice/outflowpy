@@ -96,7 +96,7 @@ module compute_outflow
             !hc(:,m,l) = hc(:,m,l)/((hc(0,m,l) - hc(-1,m,l))/dr + (1-0.5*(vc(-1) + vc(0))*dexp(r(0)))*hc(-1,m,l))  ! version 2
             !hc(:,m,l) = hc(:,m,l)/((hc(0,m,l) - hc(-1,m,l))/dr + (1-vc(-1)*dexp(rcx(-1)))*hc(-1,m,l))  ! version 3. THIS APPEARS TO BE THE MOST REALISTIC FOR SOME REASON. ANTHONY SAID UPWINDING?
 
-            grad = (hc(0,m,l)*dexp(rcx(0)) - hc(-1,m,l)*dexp(rcx(-1)))/dr - //
+            grad = (hc(0,m,l)*dexp(rcx(0)) - hc(-1,m,l)*dexp(rcx(-1)))/dr - &
             0.5_rk*(vc(-1)*dexp(rcx(-1))*hc(-1,m,l) + vc(0)*dexp(rcx(0))*hc(0,m,l))
 
             !Allowance here for difference in the position of hc and rc measurement
