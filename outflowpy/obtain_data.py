@@ -221,6 +221,8 @@ def download_hmi_mdi_crot(crot_number, source = None):
         data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
         #np.savetxt(f'./tests/data/hmi_2210.txt', data)
 
+    data = np.nan_to_num(data)
+
     return data, header
 
 def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):

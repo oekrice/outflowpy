@@ -106,7 +106,6 @@ def test_outflow_fields(test_fname, nrho, rss, mf_constant, corona_temp):
     fortran_profile = find_oflux_profile(outflow_in, fortran_out)
 
     assert (fortran_profile[-1] > 0.0 and fortran_profile[-1] < fortran_profile[0])
-#test_outflow_fields('dipole_smooth.txt',40,2.5,5e-17,2e6)
 
 
 

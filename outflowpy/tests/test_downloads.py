@@ -30,7 +30,8 @@ def test_nonexistent_download():
     #Tests to check that a reasonable exception is rasied if a Carrington rotation is specified outside the allowed range
     with pytest.raises(Exception) as excinfo:
         data, header = obtain_data.download_hmi_mdi_crot(1000)
-
+    with pytest.raises(Exception) as excinfo:
+        data, header = obtain_data.download_hmi_mdi_crot(3000)
     assert "This Carrington rotation does not exist" in str(excinfo.value)
 
 @pytest.mark.parametrize(['smooth','ns','nphi'],
@@ -83,7 +84,6 @@ def test_prepare_script(crot_number):
 def test_crot_numbers(obs_time, expected_crot, expected_frac):
     #Checks that the correct rotation numbers and fractions are obtained for a given set of times
     rot, crot_fraction = obtain_data._find_crot_numbers(obs_time)
-    print(rot, crot_fraction)
     assert rot == expected_crot
     assert crot_fraction == expected_frac
 
@@ -96,3 +96,5 @@ def test_time_errors():
     with pytest.raises(Exception) as excinfo:
         rot, crot_fraction = obtain_data._find_crot_numbers("1900-04-13T10:00:00")
     assert "Data for this Carrington rotation"  in str(excinfo.value)
+
+
