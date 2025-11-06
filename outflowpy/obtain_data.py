@@ -8,6 +8,7 @@ import drms
 from astropy.io import fits
 import numpy as np
 import sunpy.map
+import time
 
 import outflowpy
 from outflowpy.utils import carr_cea_wcs_header
