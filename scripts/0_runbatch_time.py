@@ -167,14 +167,15 @@ class LockedLog:
         self._log.close()
         self._log = None
 
-#Set the thing running. Can specify mf and corona temp here if desired
+#Set the thing running. Can specify mf, corona temp and the time cadence here if desired.
 if len(sys.argv) > 1:                                                                                                               
     batch_id = int(sys.argv[1])
 else:                                                                              
-    batch_id = random.randint(0,10**8-1)
+    raise Exception('Specify batch number.')
 
-mf_constants = [0.0,5e-17]
+mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
+corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
-run_batch(batch_id, time_cadence = 365, mf_constant = mf_constants[batch_id])
+run_batch(batch_id, time_cadence = 30, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
 
 

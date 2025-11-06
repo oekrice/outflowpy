@@ -211,15 +211,22 @@ def download_hmi_mdi_crot(crot_number, source = None):
         else:
             mdi_flag = False
 
-    c = drms.Client()
-    if mdi_flag:
-        seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
-        data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
-        data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
-    else:
-        seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
-        data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
-        #np.savetxt(f'./tests/data/hmi_2210.txt', data)
+    success = False
+    while not success:
+        try:
+            c = drms.Client()
+            if mdi_flag:
+                seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
+                data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
+                data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
+            else:
+                seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
+                data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
+                #np.savetxt(f'./tests/data/hmi_2210.txt', data)
+            success = True
+        except:
+            print("Failed to find the Carrington Rotation database. This is likely due to an internet error caused by multiple threads, and so will try again shortly.")
+            time.sleep(10.0)
 
     data = np.nan_to_num(data)
 
