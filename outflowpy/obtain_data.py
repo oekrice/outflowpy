@@ -288,12 +288,21 @@ def _find_crot_numbers(obs_time):
     else:
         mdi_flag = False
 
-    c = drms.Client()
-    #Find the correct Carrington Rotation for this date.
-    if mdi_flag:
-        crot_times = c.query(('mdi.synoptic_mr_polfil_96m'), key = ["T_START","T_STOP","CAR_ROT"])
-    else:
-        crot_times = c.query(('hmi.synoptic_mr_polfil_720s'), key = ["T_START","T_STOP","CAR_ROT"])
+    success = False
+    while not success:
+        try:
+            c = drms.Client()
+            #Find the correct Carrington Rotation for this date.
+            if mdi_flag:
+                crot_times = c.query(('mdi.synoptic_mr_polfil_96m'), key = ["T_START","T_STOP","CAR_ROT"])
+            else:
+                crot_times = c.query(('hmi.synoptic_mr_polfil_720s'), key = ["T_START","T_STOP","CAR_ROT"])
+
+            success = True
+        except:
+            print("Failed to find the Carrington Rotation database. This is likely due to an internet error caused by multiple threads, and so will try again shortly.")
+            time.sleep(10.0)
+
     #"T_START" and "T_STOP" are the useful things
     start_times_raw = list(crot_times.pop("T_START"))
     for i in range(len(start_times_raw)):
@@ -312,8 +321,6 @@ def _find_crot_numbers(obs_time):
 
     time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
     rot = int(crots[time_index])   #This is the rotation at this time
-    success = True
-
 
     crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
 
