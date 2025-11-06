@@ -22,7 +22,7 @@ import subprocess
 from scipy.interpolate import interp1d
 import seaborn as sns
 
-time_cadence = 365
+time_cadence = 30
 
 class LockedDataset:
     """
@@ -178,8 +178,8 @@ oflux_ref = frost_interp(time_interps)
 colors = plt.get_cmap('tab10').colors
 colors = sns.color_palette('dark')
 
-batch_ids = np.arange(2)
-labels = ['PFSS', 'Outflow']
+batch_ids = np.arange(5)
+labels = ['PFSS', 'Outflow','a','b','c']
 
 #Put in a thing to do some interpolation to get a value which should be bang on
 interp_xs = []; interp_ys = []
@@ -255,7 +255,7 @@ plt.xlabel('Year')
 plt.ylabel('Open Flux at 1AU (Mx)')
 plt.ylim(ymin = 0.0, ymax = 0.2e24)
 plt.savefig('./plots/0_openflux_time_fric.png')
-plt.close()
+plt.show()
 
 
 
