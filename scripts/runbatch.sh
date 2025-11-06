@@ -16,9 +16,9 @@
 # Each separate task can be identified based on the SLURM_ARRAY_TASK_ID
 # environment variable:
  
-echo "I am task number $SLURM_ARRAY_TASK_ID"
+echo "I am task number $SLURM_ARRAY_TASK_ID running batch number $1"
  
 # Run program:
 module load python
 source ../.venv/bin/activate
-python 0_runbatch_time.py 4
+python 0_runbatch_time.py $1
