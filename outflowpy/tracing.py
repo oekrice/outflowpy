@@ -1,5 +1,6 @@
 import abc
 import warnings
+import sys
 
 import astropy.constants as const
 import astropy.coordinates as astrocoords
@@ -218,3 +219,85 @@ class PythonTracer(Tracer):
 
             flines.append(fline)
         return fieldline.FieldLines(flines)
+
+class FastTracer(Tracer):
+    r"""
+    Alas the name FortranTracer has already been used, and it's probably worth keeping it as such for backwards compatibility.
+    This 'FastTracer' will use my/Anthony's Fortran code, which should be in the correct geometry (I'm not sure about the existing FortranTracer in this regard).
+
+    Parameters
+    ----------
+    max_steps: str, int
+        Maximum number of steps each streamline can take before stopping.
+        This controls the total amount of memory allocated for all the
+        streamlines.
+
+        If ``'auto'`` (the default) this is set to :math:`4n_{r} / ds`, where
+        :math:`n_{r}` is the number of radial grid points and :math:`ds` is
+        the specified ``step_size``.
+
+    step_size : float
+        Step size as a fraction of numerical grid cell size at the equator.
+        Must be less than the number of radial coordinate cells.
+    """
+    def __init__(self, max_steps='auto', step_size=1):
+
+        self.max_steps = max_steps
+        self.step_size = step_size
+        self.max_steps = max_steps
+        max_steps = 1 if max_steps == 'auto' else max_steps
+
+    def trace(self, seeds, output):
+        self.max_steps = int(4 * output.grid.nr / self.step_size)
+
+        self.validate_seeds(seeds)
+        x, y, z = self.coords_to_xyz(seeds, output)
+        r, lat, phi = astrocoords.cartesian_to_spherical(x, y, z)
+
+        # Force 360deg wrapping
+        phi = astrocoords.Longitude(phi).to_value(u.rad)
+        s = np.sin(lat).to_value(u.dimensionless_unscaled)
+        rho = np.log(r)
+        x = r*np.sin(phi)*np.cos(lat)
+        y = r*np.cos(phi)*np.cos(lat)
+        z = r*np.sin(lat)
+        #For the fortran code it is probably preferable to input as x,y,z coordinates rather than on the grid, so I'll convert them to that.
+        seeds = np.atleast_2d(np.stack((x,y,z), axis=-1))
+
+        # Get a grid
+
+        #THIS NEEDS TO BE IN MY FORMAT.
+        #vector_grid = self.vector_grid(output)
+
+        # Do the tracing
+        #
+        # Normalise step size to the radial cell size, so step size is a
+        # fraction of the radial cell size.
+        self.ds = self.step_size * output.grid._grid_spacing[2]
+        print('Attempting Fortran...')
+        from .fast_tracer import fltrace
+        #r, s, p, br, bs, bp
+        fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2))
+
+        print('Fortran complete?')
+        sys.exit()
+        self.tracer.trace(seeds.T, vector_grid)   #This is the actual tracing step. Put an input in and return a list of coordinates. Need to have an option not to output the whole lines as these will be theoretically enormous
+        xs = self.tracer.xs
+
+        # Filter out of bounds points out
+        rho_ss = np.log(output.grid.rss)
+        xs = [x[(x[:, 2] <= rho_ss) & (x[:, 2] >= 0) &
+                (np.abs(x[:, 1]) < 1), :]
+              for x in xs]
+
+        rots = self.tracer.ROT
+        if np.any(rots == 1):
+            warnings.warn(
+                'At least one field line ran out of steps during tracing.\n'
+                'You should probably increase max_steps '
+                f'(currently set to {self.max_steps}) and try again.')
+
+        xs = [np.stack(outflowpy.coords.strum2cart(x[:, 2], x[:, 1], x[:, 0]), axis=-1) for x in xs]
+        flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in xs]
+        return fieldline.FieldLines(flines)
+

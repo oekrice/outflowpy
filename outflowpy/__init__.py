@@ -23,7 +23,7 @@ import sys, types
 sys.modules['sunpy.tests'] = types.ModuleType('sunpy.tests')
 sys.modules['sunpy.tests.self_test'] = types.ModuleType('sunpy.tests.self_test')
 
-__all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc']
+__all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc', 'fast_tracer']
 
 
 from ._version import get_versions

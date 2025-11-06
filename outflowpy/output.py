@@ -41,9 +41,6 @@ class Output:
         self.br = br
         self.bs = bs
         self.bp = bp
-        # self.br = np.swapaxes(br, 0, 2)
-        # self.bs = np.swapaxes(bs, 0, 2)
-        # self.bp = np.swapaxes(bp, 0, 2)
 
         # Cache attributes
         self._common_b_cache = None
@@ -270,10 +267,50 @@ class Output:
         for i in range(self.grid.nphi + 1):
             bp[i, :, :] = bp[i, :, :] / Sbp
 
+        self.brx = br*self.bunit
+        self.bsx = bs*self.bunit
+        self.bpx = bp*self.bunit
+
         # Slice to remove ghost cells
         return (br[1:-1, 1:-1, :] * self.bunit,
                 -bs[1:-1, :, 1:-1] * self.bunit,
                 bp[:, 1:-1, 1:-1] * self.bunit)
+
+    @property
+    def bcx(self):
+        """
+        B on the centres of the cell faces PLUS ghost points.
+
+        Returns
+        -------
+        br : astropy.units.Quantity
+            A ``nphi+2, ns+2, nrho + 1`` shaped Quantity.
+        btheta : astropy.units.Quantity
+            A ``nphi+2, ns + 1, nrho+2`` shaped Quantity.
+        bphi : astropy.units.Quantity
+            A ``nphi + 1, ns+2, nrho+2`` shaped Quantity.
+
+        Notes
+        -----
+        The three components are not co-located at the same locations.
+        Component ``n`` is located on cell faces of constant ``n``, e.g.
+        the ``r`` component is located on the cell faces at constant ``r``
+        values.
+        """
+        br, bs, bp, Sbr, Sbs, Sbp = self._common_b()
+        # Remove area factors:
+        br = br.copy()
+        bs = bs.copy()
+        bp = bp.copy()
+        for i in range(self.grid.nphi + 2):
+            br[i, :, :] = br[i, :, :] / Sbr
+            bs[i, :, :] = bs[i, :, :] / Sbs
+        for i in range(self.grid.nphi + 1):
+            bp[i, :, :] = bp[i, :, :] / Sbp
+
+        return (br * self.bunit,
+                -bs * self.bunit,
+                bp * self.bunit)
 
     @property
     @functools.lru_cache(maxsize=1)

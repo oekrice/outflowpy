@@ -23,6 +23,8 @@ from scipy.interpolate import interp1d
 import seaborn as sns
 
 time_cadence = 30
+mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
+corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
 class LockedDataset:
     """
@@ -160,102 +162,116 @@ if use_hamilton_data:
     else:
         os.system("scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflow_basics/batch_logs/*.txt ../batch_logs")
 
-#Also let's look at correlations or something for each of them. Do interpolations of frost data, respective to each one. Within a given time bound, at least.
-#Then use the most correlated to determine the optimum smoothing, then hopefully can scale using more/less MF stuff. We'll see.
+def make_plots(batch_set, copy_data = False):
 
-time_interps = tflux[tflux > 2000]  #These are the time points to attempt interpolation from, as the Frost data goes back longer. I think this is fine for now.
+    if copy_data:
+        os.system("scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/*_*.txt ./batch_logs")
 
-#Do frost 'interpolation' here
-frost_xs = tflux
-frost_ys = oflux
+    #Also let's look at correlations or something for each of them. Do interpolations of frost data, respective to each one. Within a given time bound, at least.
+    #Then use the most correlated to determine the optimum smoothing, then hopefully can scale using more/less MF stuff. We'll see.
 
-frost_interp = interp1d(frost_xs, frost_ys, kind = 'linear')
+    time_interps = tflux[tflux > 2000]  #These are the time points to attempt interpolation from, as the Frost data goes back longer. I think this is fine for now.
 
-oflux_ref = frost_interp(time_interps)
+    #Do frost 'interpolation' here
+    frost_xs = tflux
+    frost_ys = oflux
 
-#plt.plot(time_interps, oflux_ref, c = 'black')
+    frost_interp = interp1d(frost_xs, frost_ys, kind = 'linear')
 
-colors = plt.get_cmap('tab10').colors
-colors = sns.color_palette('dark')
+    oflux_ref = frost_interp(time_interps)
 
-batch_ids = np.arange(5)
-labels = ['PFSS', 'Outflow','a','b','c']
+    #plt.plot(time_interps, oflux_ref, c = 'black')
 
-#Put in a thing to do some interpolation to get a value which should be bang on
-interp_xs = []; interp_ys = []
+    colors = plt.get_cmap('tab10').colors
+    colors = sns.color_palette('dark')
 
+    batch_ids = np.arange(batch_set*10, batch_set*10 + 5)
+    labels = mf_constants
 
-def determine_error_bounds(dates, ofluxes, time_cadence = 27, error_bound = 0.9):
-    #Function to take the messy daily data and transform into a nice smooth function with error bounds taking account of the wiggles.
-    #Time cadence is the regularity and range of the data points being tested, and error bound is the percentile range with which the min and max values will be calculated
-    print(dates, ofluxes)
-    tmin = np.min(dates); tmax = np.max(dates)
-    regular_dates = np.linspace(tmin, tmax, int((tmax-tmin)/(time_cadence/365.25)) + 1)
-    oflux_means = []; oflux_mins = []; oflux_maxs = []; regular_dates_thin = []
-    for date_test in regular_dates:
-        local_min = date_test - 0.5*time_cadence/365.25
-        local_max = date_test + 0.5*time_cadence/365.25
-        date_mask = (dates >= local_min) & (dates <= local_max)
-        local_ofluxes = ofluxes[date_mask]
-        if len(local_ofluxes) > 0:
-            oflux_means.append(np.mean(local_ofluxes))
-            oflux_mins.append(np.percentile(local_ofluxes, 100*(1.0 - error_bound)))
-            oflux_maxs.append(np.percentile(local_ofluxes, 100*(error_bound)))
-            regular_dates_thin.append(date_test)
-
-    return regular_dates_thin, oflux_means, oflux_mins, oflux_maxs
-
-fig = plt.figure(figsize = (10,5))
-
-overallcount = 0
-for plot_num, batch_id in enumerate(batch_ids):
-#Read in the data
-    with LockedLog("./batch_logs/0_%d.txt" % batch_id, mode = "r+") as f:
-        #This does now appear to be thread-safe, so we can be a bit smarter now and it'll run even faster and not get particularly baffled.
-        #Look at the runs which satisfy the requirements and pick a random one from them.
-        ofluxes = []; dates = []
-        start = datetime.fromisoformat("1999-01-01T00:00:00")
-        for run, info in enumerate(f, start=0):
-            date = (start + timedelta(days=time_cadence*run))
-            try:
-                parts = info.strip().split('\t')
-                openflux = float(parts[3].strip('{}'))
-            except:
-                print("This is corrupted, try again in a second or two rather than the longer time?")
-                raise Exception('Log file is corrupted. Bugger.')
-
-            if toYearFraction(date) < 1999.25:
-                continue
-            #Reasons to run: Either no start time, or no end time but start time is old
-            if openflux > 5e21:
-                ofluxes.append(openflux)
-                dates.append(toYearFraction(date))
-                overallcount += 1
-
-        ofluxes = np.array(ofluxes); dates = np.array(dates)
-        dates_mean, oflux_mean, oflux_min, oflux_max = determine_error_bounds(dates, ofluxes, 27)
-
-    plt.plot(dates, ofluxes, color = colors[plot_num], linewidth = 0.1, linestyle = 'dashed')
-    plt.plot(dates_mean, oflux_mean, color = colors[plot_num], label = labels[plot_num%10], linewidth = 1.0)
-    plt.plot(dates_mean, oflux_min, color = colors[plot_num], linewidth = 0.5, linestyle = 'dashed')
-    plt.plot(dates_mean, oflux_max, color = colors[plot_num], linewidth = 0.5, linestyle = 'dashed')
+    #Put in a thing to do some interpolation to get a value which should be bang on
+    interp_xs = []; interp_ys = []
 
 
-print('Overall percentage complete: %.1f' % (100*(overallcount/(3*27*365/time_cadence))))
+    def determine_error_bounds(dates, ofluxes, time_cadence = 27, error_bound = 0.9):
+        #Function to take the messy daily data and transform into a nice smooth function with error bounds taking account of the wiggles.
+        #Time cadence is the regularity and range of the data points being tested, and error bound is the percentile range with which the min and max values will be calculated
+        tmin = np.min(dates); tmax = np.max(dates)
+        regular_dates = np.linspace(tmin, tmax, int((tmax-tmin)/(time_cadence/365.25)) + 1)
+        oflux_means = []; oflux_mins = []; oflux_maxs = []; regular_dates_thin = []
+        for date_test in regular_dates:
+            local_min = date_test - 0.5*time_cadence/365.25
+            local_max = date_test + 0.5*time_cadence/365.25
+            date_mask = (dates >= local_min) & (dates <= local_max)
+            local_ofluxes = ofluxes[date_mask]
+            if len(local_ofluxes) > 0:
+                oflux_means.append(np.mean(local_ofluxes))
+                oflux_mins.append(np.percentile(local_ofluxes, 100*(1.0 - error_bound)))
+                oflux_maxs.append(np.percentile(local_ofluxes, 100*(error_bound)))
+                regular_dates_thin.append(date_test)
 
-#Plot open flux measurements
-plt.plot(tflux, oflux, c = 'black', linewidth = 1.0)
-plt.plot(tflux, ofluxmin, c = 'black', linewidth = 0.25)
-plt.plot(tflux, ofluxmax, c = 'black', linewidth = 0.25)
+        return regular_dates_thin, oflux_means, oflux_mins, oflux_maxs
 
-#Plot outflow field predictions
+    fig = plt.figure(figsize = (10,5))
 
-plt.legend()
-plt.xlabel('Year')
-plt.ylabel('Open Flux at 1AU (Mx)')
-plt.ylim(ymin = 0.0, ymax = 0.2e24)
-plt.savefig('./plots/0_openflux_time_fric.png')
-plt.show()
+    overallcount = 0; potentialcount = 0
+    for plot_num, batch_id in enumerate(batch_ids):
+    #Read in the data
+        try:
+            with LockedLog("./batch_logs/0_%d.txt" % batch_id, mode = "r+") as f:
+                #This does now appear to be thread-safe, so we can be a bit smarter now and it'll run even faster and not get particularly baffled.
+                #Look at the runs which satisfy the requirements and pick a random one from them.
+                ofluxes = []; dates = []
+                start = datetime.fromisoformat("1999-01-01T00:00:00")
+                for run, info in enumerate(f, start=0):
+                    date = (start + timedelta(days=time_cadence*run))
+                    try:
+                        parts = info.strip().split('\t')
+                        openflux = float(parts[3].strip('{}'))
+                    except:
+                        print("This is corrupted, try again in a second or two rather than the longer time?")
+                        raise Exception('Log file is corrupted. Bugger.')
+
+                    if toYearFraction(date) < 1999.25:
+                        continue
+                    #Reasons to run: Either no start time, or no end time but start time is old
+                    if openflux > 5e21:
+                        ofluxes.append(openflux)
+                        dates.append(toYearFraction(date))
+                        overallcount += 1
+                    potentialcount += 1
+                ofluxes = np.array(ofluxes); dates = np.array(dates)
+                dates_mean, oflux_mean, oflux_min, oflux_max = determine_error_bounds(dates, ofluxes, 27)
+
+            plt.plot(dates, ofluxes, color = colors[plot_num], linewidth = 0.1, linestyle = 'dashed')
+            plt.plot(dates_mean, oflux_mean, color = colors[plot_num], label = f"mf = {labels[plot_num%10]}", linewidth = 1.0)
+            plt.plot(dates_mean, oflux_min, color = colors[plot_num], linewidth = 0.5, linestyle = 'dashed')
+            plt.plot(dates_mean, oflux_max, color = colors[plot_num], linewidth = 0.5, linestyle = 'dashed')
+        except:
+            pass
+
+
+    print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
+
+    #Plot open flux measurements
+    plt.plot(tflux, oflux, c = 'black', linewidth = 1.0)
+    plt.plot(tflux, ofluxmin, c = 'black', linewidth = 0.25)
+    plt.plot(tflux, ofluxmax, c = 'black', linewidth = 0.25)
+
+    #Plot outflow field predictions
+
+    plt.legend()
+    plt.xlabel('Year')
+    plt.ylabel('Open Flux at 1AU (Mx)')
+    plt.ylim(ymin = 0.0, ymax = 0.2e24)
+    plt.title(f'Corona temperature = {corona_temps[batch_set]/1000000} MK')
+    plt.savefig('./plots/0_openflux_time_fric_%d.png' % batch_set)
+    plt.close()
+
+
+for batch_set in range(len(corona_temps)):
+    make_plots(batch_set, copy_data = True)
+
+
 
 
 
