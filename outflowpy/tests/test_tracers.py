@@ -11,8 +11,9 @@ from .example_maps import dipole_map, dipole_result  # NoQA
 
 
 @pytest.fixture(params=[tracing.PythonTracer(),
-                        tracing.FortranTracer()],
-                ids=['python', 'fortran'])
+                        tracing.FortranTracer(),
+                        tracing.FastTracer()],
+                ids=['python', 'fortran', 'fast'])
 def flines(dipole_result, request):
     tracer = request.param
     input, out = dipole_result
@@ -20,7 +21,6 @@ def flines(dipole_result, request):
 
     seed = coord.SkyCoord(2*u.deg, -45*u.deg, 1.01*const.R_sun, frame=out_frame)
     flines = tracer.trace(seed, out)
-    print(flines[0].coords)
     return flines
 
 
@@ -57,6 +57,18 @@ def test_fline_step_size(dipole_result):
     assert out.grid.nr == 10
     # With a step size of 0.2, this should be ~50
     assert len(flines[0]) == 52
+
+    tracer = tracing.FastTracer(step_size=0.5)
+    flines = tracer.trace(seed, out)
+    assert out.grid.nr == 10
+    # With a step size of 0.5, this should be ~35
+    assert len(flines[0]) == 35
+
+    tracer = tracing.FastTracer(step_size=0.2)
+    flines = tracer.trace(seed, out)
+    assert out.grid.nr == 10
+    # With a step size of 0.2, this should be ~50
+    assert len(flines[0]) == 86
 
 
 def test_rot_warning(dipole_result):

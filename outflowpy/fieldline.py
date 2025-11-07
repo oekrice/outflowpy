@@ -129,6 +129,9 @@ class FieldLine:
         self._output = output
         # Field line is open if one end is on the solar surface and one on
         # the source surface
+
+        #My Fortran tracer doesn't necessary end up with the field lines in the direction that the python tracer does, so need to add an extra checker here? Or just get it right in the fortran. Yes.
+
         atol = 0.1
         if len(self._r) <= 1:
             self._is_open = False

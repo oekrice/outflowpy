@@ -17,12 +17,26 @@ class F2PyBuild(build_py):
             "-m", "outflow_calc"
         ])
 
+        subprocess.check_call([
+            "python", "-m", "numpy.f2py",
+            "-c", "fortran/fast_tracer.f90",
+            "-m", "fast_tracer"
+        ])
+
         for file in Path(".").glob("outflow_calc*.so"):
             print('File found and moving', build_dir / file.name)
             file.rename(build_dir / file.name)
         for file in Path(".").glob("outflow_calc*.pyd"):
             file.rename(build_dir / file.name)
         for file in Path(".").glob("outflow_calc*.c"):
+            file.rename(build_dir / file.name)
+
+        for file in Path(".").glob("fast_tracer*.so"):
+            print('File found and moving', build_dir / file.name)
+            file.rename(build_dir / file.name)
+        for file in Path(".").glob("fast_tracer*.pyd"):
+            file.rename(build_dir / file.name)
+        for file in Path(".").glob("fast_tracer*.c"):
             file.rename(build_dir / file.name)
 
         super().run()

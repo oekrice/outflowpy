@@ -283,6 +283,7 @@ def _find_crot_numbers(obs_time):
     crot_fraction: float
     Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
     """
+    print('Finding crots')
 
     if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
         mdi_flag = True
@@ -325,6 +326,7 @@ def _find_crot_numbers(obs_time):
 
     crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
 
+    print('Crots found')
     if rot < 1909 or rot > 2299:
         raise Exception(f"Data for this Carrington rotation ({rot}) does not exist")
 
