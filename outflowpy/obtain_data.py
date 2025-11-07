@@ -283,7 +283,6 @@ def _find_crot_numbers(obs_time):
     crot_fraction: float
     Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
     """
-    print('Finding crots')
 
     if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
         mdi_flag = True

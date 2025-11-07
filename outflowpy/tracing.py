@@ -274,7 +274,6 @@ class FastTracer(Tracer):
         # Normalise step size to the radial cell size, so step size is a
         # fraction of the radial cell size.
         self.ds = self.step_size * output.grid._grid_spacing[2]
-        print('Attempting Fortran...')
         from .fast_tracer import fltrace
         #r, s, p, br, bs, bp
         save_flag = True
@@ -297,7 +296,6 @@ class FastTracer(Tracer):
                     x_filter.append(pt)
             if len(x_filter) > 0:
                 x_filtered.append(np.array(x_filter))
-
 
         flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in x_filtered]
         return fieldline.FieldLines(flines)
