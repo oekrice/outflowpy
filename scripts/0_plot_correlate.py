@@ -22,7 +22,7 @@ import subprocess
 from scipy.interpolate import interp1d
 import seaborn as sns
 
-time_cadence = 30
+time_cadence = 1
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
@@ -213,7 +213,7 @@ def make_plots(batch_set, copy_data = False):
 
     fig = plt.figure(figsize = (10,5))
 
-    overallcount = 0
+    overallcount = 0; potentialcount = 0
     all_ofluxes = []
     for plot_num, batch_id in enumerate(batch_ids):
     #Read in the data
@@ -239,6 +239,8 @@ def make_plots(batch_set, copy_data = False):
                     dates.append(toYearFraction(date))
                     overallcount += 1
 
+                potentialcount += 1
+
             if len(ofluxes) > 5:
                 ofluxes = np.array(ofluxes); dates = np.array(dates)
                 interp_fn = interp1d(dates, ofluxes, kind = 'linear', fill_value ="extrapolate")
@@ -255,7 +257,7 @@ def make_plots(batch_set, copy_data = False):
 
 
 
-    print('Overall percentage complete: %.1f' % (100*(overallcount/(3*27*365/time_cadence))))
+    print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
 
     #Plot outflow field predictions
 

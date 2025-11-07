@@ -248,7 +248,7 @@ class FastTracer(Tracer):
         max_steps = 1 if max_steps == 'auto' else max_steps
 
     def trace(self, seeds, output):
-        self.max_steps = int(4 * output.grid.nr / self.step_size)
+        self.max_steps = int(20 * output.grid.nr / self.step_size)
 
         self.validate_seeds(seeds)
         x, y, z = self.coords_to_xyz(seeds, output)
@@ -258,8 +258,8 @@ class FastTracer(Tracer):
         phi = astrocoords.Longitude(phi).to_value(u.rad)
         s = np.sin(lat).to_value(u.dimensionless_unscaled)
         rho = np.log(r)
-        x = r*np.sin(phi)*np.cos(lat)
-        y = r*np.cos(phi)*np.cos(lat)
+        x = r*np.cos(phi)*np.cos(lat)
+        y = r*np.sin(phi)*np.cos(lat)
         z = r*np.sin(lat)
         #For the fortran code it is probably preferable to input as x,y,z coordinates rather than on the grid, so I'll convert them to that.
         seeds = np.atleast_2d(np.stack((x,y,z), axis=-1))
@@ -277,27 +277,28 @@ class FastTracer(Tracer):
         print('Attempting Fortran...')
         from .fast_tracer import fltrace
         #r, s, p, br, bs, bp
-        fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2))
+        save_flag = True
+        if save_flag:
+            nlines_out = np.shape(seeds)[0]
+        else:
+            nlines_out = 1
+        xouts = fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(-output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2), self.ds, self.max_steps, save_flag, nlines_out)
 
-        print('Fortran complete?')
-        sys.exit()
-        self.tracer.trace(seeds.T, vector_grid)   #This is the actual tracing step. Put an input in and return a list of coordinates. Need to have an option not to output the whole lines as these will be theoretically enormous
-        xs = self.tracer.xs
+        xs = xouts
 
-        # Filter out of bounds points out
-        rho_ss = np.log(output.grid.rss)
-        xs = [x[(x[:, 2] <= rho_ss) & (x[:, 2] >= 0) &
-                (np.abs(x[:, 1]) < 1), :]
-              for x in xs]
+        x_filtered = []
+        rmin = np.exp(output.grid.rg[0])
+        rmax = np.exp(output.grid.rg[-1])
 
-        rots = self.tracer.ROT
-        if np.any(rots == 1):
-            warnings.warn(
-                'At least one field line ran out of steps during tracing.\n'
-                'You should probably increase max_steps '
-                f'(currently set to {self.max_steps}) and try again.')
+        for x in xs:
+            x_filter = []
+            for pt in x:
+                if np.sum(pt**2) >= rmin**2 and np.sum(pt**2) <= rmax**2:
+                    x_filter.append(pt)
+            if len(x_filter) > 0:
+                x_filtered.append(np.array(x_filter))
 
-        xs = [np.stack(outflowpy.coords.strum2cart(x[:, 2], x[:, 1], x[:, 0]), axis=-1) for x in xs]
-        flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in xs]
+
+        flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in x_filtered]
         return fieldline.FieldLines(flines)
 
