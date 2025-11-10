@@ -122,7 +122,8 @@ module fltrace
                     nxt = nxt + dirn
                     cntr = cntr + 1
                     if (cntr .ge. nmax/2) then
-                        print*,'This field line is very long. Aborting... If this keeps happening, something more sinister is probably afoot.'
+                        print*,'This field line is very long. Aborting...'
+                        print*, 'If this keeps happening, something more sinister is probably afoot.'
                         xl(i_update,:,:) = -99.0_rk
                         exit
                     end if
@@ -164,7 +165,8 @@ module fltrace
                     nxt = nxt + dirn
                     cntr = cntr + 1
                     if (cntr .ge. nmax/2) then
-                        print*,'This field line is very long. Aborting... If this keeps happening, something more sinister is probably afoot.'
+                        print*,'This field line is very long. Aborting...'
+                        print*, 'If this keeps happening, something more sinister is probably afoot.'
                         xl(i_update,:,:) = -99.0_rk
                         exit
                     end if

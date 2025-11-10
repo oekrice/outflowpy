@@ -40,4 +40,5 @@ Monday 10th November:
 
 I'm not sure what happened on Friday, but I think it was mainly getting the tracer integrated and working nicely. Alas I got banned from downloading data, but that appears to have subsided now. I'll try again but a little less forcefully...
 
+To get things to compile on Windows, it looks like using python 3.12 might be a good bet. Tbd whether this actually works though.
 
