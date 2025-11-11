@@ -9,6 +9,7 @@ from astropy.io import fits
 import numpy as np
 import sunpy.map
 import time
+import os
 
 import outflowpy
 from outflowpy.utils import carr_cea_wcs_header
@@ -16,6 +17,7 @@ from scipy.interpolate import RectBivariateSpline
 
 import matplotlib.pyplot as plt
 import scipy.linalg as la
+import pathlib
 
 from datetime import datetime
 
@@ -266,29 +268,50 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
 
     return brm
 
-def _find_crot_numbers(obs_time):
+def _load_cached_crot_data(source):
     r"""
-    Outputs the three Carrington rotation numbers around the time of the requested observation.
-    Obtains this data from the online data series, so it should stay up to date
+    Checks whether the Carrington Rotation data exists and if so, loads it in.
+    Should be activated whenever 'use_cached' is true, to avoid multiple calls to the JSOC API
 
     Parameters
     ----------
-    obs_time : string
-        String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss.
-
+    source : string
+        Either 'HMI' or 'MDI', which is to be determined using the input time
     Returns
     -------
-    crot_number : int
-    Integer corresponding to the required Carrington rotation
-    crot_fraction: float
-    Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
+    start_times: array
+        Start times of the requested series
+    end_times: array
+        End times of the requested series
     """
+    cache_dir = pathlib.Path(__file__).parent / 'download_cache'
+    start_times = np.loadtxt(f'{cache_dir}/{source}_start_times.txt')
+    end_times = np.loadtxt(f'{cache_dir}/{source}_start_times.txt')
+    crots = np.loadtxt(f'{cache_dir}/{source}_crots.txt')
 
-    if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
-        mdi_flag = True
+    if len(start_times) == len(end_times) and len(end_times) == len(crots):
+        return start_times, end_times, crots
     else:
-        mdi_flag = False
+        raise Exception('Cached data is corrupted, so will attempt to redownload')
 
+def _download_crot_data(source, use_cached = False):
+    r"""
+    Downloads the Carrington rotation data from JSOC -- to be used if it is not cached.
+    If 'use_cached' is True, then will save this to the cache
+
+    Parameters
+    ----------
+    source : string
+        Either 'HMI' or 'MDI', which is to be determined using the input time
+    Returns
+    -------
+    crots: array
+        Array of all the available Carrington Rotations
+    start_times: array
+        Start times of the requested series
+    end_times: array
+        End times of the requested series
+    """
     success = False
     while not success:
         try:
@@ -317,6 +340,52 @@ def _find_crot_numbers(obs_time):
     start_times = [datetime.strptime(s.split('_TAI')[0], "%Y.%m.%d_%H:%M:%S") for s in start_times_raw]
     end_times = [datetime.strptime(s.split('_TAI')[0], "%Y.%m.%d_%H:%M:%S") for s in end_times_raw]
     crots = crot_times.pop("CAR_ROT")
+
+    if cache_data:
+        cache_dir = pathlib.Path(__file__).parent / 'download_cache'
+        if not os.path.exists(test_data):
+            os.mkdir(test_data)
+        np.savetxt(f'{cache_dir}/{source}_start_times.txt', start_times)
+        np.savetxt(f'{cache_dir}/{source}_end_times.txt', end_times)
+        np.savetxt(f'{cache_dir}/{source}_crots.txt', crots)
+
+    return crots, start_times, end_times
+
+
+def _find_crot_numbers(obs_time, use_cached = False):
+    r"""
+    Outputs the three Carrington rotation numbers around the time of the requested observation.
+    Obtains this data from the online data series, so it should stay up to date
+
+    Parameters
+    ----------
+    obs_time : string
+        String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss.
+
+    Returns
+    -------
+    crot_number : int
+    Integer corresponding to the required Carrington rotation
+    crot_fraction: float
+    Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
+    """
+
+    if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
+        source = 'MDI'
+    else:
+        source = 'HMI'
+
+    use_cached = True; cache_exists = False
+    if use_cached: #Try to find if the data already exists
+        try:
+            crots, start_times, end_times = _load_cached_crot_data(source)
+            cache_exists = True
+        except:
+            pass
+
+    if not cache_exists:
+        crots, start_times, end_times = _download_crot_data(source, use_cached = False)
+
     if np.max(end_times) < datetime.fromisoformat(obs_time):
         raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
 

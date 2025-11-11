@@ -12,6 +12,7 @@ import outflowpy.sample_data
 import outflowpy.tracing
 import outflowpy.utils
 import outflowpy.obtain_data
+import outflowpy.plotting
 
 from .input import Input
 from .output import Output
