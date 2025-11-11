@@ -2,9 +2,10 @@ module fltrace
     implicit none
     contains
 
-    subroutine trace_fieldlines(seeds, r, s, p, br, bs, bp, step_size, max_steps, save_flag, nlines_out, nseeds, nr, ns, np, xl)
+    subroutine trace_fieldlines(seeds, r, s, p, br, bs, bp, step_size, max_steps, save_flag, nlines_out, &
+    nseeds, image_res, image_extent, image_parameters, nr, ns, np, xl, emission_matrix)
     integer,parameter :: rk=selected_real_kind(15,100)
-    integer, intent(in):: nseeds, nr, ns, np, max_steps, nlines_out
+    integer, intent(in):: nseeds, nr, ns, np, max_steps, nlines_out, image_res
     real(rk), intent(in):: seeds(1:nseeds,1:3)
     real(rk), intent(in):: br(1:nr,1:ns+1,1:np+1), bs(1:nr+1,1:ns,1:np+1), bp(1:nr+1,1:ns+1,1:np)
     real(rk), intent(in):: r(1:nr), s(1:ns), p(1:np)
@@ -15,17 +16,22 @@ module fltrace
     real(rk):: dr, ds, dp
     real(rk), dimension(64,64) :: m
 
+    ! --- Image generation stuff
+    real(rk), intent(out), dimension(1:image_res,1:image_res):: emission_matrix !For plotting things in the plane of earth-observations
+    real(rk), intent(in):: image_extent !For plotting things in the plane of earth-observations
+    real(rk), dimension(1:100):: image_parameters
+
     allocate(db(8,nr,ns,np,3))
     db = 0.0_rk
 
     call prepareInterpB(br, bs, bp, db, m, r, s, p, nr, ns, np, dr, ds, dp)
 
-    call find_fieldlines(seeds, xl, db, m, step_size, save_flag, r, s, p, nr, ns, np, dr, ds, dp) !Integrates along the field lines using the existing tracer, saves data to the array xl
+    call find_fieldlines(seeds, xl, db, m, step_size, save_flag, r, s, p, nr, ns, np, dr, ds, dp, image_res, image_extent, image_parameters, emission_matrix) !Integrates along the field lines using the existing tracer, saves data to the array xl
 
     end subroutine trace_fieldlines
 
     !****************************************************************
-    subroutine find_fieldlines(x0, xl, db, m, maxdl, save_flag, r, s, p, nr, ns, np, dr, ds, dp)
+    subroutine find_fieldlines(x0, xl, db, m, maxdl, save_flag, r, s, p, nr, ns, np, dr, ds, dp, image_res, image_extent, image_parameters, emission_matrix)
     integer,parameter :: rk=selected_real_kind(15,100)
     real(rk), intent(in), dimension(:,:) :: x0
     logical, intent(in):: save_flag
@@ -42,9 +48,17 @@ module fltrace
     real(rk), dimension(3) :: x1, x2, dx1, dx2, k1, k2
     integer :: nxt, cntr, dirn, i, i_update, s_index, phi_index
 
-    real(rk):: surface_prop, open_prop, maxb_surface, maxb_overall
+    real(rk):: surface_prop, open_prop, maxb_surface, maxb_overall, maxheight
     integer, dimension(:), allocatable :: endflag
 
+    ! ---
+    integer, intent(in):: image_res
+    real(rk), intent(out), dimension(1:image_res,1:image_res):: emission_matrix
+    real(rk), dimension(1:image_res,1:image_res):: local_matrix
+    real(rk), dimension(1:100):: image_parameters
+    real(rk), intent(in):: image_extent !For plotting things in the plane of earth-observations
+
+    emission_matrix = 0.0_rk; local_matrix = 0.0_rk
     nfl0 = size(x0,1)   !Number of field lines to be traced. I assume xl is a list of the start points, but can't be entirely sure. Let's have a cup of coffee.
     nmax = size(xl,2)
 
@@ -80,6 +94,9 @@ module fltrace
         ! Initialise variables:
         xl(i_update,:,:) = 0.0_rk
         xl(i_update,:,3) = -99.0_rk
+
+        local_matrix = 0.0_rk
+        maxheight = 1.0_rk
 
         do dirn=-1,1,2
             ! Reverse direction of field for backward and forward tracing:
@@ -175,6 +192,12 @@ module fltrace
                     ! Interpolate k1 at next point:
                     call interpB(x1, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                     dl_rkt = dsqrt(sum(k1**2))
+                    call update_emissions(local_matrix, x1, k1, r, nr, image_parameters, maxb_overall, image_extent)
+
+                    if (dsqrt(sum(x1**2)) > maxheight) then
+                        maxheight = dsqrt(sum(x1**2))
+                    end if
+
                     if (dl_rkt < minB) exit   ! stop if null is reached
                     dl_rkt = dl_rkt*dirn
                     k1 = k1/dl_rkt
@@ -200,17 +223,53 @@ module fltrace
             line_length = 0
         end if
 
-        !Determine weighting for openness
-        if (dsqrt(sum(xl(i_update,1,:)**2)) > 2.0_rk .or. dsqrt(sum(xl(i_update,line_length + 1,:)**2)) > 2.0_rk) then
-            open_prop = 1.0_rk
-        else
-            open_prop = 2.0_rk
+        !Determine weighting for openness. I think perhaps doing this as a proportion of the maximum height might be nice? Stops the massive arcades dominating.
+        open_prop = maxheight/dexp(r(nr))
+
+        if (line_length > 0) then
+            emission_matrix = emission_matrix + (open_prop**-abs(image_parameters(3)))*(surface_prop**image_parameters(2))*local_matrix
         end if
     !Expansion factors won't add much complexity so may as well caclulate them always here. Not sure how to deal with closed lines. Sometimes things go backwards? Perhaps put in a checker for direction at the start?
     end do
 
     end subroutine find_fieldlines
 
+    !****************************************************************
+
+    subroutine update_emissions(local_matrix, x1, k1, r, nr, image_parameters, maxb_overall, image_extent)
+    integer,parameter :: rk=selected_real_kind(15,100)
+    real(rk), dimension(:,:):: local_matrix
+    real(rk), dimension(1:100):: image_parameters
+    real(rk), dimension(3):: x1, k1
+    real(rk):: thomson_angle, thomson_factor
+    real(rk):: yfact, zfact, altitude, longitude, bmag, overall_factor, maxb_overall
+    integer:: y_res, z_res, y_index, z_index
+    real(rk), intent(in):: r(1:nr)
+    integer, intent(in):: nr
+    real(rk), intent(in):: image_extent !For plotting things in the plane of earth-observations
+
+    !I've thought about the geometry a bit more, and I think a different approach is required. Bugger.
+    !Determine appropriate point in the y, z, plane
+    !Image dimensions are determined by the maximum radius (obvs)
+    !local_matrix = 0.0_rk
+    y_res = size(local_matrix,1)
+    z_res = size(local_matrix,2)
+    yfact = (-x1(2) + image_extent)/(2*image_extent)
+    zfact = (x1(3) + image_extent)/(2*image_extent)
+    if ((yfact > 0.0_rk) .and. (yfact < 1.0_rk) .and. (zfact > 0.0_rk) .and. (zfact < 1.0_rk)) then
+        y_index = int(y_res*yfact) + 1
+        z_index = int(z_res*zfact) + 1
+        bmag = dsqrt(sum(k1**2))/maxb_overall
+        altitude = dsqrt(sum(x1**2))/dexp(r(nr))
+        longitude = x1(1)/altitude
+        thomson_angle = abs(atan(sqrt(x1(2)**2 + x1(3)**2)/x1(1)))
+        thomson_factor = sin(thomson_angle)**2
+        overall_factor = thomson_factor*bmag**abs(image_parameters(1))
+        !Determine magfield and location factors based on the field strenth etc.
+        local_matrix(y_index, z_index) = local_matrix(y_index, z_index) + overall_factor
+    end if
+
+    end subroutine update_emissions
 
     !****************************************************************
     subroutine prepareInterpB(br, bs, bp, db, m, r, s, p, nr, ns, np, dr, ds, dp)

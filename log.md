@@ -50,10 +50,16 @@ Tuesday 11th November:
 
 Plan for today:
 
-- Add something which saves out the raw crot downloads so I stop getting blocked from the server
-- Add the image generation to the tracer, and some optional flags like not plotting the occasional open field line
+- Add something which saves out the raw crot downloads so I stop getting blocked from the server.
+- Add the image generation to the tracer, and some optional flags like not plotting the occasional open field line.
 
 I think that's probably sufficient.
+The first of these goals has been acheived. Good good.
+
+Notes for the image generator:
+- Will be a square view but would like to make the dimensions variables, along with the resolution. The default values for these can be specified in the python wrapper rather than trying to be snazzy with the Fortran.
+- Get the Fortran to output two arrays -- both the field lines and the image. But either of them have the potential to be none, which needs to be caught in the Python.
+
 
 
 

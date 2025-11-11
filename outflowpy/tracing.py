@@ -10,6 +10,7 @@ import numpy as np
 import outflowpy
 import outflowpy.fieldline as fieldline
 
+from scipy.ndimage import gaussian_filter
 
 class Tracer(abc.ABC):
     """
@@ -247,7 +248,7 @@ class FastTracer(Tracer):
         self.max_steps = max_steps
         max_steps = 1 if max_steps == 'auto' else max_steps
 
-    def trace(self, seeds, output):
+    def trace(self, seeds, output, parameters = None, save_flag = True, image_resolution = 500, image_extent = None):
         self.max_steps = int(20 * output.grid.nr / self.step_size)
 
         self.validate_seeds(seeds)
@@ -276,12 +277,28 @@ class FastTracer(Tracer):
         self.ds = self.step_size * output.grid._grid_spacing[2]
         from .fast_tracer import fltrace
         #r, s, p, br, bs, bp
-        save_flag = True
+        if len(seeds) > 10000 and save_flag:
+            save_flag = False
+            print('Too many field lines to save them all out, so just saving one of them. Reduce to 10000 or fewer.')
+
         if save_flag:
             nlines_out = np.shape(seeds)[0]
         else:
             nlines_out = 1
-        xouts = fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(-output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2), self.ds, self.max_steps, save_flag, nlines_out)
+
+        image_parameters = np.zeros(100)
+        if not parameters:
+            image_parameters[:6] = [0.009,-0.432,-0.026,0.625,-1.646, 5.0]
+        else:
+            image_parameters[:len(parameters)] = parameters
+
+        if not image_extent:
+            image_extent = 2
+
+        xouts, image_matrix = fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(-output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2), self.ds, self.max_steps, save_flag, nlines_out, image_resolution, image_extent, image_parameters)
+
+        image_matrix = gaussian_filter(image_matrix, sigma = (1 + abs(image_parameters[3]))*image_resolution/500)
+        image_matrix = np.clip(image_matrix, 0, np.nanpercentile(image_matrix, 100 - abs(image_parameters[4])))
 
         xs = xouts
 
@@ -298,5 +315,5 @@ class FastTracer(Tracer):
                 x_filtered.append(np.array(x_filter))
 
         flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in x_filtered]
-        return fieldline.FieldLines(flines)
+        return fieldline.FieldLines(flines), image_matrix
 
