@@ -177,7 +177,7 @@ def _scale_mdi(mdi_input):
 
     return mdi_input
 
-def download_hmi_mdi_crot(crot_number, source = None):
+def download_hmi_mdi_crot(crot_number, source = None, use_cached = False):
     r"""
     Downloads the raw HMI data with Carrington rotation number 'crot_number'.
 
@@ -187,6 +187,9 @@ def download_hmi_mdi_crot(crot_number, source = None):
         Carrington rotation number
     source (optional): string
         If specified, ensures that the data comes from either 'MDI' or 'HMI'. This stops a mismatch if the maps are stitched together.
+    use_cached (optional): bool
+        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
+    
     Returns
     -------
     data : array
@@ -214,28 +217,47 @@ def download_hmi_mdi_crot(crot_number, source = None):
         else:
             mdi_flag = False
 
-    success = False
-    while not success:
-        try:
-            c = drms.Client()
-            if mdi_flag:
-                seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
-                data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
-                data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
-            else:
-                seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
-                data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
-                #np.savetxt(f'./tests/data/hmi_2210.txt', data)
-            success = True
-        except:
-            print("Failed to find the Carrington Rotation database. This is likely due to an internet error caused by multiple threads, and so will try again shortly.")
-            time.sleep(10.0)
+    if mdi_flag:
+        source = 'MDI'
+    else:
+        source = 'HMI'
 
-    data = np.nan_to_num(data)
+    cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+    success = False; cache_exists = False
+    if use_cached:
+        #Check if cached data exists
+        try:
+            data = np.load(f'{cache_dir}/{source}_{crot_number}_data.npy', allow_pickle = True)
+            header = np.load(f'{cache_dir}/{source}_{crot_number}_header.npy', allow_pickle = True)
+            cache_exists = True
+        except:
+            pass
+    
+    if not cache_exists:
+        while not success:
+            try:
+                c = drms.Client()
+                if mdi_flag:
+                    seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
+                    data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
+                    data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
+                else:
+                    seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
+                    data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
+                success = True
+            except:
+                print("Failed to find the Carrington Rotation database. This is likely due to an internet error caused by multiple threads, and so will try again shortly.")
+                time.sleep(10.0)
+
+        data = np.nan_to_num(data)
+
+        if use_cached:
+            np.save(f'{cache_dir}/{source}_{crot_number}_data.npy', data)
+            np.save(f'{cache_dir}/{source}_{crot_number}_header.npy', header)
 
     return data, header
 
-def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
+def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_cached = False):
     r"""
     Downloads (without email etc.) the HMI or MDI data matching the rotation number above
 
@@ -255,7 +277,7 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0):
     Outputs a sunpy map object
     """
     
-    data, header = download_hmi_mdi_crot(crot_number)
+    data, header = download_hmi_mdi_crot(crot_number, use_cached = use_cached)
     print('Data downloaded...')
     #Add smoothing in here
     data = sh_smooth(data, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
@@ -284,13 +306,13 @@ def _load_cached_crot_data(source):
     end_times: array
         End times of the requested series
     """
-    cache_dir = pathlib.Path(__file__).parent / 'download_cache'
-    start_times = np.loadtxt(f'{cache_dir}/{source}_start_times.txt')
-    end_times = np.loadtxt(f'{cache_dir}/{source}_start_times.txt')
-    crots = np.loadtxt(f'{cache_dir}/{source}_crots.txt')
+    cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+    start_times = np.load(f'{cache_dir}/{source}_start_times.npy', allow_pickle = True)
+    end_times = np.load(f'{cache_dir}/{source}_end_times.npy', allow_pickle = True)
+    crots = np.load(f'{cache_dir}/{source}_crots.npy', allow_pickle = True)
 
     if len(start_times) == len(end_times) and len(end_times) == len(crots):
-        return start_times, end_times, crots
+        return crots, start_times, end_times
     else:
         raise Exception('Cached data is corrupted, so will attempt to redownload')
 
@@ -313,11 +335,12 @@ def _download_crot_data(source, use_cached = False):
         End times of the requested series
     """
     success = False
+
     while not success:
         try:
             c = drms.Client()
             #Find the correct Carrington Rotation for this date.
-            if mdi_flag:
+            if source == 'MDI':
                 crot_times = c.query(('mdi.synoptic_mr_polfil_96m'), key = ["T_START","T_STOP","CAR_ROT"])
             else:
                 crot_times = c.query(('hmi.synoptic_mr_polfil_720s'), key = ["T_START","T_STOP","CAR_ROT"])
@@ -341,13 +364,13 @@ def _download_crot_data(source, use_cached = False):
     end_times = [datetime.strptime(s.split('_TAI')[0], "%Y.%m.%d_%H:%M:%S") for s in end_times_raw]
     crots = crot_times.pop("CAR_ROT")
 
-    if cache_data:
-        cache_dir = pathlib.Path(__file__).parent / 'download_cache'
-        if not os.path.exists(test_data):
-            os.mkdir(test_data)
-        np.savetxt(f'{cache_dir}/{source}_start_times.txt', start_times)
-        np.savetxt(f'{cache_dir}/{source}_end_times.txt', end_times)
-        np.savetxt(f'{cache_dir}/{source}_crots.txt', crots)
+    if use_cached:
+        cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+        np.save(f'{cache_dir}/{source}_start_times.npy', start_times)
+        np.save(f'{cache_dir}/{source}_end_times.npy', end_times)
+        np.save(f'{cache_dir}/{source}_crots.npy', crots)
 
     return crots, start_times, end_times
 
@@ -375,7 +398,9 @@ def _find_crot_numbers(obs_time, use_cached = False):
     else:
         source = 'HMI'
 
-    use_cached = True; cache_exists = False
+    use_cached = True; 
+
+    cache_exists = False
     if use_cached: #Try to find if the data already exists
         try:
             crots, start_times, end_times = _load_cached_crot_data(source)
@@ -384,9 +409,9 @@ def _find_crot_numbers(obs_time, use_cached = False):
             pass
 
     if not cache_exists:
-        crots, start_times, end_times = _download_crot_data(source, use_cached = False)
+        crots, start_times, end_times = _download_crot_data(source, use_cached = use_cached)
 
-    if np.max(end_times) < datetime.fromisoformat(obs_time):
+    if np.max(end_times) < datetime.fromisoformat(obs_time) or np.min(end_times) > datetime.fromisoformat(obs_time):
         raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
 
     time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
@@ -394,13 +419,12 @@ def _find_crot_numbers(obs_time, use_cached = False):
 
     crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
 
-    print('Crots found')
     if rot < 1909 or rot > 2299:
-        raise Exception(f"Data for this Carrington rotation ({rot}) does not exist")
+        raise Exception(f"Failed to find a Carrington rotation corresponding to this observation time.")
 
     return rot, crot_fraction
 
-def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0):
+def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cached = False):
     r"""
     Downloads (without email etc.) the HMI or MDI data corresponding to the specified time
     Obtains three HMI/MDI magnetograms and stiches them together as appropriate.
@@ -423,7 +447,7 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0):
     """
 
     #Determine the rotation number and the fraction of time through this rotation
-    crot_number, crot_fraction = _find_crot_numbers(obs_time)
+    crot_number, crot_fraction = _find_crot_numbers(obs_time, use_cached = use_cached)
 
     if crot_number < 2098:
         source = 'MDI'
@@ -432,9 +456,9 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0):
 
     print(f"Obtaining data from {source}, downloading rotations, {crot_number-1, crot_number, crot_number+1}")
     #Download the respective sets of data
-    brm  , header   = download_hmi_mdi_crot(crot_number  , source = source)
-    brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source)
-    brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source)
+    brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached)
+    brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached)
+    brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source, use_cached = use_cached)
 
     brm_shift = 0.0*brm
     nphi = np.shape(brm_shift)[1]

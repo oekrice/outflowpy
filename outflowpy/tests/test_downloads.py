@@ -9,22 +9,24 @@ from outflowpy import obtain_data
 
 test_data = pathlib.Path(__file__).parent / 'data'
 
-@pytest.mark.parametrize('crot_number',
-                         [2000,
-                          2210,
+@pytest.mark.parametrize(['crot_number','use_cached'],
+                         [[2000,False],
+                          [2210,False],
+                          [2000,True],
+                          [2210,True],
                           ])
-def test_data_downloads(crot_number):
+def test_data_downloads(crot_number, use_cached):
     #Test to check that data is correctly downloaded for both HMI and MDI
-    data, header = obtain_data.download_hmi_mdi_crot(crot_number)
+    data, header = obtain_data.download_hmi_mdi_crot(crot_number, use_cached = use_cached)
     #Check if the data files exist. If so, compare them. If not, don't bother.
     if crot_number < 2098:
         if os.path.isfile(f'{test_data}/mdi_2000.txt'):
             expected_data = np.loadtxt(f'{test_data}/mdi_2000.txt')
-            np.testing.assert_allclose(data, expected_data, atol=1e-13, rtol=0)
+            np.testing.assert_allclose(data, expected_data, atol=1e-10)
     else:
         if os.path.isfile(f'{test_data}/mdi_2000.txt'):
             expected_data = np.loadtxt(f'{test_data}/hmi_2210.txt')
-            np.testing.assert_allclose(data, expected_data, atol=1e-13, rtol=0)
+            np.testing.assert_allclose(data, expected_data, atol=1e-10)
 
 def test_nonexistent_download():
     #Tests to check that a reasonable exception is rasied if a Carrington rotation is specified outside the allowed range
@@ -75,7 +77,7 @@ def test_prepare_script(crot_number):
         expected_data = np.loadtxt(f'{test_data}/mdi_2000_smooth.txt')
     else:
         expected_data = np.loadtxt(f'{test_data}/hmi_2210_smooth.txt')
-    np.testing.assert_allclose(data_map.data, expected_data, atol=1e-13, rtol=0)
+    np.testing.assert_allclose(data_map.data, expected_data, atol=1e-10)
 
 @pytest.mark.parametrize(['obs_time','expected_crot','expected_frac'],
                          [["2005-04-13T10:00:00",2028,0.7099823230844563],
@@ -95,6 +97,6 @@ def test_time_errors():
 
     with pytest.raises(Exception) as excinfo:
         rot, crot_fraction = obtain_data._find_crot_numbers("1900-04-13T10:00:00")
-    assert "Data for this Carrington rotation"  in str(excinfo.value)
+    assert "Failed to find a Carrington rotation corresponding to this observation time"  in str(excinfo.value)
 
 

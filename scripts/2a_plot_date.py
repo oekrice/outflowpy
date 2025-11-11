@@ -9,6 +9,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import sunpy
 import random
+import sys
 
 max_rss = 5
 
@@ -52,14 +53,14 @@ for plot_count, rss in enumerate(rss_values):
 
     print('Run parameters', obs_time, ns, nphi,1.0*5e-2/nphi, corona_temp, mf_constant)
     #br = np.loadtxt("./data/dipole_smooth.txt")
-    br = np.loadtxt("./data/hmi_2210_smooth.txt")
+    # br = np.loadtxt("./data/hmi_2210_smooth.txt")
     #br = np.loadtxt("./data/mdi_2000_smooth.txt")
     #
     #
-    header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.T.shape)
-    input_map = sunpy.map.Map((br, header))
+    # header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.T.shape)
+    # input_map = sunpy.map.Map((br, header))
 
-    input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi)   #Outputs the set of data corresponding to this particular Carrington rotation.
+    input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = False)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
     sys.exit()
 
