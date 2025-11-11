@@ -16,7 +16,7 @@ from matplotlib.patches import Circle
 from matplotlib.colors import LinearSegmentedColormap
 
 max_rss = 5
-nseeds = 100001
+nseeds = 1001
 image_extent = 2.5
 image_parameters = [0.009,-0.432,0.5,0.625,-1.646, 2.0]
 
@@ -30,34 +30,6 @@ rss_values = [5.0]
 model_options = ["PFSS", "Outflow"]
 
 model = 1
-
-def make_image(image_matrix, image_extent, image_parameters):
-
-    size = 7
-    cmap = "bone"
-    fig, ax = plt.subplots(figsize = (size, size))
-    moon_face = mpimg.imread("./data/moonface_druck.png")
-
-    image_matrix = np.flip(image_matrix, 1)
-
-    xs = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[0])
-    ys = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[1])
-    ax.imshow(image_matrix.T, cmap = cmap, extent = [-image_extent,image_extent,-image_extent,image_extent],interpolation="bilinear")
-
-    moon_img = ax.imshow(moon_face, extent = [-1,1,-1,1],interpolation="bilinear")
-    circle = Circle((0, 0), 0.995, transform = ax.transData)
-    moon_img.set_clip_path(circle)
-
-    ax.set_xlim(-image_extent, image_extent)
-    ax.set_ylim(-image_extent, image_extent)
-
-    ax.set_aspect('equal')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    plt.tight_layout()
-
-    plt.savefig(f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
-    plt.close()
 
 for plot_count, rss in enumerate(rss_values):
 
@@ -147,7 +119,7 @@ for plot_count, rss in enumerate(rss_values):
             tracer = outflowpy.tracing.FortranTracer()
         field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 1000)
 
-        make_image(image_matrix, image_extent, image_parameters)
+        outflowpy.plotting.make_image(image_matrix, image_extent, image_parameters, f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
 
         if True:
             fig, ax = plt.subplots()

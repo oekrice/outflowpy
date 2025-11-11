@@ -3,7 +3,38 @@ import os
 import numpy as np
 import astropy.constants as const
 import random
+import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.image as mpimg
+from matplotlib.patches import Circle
+
+def make_image(image_matrix, image_extent, image_parameters, image_fname):
+
+    size = 7
+    cmap = "bone"
+    fig, ax = plt.subplots(figsize = (size, size))
+    moon_face = mpimg.imread("./data/moonface_druck.png")
+
+    image_matrix = np.flip(image_matrix, 1)
+
+    xs = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[0])
+    ys = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[1])
+    ax.imshow(image_matrix.T, cmap = cmap, extent = [-image_extent,image_extent,-image_extent,image_extent],interpolation="bilinear")
+
+    moon_img = ax.imshow(moon_face, extent = [-1,1,-1,1],interpolation="bilinear")
+    circle = Circle((0, 0), 0.995, transform = ax.transData)
+    moon_img.set_clip_path(circle)
+
+    ax.set_xlim(-image_extent, image_extent)
+    ax.set_ylim(-image_extent, image_extent)
+
+    ax.set_aspect('equal')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.tight_layout()
+
+    plt.savefig(image_fname)
+    plt.close()
 
 def plot_pyvista(output, fieldlines):
     """
