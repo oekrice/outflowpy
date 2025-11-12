@@ -61,6 +61,9 @@ Notes for the image generator:
 - Get the Fortran to output two arrays -- both the field lines and the image. But either of them have the potential to be none, which needs to be caught in the Python.
 
 
+Wednesday 12th November:
+
+The aims from yesterday have been roughly acheived. Probably not worth writing tests for the image generation, but maybe at some point... Alas still can't run linux stuff locally and my IP is still blocked by JSOC. Not sure how long I'll have to wait for that one.
 
 
 

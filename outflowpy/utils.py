@@ -9,9 +9,36 @@ import sunpy.map
 import sunpy.time
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
 
 import outflowpy.map
+from scipy.stats import qmc
 
+def random_seed_sampler(output, nseeds, r_skew, rss):
+    """
+    Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
+    """
+    sampler = qmc.LatinHypercube(d=3)
+    sample = sampler.random(n = nseeds)
+
+    lons, lats, rs = [], [], []
+
+    l_bounds = [0., -1.0, 0.0]
+    u_bounds = [2*np.pi, 1.0, 1.0]
+    sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
+
+    for seed in sample_scaled:
+        lons.append(seed[0] * u.rad)
+        lat = np.arccos(seed[1])
+        lat = lat - np.pi/2
+        lats.append(lat * u.rad)
+        r_select = (rss - 1.0)*seed[2]**(np.abs(r_skew) + 1) + 1.0   #Skew this so there are more starting points lower in the domain
+        rs.append(r_select)
+    rs = np.array(rs) * const.R_sun
+
+    seeds = SkyCoord(lons,lats,rs, frame=output.coordinate_frame)   #This can take three arrays (of the same length) for all the coordinates.
+
+    return seeds
 
 #The below three functions check the downloaded data is cylindrical equal area projection
 def is_cea_map(m, error=False):

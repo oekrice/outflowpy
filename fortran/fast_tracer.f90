@@ -45,7 +45,7 @@ module fltrace
     integer :: nfl0, nmax, n, startn, endn, line_length
     real(rk) :: rMin, rMax, maxerror, minB
     real(rk) :: maxdl, dl, r1, r2, dl_rkt, error, k1r, rl
-    real(rk), dimension(3) :: x1, x2, dx1, dx2, k1, k2
+    real(rk), dimension(3) :: x1, x2, dx1, dx2, k1, k2, xstart, xend
     integer :: nxt, cntr, dirn, i, i_update, s_index, phi_index
 
     real(rk):: surface_prop, open_prop, maxb_surface, maxb_overall, maxheight
@@ -113,7 +113,6 @@ module fltrace
 
             dl_rkt = dsqrt(sum(k1*k1))
 
-            surface_prop = dl_rkt/maxb_surface
             if (dl_rkt < minB) exit   ! stop if null is reached
             dl_rkt = dl_rkt*dirn
             k1 = k1/dl_rkt
@@ -192,7 +191,10 @@ module fltrace
                     ! Interpolate k1 at next point:
                     call interpB(x1, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                     dl_rkt = dsqrt(sum(k1**2))
-                    call update_emissions(local_matrix, x1, k1, r, nr, image_parameters, maxb_overall, image_extent)
+
+                    if (image_res > 0) then
+                        call update_emissions(local_matrix, x1, k1, r, nr, image_parameters, maxb_overall, image_extent)
+                    end if
 
                     if (dsqrt(sum(x1**2)) > maxheight) then
                         maxheight = dsqrt(sum(x1**2))
@@ -218,6 +220,30 @@ module fltrace
             xl(i_update,1:endn-startn+2,:) = xl(i_update,startn:endn+1,:)
             xl(i_update,endn-startn+2:nmax,:) = 0.0_rk
             line_length = endn - startn + 1
+            !Determine the weighting based on the magnetic field strength on the solar surface. Need to determine which of the ends meet the surface, for a start
+            !If it is a closed field line, take the mean of both values
+            xstart =  xl(i_update,1,:)
+            xend = xl(i_update,line_length,:)
+            if ((sum(xstart**2) < 1.5_rk) .and. (sum(xend**2) < 1.5_rk)) then !Closed field line
+                call interpB(xstart, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
+                dl_rkt = dsqrt(sum(k1*k1))
+                surface_prop = 0.5_rk*dl_rkt/maxb_surface
+                call interpB(xend, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
+                dl_rkt = dsqrt(sum(k1*k1))
+                surface_prop = surface_prop + 0.5_rk*dl_rkt/maxb_surface
+            else if (sum(xstart**2) < 1.5_rk) then
+                call interpB(xstart, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
+                dl_rkt = dsqrt(sum(k1*k1))
+                surface_prop = dl_rkt/maxb_surface
+            else if (sum(xend**2) < 1.5_rk) then
+                call interpB(xend, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
+                dl_rkt = dsqrt(sum(k1*k1))
+                surface_prop = dl_rkt/maxb_surface
+            else !This field line never touches the surface, so don't plot it at all.
+                xl(i_update,:,:) = 0.0_rk
+                line_length = 0
+                surface_prop = 0.0_rk
+            end if
         else
             xl(i_update,:,:) = 0.0_rk
             line_length = 0
@@ -226,8 +252,8 @@ module fltrace
         !Determine weighting for openness. I think perhaps doing this as a proportion of the maximum height might be nice? Stops the massive arcades dominating.
         open_prop = maxheight/dexp(r(nr))
 
-        if (line_length > 0) then
-            emission_matrix = emission_matrix + (open_prop**-abs(image_parameters(3)))*(surface_prop**image_parameters(2))*local_matrix
+        if (line_length > 0 .and. image_res > 0) then
+            emission_matrix = emission_matrix + (open_prop**image_parameters(3))*(surface_prop**abs(image_parameters(2)))*local_matrix
         end if
     !Expansion factors won't add much complexity so may as well caclulate them always here. Not sure how to deal with closed lines. Sometimes things go backwards? Perhaps put in a checker for direction at the start?
     end do

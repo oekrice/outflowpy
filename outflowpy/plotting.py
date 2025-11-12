@@ -8,11 +8,21 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.image as mpimg
 from matplotlib.patches import Circle
 
+
+
 def make_image(image_matrix, image_extent, image_parameters, image_fname):
 
-    size = 7
-    cmap = "bone"
-    fig, ax = plt.subplots(figsize = (size, size))
+    """
+    Generates an image in the style of a Druckmuller eclipse picture
+    """
+
+    npixels = 512
+    dpi = 100
+
+    cmap = LinearSegmentedColormap.from_list("eclipse", ["#3b444dff", "#dadadaff"])
+
+    fig, ax = plt.subplots(figsize = (npixels/dpi, npixels/dpi), dpi = dpi)
+    ax = fig.add_axes([0, 0, 1, 1])
     moon_face = mpimg.imread("./data/moonface_druck.png")
 
     image_matrix = np.flip(image_matrix, 1)
@@ -27,13 +37,12 @@ def make_image(image_matrix, image_extent, image_parameters, image_fname):
 
     ax.set_xlim(-image_extent, image_extent)
     ax.set_ylim(-image_extent, image_extent)
-
+    ax.axis("off")
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
-    plt.tight_layout()
 
-    plt.savefig(image_fname)
+    plt.savefig(image_fname, bbox_inches=None, pad_inches = 0, dpi = dpi)
     plt.close()
 
 def plot_pyvista(output, fieldlines):
@@ -41,8 +50,6 @@ def plot_pyvista(output, fieldlines):
     Plots calculated field lines using pyvista, along with a colourmap on the lower surface corresponding to the photospheric magnetic field.
     """
 
-
-    #Uses the three classes to construct a Pyvista plot replete with all the options one might require from such a thing
     off_screen = True
     print('Plotting in pyvista...')
     if off_screen and not os.name == 'nt':
@@ -132,3 +139,5 @@ def plot_pyvista(output, fieldlines):
     print('Plotted seemingly sucessfullly...')
 
     return None
+
+

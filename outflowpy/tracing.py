@@ -248,7 +248,7 @@ class FastTracer(Tracer):
         self.max_steps = max_steps
         max_steps = 1 if max_steps == 'auto' else max_steps
 
-    def trace(self, seeds, output, parameters = None, save_flag = True, image_resolution = 500, image_extent = None):
+    def trace(self, seeds, output, parameters = None, save_flag = True, image_resolution = 500, image_extent = None, generate_image = False):
         self.max_steps = int(20 * output.grid.nr / self.step_size)
 
         self.validate_seeds(seeds)
@@ -287,7 +287,7 @@ class FastTracer(Tracer):
             nlines_out = 1
 
         image_parameters = np.zeros(100)
-        if not parameters:
+        if parameters is None:
             image_parameters[:6] = [0.009,-0.432,-0.026,0.625,-1.646, 5.0]
         else:
             image_parameters[:len(parameters)] = parameters
@@ -295,10 +295,14 @@ class FastTracer(Tracer):
         if not image_extent:
             image_extent = 2
 
+        if not generate_image:
+            image_resolution = 0
+
         xouts, image_matrix = fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(-output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2), self.ds, self.max_steps, save_flag, nlines_out, image_resolution, image_extent, image_parameters)
 
-        image_matrix = gaussian_filter(image_matrix, sigma = (1 + abs(image_parameters[3]))*image_resolution/500)
-        image_matrix = np.clip(image_matrix, 0, np.nanpercentile(image_matrix, 100 - abs(image_parameters[4])))
+        if generate_image:
+            image_matrix = gaussian_filter(image_matrix, sigma = (1 + abs(image_parameters[3]))*image_resolution/500)
+            image_matrix = np.clip(image_matrix, 0, np.nanpercentile(image_matrix, 100 - abs(image_parameters[4])))
 
         xs = xouts
 
@@ -315,5 +319,8 @@ class FastTracer(Tracer):
                 x_filtered.append(np.array(x_filter))
 
         flines = [fieldline.FieldLine(x[:, 0], x[:, 1], x[:, 2], output) for x in x_filtered]
-        return fieldline.FieldLines(flines), image_matrix
 
+        if generate_image:
+            return fieldline.FieldLines(flines), image_matrix
+        else:
+            return fieldline.FieldLines(flines)
