@@ -256,7 +256,7 @@ def outflow(input):
     
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 
-def outflow_fortran(input):
+def outflow_fortran(input, existing_fname = None):
     r"""
     Compute outflow field using the precompiled Fortran routine -- this is just a python wrapper.
 
@@ -277,7 +277,14 @@ def outflow_fortran(input):
     """
     from .outflow_calc import compute_outflow
 
-    br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ls, input.grid.trigs, input.grid.legs)
+    if not existing_fname:
+        br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ls, input.grid.trigs, input.grid.legs)
+
+    else:
+        br = np.load(f'{existing_fname}_br.npy')
+        bs = np.load(f'{existing_fname}_bs.npy')
+        bp = np.load(f'{existing_fname}_bp.npy')
+
     br = np.swapaxes(br, 0, 2)
     bs = np.swapaxes(bs, 0, 2)
     bp = np.swapaxes(bp, 0, 2)

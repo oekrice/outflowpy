@@ -36,11 +36,11 @@ def make_image(parameter_set, image_number):
     4: Percentile clip for saturating the image. Always positive.
     5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes
     """
-    br = np.loadtxt("./data/hmi_2210_smooth.txt")
+
+    field_root = "./data/output_08"
+    br = np.loadtxt("./data/2008_input.txt")
 
     nrho = 60
-    ns = 90
-    nphi = 180
     rss = 5.0
 
     corona_temp = 2e6
@@ -54,13 +54,20 @@ def make_image(parameter_set, image_number):
     input_map = sunpy.map.Map((br, header))
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
-    outflow_out = outflowpy.outflow_fortran(outflow_in)
+
+    outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
+
+    # np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
+    # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
+    # np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
     seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[5], rss)
 
     tracer = outflowpy.tracing.FastTracer()
 
     field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = parameter_set, image_extent = image_extent, generate_image = True, save_flag = False, image_resolution = image_resolution)
+
+    #outflowpy.plotting.plot_pyvista(outflow_out, field_lines)
 
     outflowpy.plotting.make_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png')
 
@@ -119,11 +126,13 @@ def generate_and_compare(parameter_set):
 
     return similarity
 
-if True:
-    for i in range(6):
+if False:
+    parameter_set = np.zeros(100)
+    similarity = generate_and_compare(parameter_set)
+
+    for i in range(0):
         parameter_set = np.zeros(100)
         parameter_set[i] = 1.0
-        #parameter_set[:6] = [-0.004,-0.444,-0.298,0.699,-1.265,0.0]
         similarity = generate_and_compare(parameter_set)
 
 def run_optimisation():
@@ -135,6 +144,6 @@ def run_optimisation():
     es.optimize(generate_and_compare)
     es.result_pretty()
 
-#run_optimisation()
+run_optimisation()
 
 
