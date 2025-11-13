@@ -65,7 +65,8 @@ Wednesday 12th November:
 
 The aims from yesterday have been roughly acheived. Probably not worth writing tests for the image generation, but maybe at some point... Alas still can't run linux stuff locally and my IP is still blocked by JSOC. Not sure how long I'll have to wait for that one.
 
+Thursday 13th November:
 
-
+The images have converged resonably nicely with 10,000 field lines. I'm going to experiment with getting openmp to work so it can trace field lines more effectively, but perhaps mext week would be more wise. Also would need to automate checking whether openmp is even an option.
 
 

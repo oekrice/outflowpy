@@ -9,14 +9,16 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import sunpy
 import random
-import sys
+import os, sys
 from scipy.stats import qmc
 import matplotlib.image as mpimg
 from matplotlib.patches import Circle
 from matplotlib.colors import LinearSegmentedColormap
 
+os.environ["OMP_NUM_THREADS"] = "4"
+
 max_rss = 5
-nseeds = 1001
+nseeds = 10000
 image_extent = 2.5
 image_parameters = [0.009,-0.432,0.5,0.625,-1.646, 2.0]
 
@@ -117,7 +119,7 @@ for plot_count, rss in enumerate(rss_values):
             tracer = outflowpy.tracing.PythonTracer()
         else:
             tracer = outflowpy.tracing.FortranTracer()
-        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 1000)
+        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 1000, generate_image = True)
 
         outflowpy.plotting.make_image(image_matrix, image_extent, image_parameters, f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
 

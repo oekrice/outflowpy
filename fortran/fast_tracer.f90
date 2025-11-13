@@ -46,7 +46,8 @@ module fltrace
     real(rk) :: rMin, rMax, maxerror, minB
     real(rk) :: maxdl, dl, r1, r2, dl_rkt, error, k1r, rl
     real(rk), dimension(3) :: x1, x2, dx1, dx2, k1, k2, xstart, xend
-    integer :: nxt, cntr, dirn, i, i_update, s_index, phi_index
+    real(rk), dimension(:,:):: xl_local(1:size(xl,2),1:3)
+    integer :: nxt, cntr, dirn, i
 
     real(rk):: surface_prop, open_prop, maxb_surface, maxb_overall, maxheight
     integer, dimension(:), allocatable :: endflag
@@ -73,27 +74,21 @@ module fltrace
     maxb_surface = maxval(dsqrt(sum(db(1,1,:,:,:)**2, 3)))
     maxb_overall = maxval(dsqrt(sum(db(1,:,:,:,:)**2, 3)))
     minB = 0.0000001_rk*maxb_overall
-    s_index = 1; phi_index = 1
     xl = 0.0_rk
+    !$omp parallel do default(shared) &
+    !$omp& private(i, dirn, nxt, cntr, dl, dl_rkt, rl, k1r, r1, r2,  &
+    !$omp& x1, x2, xstart, xl_local, xend, k1, k2, dx1, dx2, error, local_matrix,  &
+    !$omp& startn, endn, line_length, maxheight, surface_prop, open_prop)
     do i = 1, nfl0
-        if (sum(x0(i,:)**2) < 1d-6) exit !This start point hasn't been assigned, so ignore it
-
         if (nfl0 .le. 100000) then
             if ((mod(i,1000) == 0 .or. i == nfl0))            print*, 100*i/nfl0, '% complete'
         else
             if ((mod(i,nfl0/100) == 0 .or. i == nfl0))            print*, 100*i/nfl0, '% complete'
         end if
 
-        if (save_flag) then
-            !If need to save out every field line, make a big array. If not, just overwrite each one (this makes it possible to do loads)
-            i_update = i
-        else
-            i_update = 1
-        end if
-
         ! Initialise variables:
-        xl(i_update,:,:) = 0.0_rk
-        xl(i_update,:,3) = -99.0_rk
+        xl_local = 0.0_rk
+        xl_local(:,3) = -99.0_rk !Flag to ensure the length of the fieldline is appropriately measured
 
         local_matrix = 0.0_rk
         maxheight = 1.0_rk
@@ -107,9 +102,9 @@ module fltrace
             cntr = 0
 
             ! Add startpoint to output array:
-            xl(i_update,nxt,:) = x0(i,:)
+            xl_local(nxt,:) = x0(i,:)
             ! Interpolate k1:
-            call interpB(xl(i_update,nxt,:), k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
+            call interpB(xl_local(nxt,:), k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
 
             dl_rkt = dsqrt(sum(k1*k1))
 
@@ -118,18 +113,14 @@ module fltrace
             k1 = k1/dl_rkt
             do
                 ! Compute midpoint:
-                x2 = xl(i_update,nxt,:) + dl*k1
+                x2 = xl_local(nxt,:) + dl*k1
                 r2 = dsqrt(sum(x2*x2))
-!                 if (sum(x2(1:2)**2) < 1d-8) then
-!                     xl(i_update,:,:) = -99.0_rk
-!                     exit!stop if too near the poles as they can get stuck there
-!                 end if
 
                 ! If outside boundary, do Euler step to boundary and stop:
                 if ((r2 .lt. rMin).or.(r2 .gt. rMax)) then
-                    rl = dsqrt(sum(xl(i_update,nxt,:)*xl(i_update,nxt,:)))
-                    k1r = (xl(i_update,nxt,1)*k1(1) + xl(i_update,nxt,2)*k1(2) &
-                        + xl(i_update,nxt,3)*k1(3))/rl
+                    rl = dsqrt(sum(xl_local(nxt,:)*xl_local(nxt,:)))
+                    k1r = (xl_local(nxt,1)*k1(1) + xl_local(nxt,2)*k1(2) &
+                        + xl_local(nxt,3)*k1(3))/rl
                     if (r2.lt.rMin) then
                         dl = (rMin - rl)/k1r
                     else
@@ -140,11 +131,11 @@ module fltrace
                     if (cntr .ge. nmax/2) then
                         print*,'This field line is very long. Aborting...'
                         print*, 'If this keeps happening, something more sinister is probably afoot.'
-                        xl(i_update,:,:) = -99.0_rk
+                        xl_local(:,:) = -99.0_rk
                         exit
                     end if
 
-                    xl(i_update,nxt,:) = xl(i_update,nxt-dirn,:) + dl*k1
+                    xl_local(nxt,:) = xl_local(nxt-dirn,:) + dl*k1
 
                     exit
                 end if
@@ -174,7 +165,7 @@ module fltrace
                 ! Update if error is small enough:
                 if (error.le.maxerror) then
 
-                    x1 = xl(i_update,nxt,:) + dx2
+                    x1 = xl_local(nxt,:) + dx2
                     r1 = dsqrt(sum(x1*x1))
                     ! Return midpoint if full step leaves domain:
                     if ((r1.lt.rMin).or.(r1.gt.rMax)) x1 = x2
@@ -183,10 +174,10 @@ module fltrace
                     if (cntr .ge. nmax/2) then
                         print*,'This field line is very long. Aborting...'
                         print*, 'If this keeps happening, something more sinister is probably afoot.'
-                        xl(i_update,:,:) = -99.0_rk
+                        xl_local(:,:) = -99.0_rk
                         exit
                     end if
-                    xl(i_update,nxt,:) = x1
+                    xl_local(nxt,:) = x1
 
                     ! Interpolate k1 at next point:
                     call interpB(x1, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
@@ -205,47 +196,48 @@ module fltrace
                     k1 = k1/dl_rkt
                 end if
             end do
-         end do
+          end do
 
         startn = 1; endn = 0
         do n = 1, nmax
-            if (xl(i_update, n, 3) > -90_rk) then
+            if (xl_local( n, 3) > -90_rk) then
                 endn = n
             else if (endn < 1) then
                 startn = n + 1
             end if
         end do
         !Shift such that the field line is at the start of the array, for ease of transferring the data
+
         if (startn < nmax .and. (endn - startn) > 5) then
-            xl(i_update,1:endn-startn+2,:) = xl(i_update,startn:endn+1,:)
-            xl(i_update,endn-startn+2:nmax,:) = 0.0_rk
+            xl_local(1:endn-startn+2,:) = xl_local(startn:endn+1,:)
+            xl_local(endn-startn+2:nmax,:) = 0.0_rk
             line_length = endn - startn + 1
             !Determine the weighting based on the magnetic field strength on the solar surface. Need to determine which of the ends meet the surface, for a start
             !If it is a closed field line, take the mean of both values
-            xstart =  xl(i_update,1,:)
-            xend = xl(i_update,line_length,:)
-            if ((sum(xstart**2) < 1.5_rk) .and. (sum(xend**2) < 1.5_rk)) then !Closed field line
+            xstart =  xl_local(1,:)
+            xend = xl_local(line_length,:)
+            if ((sum(xstart**2) < 1.1_rk*dexp(r(1))**2) .and. (sum(xend**2) < 1.1_rk*dexp(r(1))**2)) then !Closed field line
                 call interpB(xstart, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                 dl_rkt = dsqrt(sum(k1*k1))
                 surface_prop = 0.5_rk*dl_rkt/maxb_surface
                 call interpB(xend, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                 dl_rkt = dsqrt(sum(k1*k1))
                 surface_prop = surface_prop + 0.5_rk*dl_rkt/maxb_surface
-            else if (sum(xstart**2) < 1.5_rk) then
+            else if (sum(xstart**2) < 1.1_rk*dexp(r(1))**2) then
                 call interpB(xstart, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                 dl_rkt = dsqrt(sum(k1*k1))
                 surface_prop = dl_rkt/maxb_surface
-            else if (sum(xend**2) < 1.5_rk) then
+            else if (sum(xend**2) < 1.1_rk*dexp(r(1))**2) then
                 call interpB(xend, k1, db, m, r, s, p, nr, ns, np, dr, ds, dp)
                 dl_rkt = dsqrt(sum(k1*k1))
                 surface_prop = dl_rkt/maxb_surface
             else !This field line never touches the surface, so don't plot it at all.
-                xl(i_update,:,:) = 0.0_rk
+                xl_local(:,:) = 0.0_rk
                 line_length = 0
                 surface_prop = 0.0_rk
             end if
         else
-            xl(i_update,:,:) = 0.0_rk
+            xl_local(:,:) = 0.0_rk
             line_length = 0
         end if
 
@@ -255,8 +247,13 @@ module fltrace
         if (line_length > 0 .and. image_res > 0) then
             emission_matrix = emission_matrix + (open_prop**image_parameters(3))*(surface_prop**abs(image_parameters(2)))*local_matrix
         end if
-    !Expansion factors won't add much complexity so may as well caclulate them always here. Not sure how to deal with closed lines. Sometimes things go backwards? Perhaps put in a checker for direction at the start?
+
+        if (save_flag) then
+            xl(i,:,:) = xl_local(:,:)
+        end if
+
     end do
+    !$omp end parallel do
 
     end subroutine find_fieldlines
 

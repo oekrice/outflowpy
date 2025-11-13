@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
+import matplotlib.image as mpimg
+from matplotlib.gridspec import GridSpec
 
 colors = sns.color_palette('dark')
 
@@ -59,34 +61,58 @@ def determine_error_bounds(values, time_cadence = 20, error_bound = 0.8):
     return means, mins, maxs
 
 #Let's do some plots of the variables
+#for i in range(len(log_info)- 1, len(log_info)):
+counter = 0
+for i in range(len(log_info)- 1, len(log_info)):
+    #Make the plot get longer, and put some dots on for animation?
+    fig = plt.figure(figsize = (20,10))
+    gs = GridSpec(2, 2, figure=fig, width_ratios=[2, 2], height_ratios=[1.0, 1.0])
+    ax_left = fig.add_subplot(gs[:, 0])
+    ax_top_right = fig.add_subplot(gs[0, 1])
+    ax_bottom_right = fig.add_subplot(gs[1, 1])
 
-fig, axs = plt.subplots(2,1, figsize = (7,5))
-ax = axs[0]
-for var_id, variable in enumerate(range(2, np.size(log_info[1]))):
-    means, mins, maxs = determine_error_bounds(log_info[:,variable])
-    ax.plot(means, color = colors[var_id%10], linewidth = 1.0, label = var_id)
-    ax.plot(mins, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
-    ax.plot(maxs, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
-
-ax.set_title('Convergence of parameter values, run %d' % batch_id)
-ax.set_ylabel('Parameter value')
-ax.set_xlabel('Interation')
-ax.legend()
-
-#Do the same treatment for the skill score
-ax = axs[1]
-means, _, _ = determine_error_bounds(log_info[:,1])
-ax.plot(log_info[:,1], color = 'black', linewidth = 0.5)
-ax.plot(means, color = 'black', linewidth = 1.0)
-
-plt.tight_layout()
-plt.savefig(file_root + 'converge.png')
-plt.show()
-plt.close()
+    ax = ax_top_right
+    for var_id, variable in enumerate(range(2, np.size(log_info[1]))):
+        means, mins, maxs = determine_error_bounds(log_info[:i,variable])
+        ax.plot(means, color = colors[var_id%10], linewidth = 1.0, label = var_id)
+        #ax.plot(mins, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
+        #ax.plot(maxs, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
+        ax.plot(log_info[:i,variable], color = colors[var_id%10], linewidth = 0.25)
 
 
+    ax.set_ylabel('Parameter value')
+    ax.set_xlabel('Iteration')
+    #ax.legend(loc='upper left')
+    ax.set_xlim(0,max(100,i*1.1))
+    ax.set_xticks([])
+    ax.set_title('Parameter Values')
+    ax.axis('off')
 
+    #Do the same treatment for the skill score
+    ax = ax_bottom_right
+    means, _, _ = determine_error_bounds(log_info[:i,1])
+    ax.plot(log_info[:i,1], color = 'black', linewidth = 0.5)
+    ax.plot(means, color = 'black', linewidth = 1.0)
+    ax.set_xlim(0,max(100,i*1.1))
+    ax.set_ylim(0.35,0.45)
+    ax.set_xticks([])
+    ax.set_title('Image Match Score')
+    ax.axis('off')
 
+    img = mpimg.imread(file_root + '%04d.png' % i)
+    ax = ax_left
+
+    ax.imshow(img)
+    ax.set_title('Test Image %d' % i)
+    ax.axis('off')
+
+    plt.tight_layout()
+
+    #ffmpeg -framerate 30 -i ./img_plots/converges/converge%04d.png -c:v mpeg4 -q:v 1 converges.mp4
+    plt.savefig(file_root + 'converge.png')
+    plt.close()
+
+    counter += 1
 
 
 
