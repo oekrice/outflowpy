@@ -20,7 +20,7 @@ class F2PyBuild(build_py):
         subprocess.check_call([
             "python", "-m", "numpy.f2py",
             "-c", "fortran/fast_tracer.f90",
-            "-m", "fast_tracer"
+            "-m", "fast_tracer", "--f90flags='-fopenmp'", "-lgomp"
         ])
 
         for file in Path(".").glob("outflow_calc*.so"):

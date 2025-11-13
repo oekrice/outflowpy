@@ -69,4 +69,9 @@ Thursday 13th November:
 
 The images have converged resonably nicely with 10,000 field lines. I'm going to experiment with getting openmp to work so it can trace field lines more effectively, but perhaps mext week would be more wise. Also would need to automate checking whether openmp is even an option.
 
+The parameters from the 10,000 run are 
+-0.203,0.587,-1.063,0.002,-0.497,-0.831
+
+I've got it running with Openmp -- now will do the same with 50,000 lines using those parameters as a base
+
 

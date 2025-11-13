@@ -45,7 +45,7 @@ def make_image(parameter_set, image_number):
 
     corona_temp = 2e6
     mf_constant = 5e-17
-    nseeds = 10000
+    nseeds = 50000
 
     image_extent = 2.5
     image_resolution = 512
@@ -139,7 +139,7 @@ def run_optimisation():
     print('Running optimisation run')
     if os.path.exists("img_plots/log.txt"):
         os.remove("img_plots/log.txt")
-    initial_parameter_set = np.zeros(6)
+    initial_parameter_set = [-0.203,0.587,-1.063,0.002,-0.497,-0.831]
     es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.5, {'verb_disp': 1})
     es.optimize(generate_and_compare)
     es.result_pretty()
