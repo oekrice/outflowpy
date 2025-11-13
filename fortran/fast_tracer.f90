@@ -26,12 +26,14 @@ module fltrace
 
     call prepareInterpB(br, bs, bp, db, m, r, s, p, nr, ns, np, dr, ds, dp)
 
-    call find_fieldlines(seeds, xl, db, m, step_size, save_flag, r, s, p, nr, ns, np, dr, ds, dp, image_res, image_extent, image_parameters, emission_matrix) !Integrates along the field lines using the existing tracer, saves data to the array xl
+    call find_fieldlines(seeds, xl, db, m, step_size, save_flag, r, s, p, nr, ns, np, dr, ds, dp, &
+    image_res, image_extent, image_parameters, emission_matrix) !Integrates along the field lines using the existing tracer, saves data to the array xl
 
     end subroutine trace_fieldlines
 
     !****************************************************************
-    subroutine find_fieldlines(x0, xl, db, m, maxdl, save_flag, r, s, p, nr, ns, np, dr, ds, dp, image_res, image_extent, image_parameters, emission_matrix)
+    subroutine find_fieldlines(x0, xl, db, m, maxdl, save_flag, r, s, p, nr, ns, np, dr, ds, dp, &
+    image_res, image_extent, image_parameters, emission_matrix)
     integer,parameter :: rk=selected_real_kind(15,100)
     real(rk), intent(in), dimension(:,:) :: x0
     logical, intent(in):: save_flag
@@ -245,7 +247,8 @@ module fltrace
         open_prop = maxheight/dexp(r(nr))
 
         if (line_length > 0 .and. image_res > 0) then
-            emission_matrix = emission_matrix + (open_prop**image_parameters(3))*(surface_prop**abs(image_parameters(2)))*local_matrix
+            emission_matrix = emission_matrix + (open_prop**image_parameters(3))*&
+            (surface_prop**abs(image_parameters(2)))*local_matrix
         end if
 
         if (save_flag) then
