@@ -23,6 +23,8 @@ import torchvision.transforms as transforms
 
 import os
 import cma
+import matplotlib
+matplotlib.use("Agg")
 
 def make_image(parameter_set, image_number):
     """
