@@ -70,8 +70,37 @@ Thursday 13th November:
 The images have converged resonably nicely with 10,000 field lines. I'm going to experiment with getting openmp to work so it can trace field lines more effectively, but perhaps mext week would be more wise. Also would need to automate checking whether openmp is even an option.
 
 The parameters from the 10,000 run are 
--0.203,0.587,-1.063,0.002,-0.497,-0.831
+[]-0.203,0.587,-1.063,0.002,-0.497,-0.831]
 
 I've got it running with Openmp -- now will do the same with 50,000 lines using those parameters as a base
 
+python -m numpy.f2py -c fortran/outflow_calc.f90 -m outflow_calc
 
+ON Hamilton:
+keep venv on nobackup to do image things
+
+python -m venv /nobackup/vgjn10/projects/outflowpy/.venv
+source /nobackup/vgjn10/projects/outflowpy/.venv/bin/activate
+module load python
+module purge
+module load python/3.13.9
+python -m pip install --upgrade pip setuptools wheel
+pip install .
+
+Monday 17th November:
+
+Run with 50,000 lines has converged nicely. Making a video from it now...
+
+Resulting parameter set:
+
+[-0.135,0.764,-0.667,-0.003,-1.38,-1.359]
+
+Nothing too extreme, which is good.
+
+With 250,000 lines, the parameters are quite different:
+
+[-0.003,0.533,-0.165,0.009,-2.314,-2.625]
+
+but the result looks pretty good. That might be the most interesting of the videos, and those are the parameters we should probably use. Interesting that the parameters seem to follow a nice pattern here!
+
+Perhaps it's worth doing some manual image manipulation on this as well to get them to match even better. Could definitely be quite snazzy about it.

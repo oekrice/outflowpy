@@ -36,7 +36,7 @@ def make_image(parameter_set, image_number):
     2: Weighting based on the maximum height of the field line. Allowed to skew in either direction.
     3: Gaussian blurring factor. Always positive.
     4: Percentile clip for saturating the image. Always positive.
-    5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes
+    5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes.
     """
 
     field_root = "./data/output_08"
@@ -47,7 +47,7 @@ def make_image(parameter_set, image_number):
 
     corona_temp = 2e6
     mf_constant = 5e-17
-    nseeds = 50000
+    nseeds = 10000
 
     image_extent = 2.5
     image_resolution = 512
@@ -71,7 +71,7 @@ def make_image(parameter_set, image_number):
 
     #outflowpy.plotting.plot_pyvista(outflow_out, field_lines)
 
-    outflowpy.plotting.make_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png')
+    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png')
 
 def compare_image(image_id, eclipse_year):
     resolution = 512

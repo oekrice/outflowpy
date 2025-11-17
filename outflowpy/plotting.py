@@ -10,7 +10,7 @@ from matplotlib.patches import Circle
 
 
 
-def make_image(image_matrix, image_extent, image_parameters, image_fname):
+def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_screen = True):
 
     """
     Generates an image in the style of a Druckmuller eclipse picture
@@ -43,6 +43,8 @@ def make_image(image_matrix, image_extent, image_parameters, image_fname):
     ax.set_yticks([])
 
     plt.savefig(image_fname, bbox_inches=None, pad_inches = 0, dpi = dpi)
+    if not off_screen:
+        plt.show()
     plt.close()
 
 def plot_pyvista(output, fieldlines):
