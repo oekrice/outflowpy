@@ -7,29 +7,94 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.image as mpimg
 from matplotlib.patches import Circle
+from PIL import Image
 
 
+def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace(0.0,255.0,20)):
+    """
+    This is an experiment to scale the pixel brightness of the generated image to match that of the target comparison one. Not sure yet how well (or at all) that will work...
+    Only want to compare pixels which lie outside the picture of the moon.
+    """
 
-def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_screen = True):
+    #Find distribution of these pixels (can show in histogram form)
+    reference_dist = np.zeros(256)
+    synthetic_dist = np.zeros(256)
+
+    image_matrix = image_matrix*255/np.max(image_matrix)
+    img_ref = Image.open(reference_fname).convert("L")  #Real image in greyscale
+    img_colours = Image.open(reference_fname).convert("RGB")
+
+    reference_matrix = np.zeros((img_ref.size))
+    synthetic_matrix = np.zeros((img_ref.size))
+    res = np.shape(reference_matrix)[0]
+    for i in range(res):
+        for j in range(res):
+            radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
+            if radius>1:
+                reference_dist[img_ref.getpixel((i,j))] += 1
+                synthetic_dist[int(image_matrix[i,j])] += 1
+            reference_matrix[i,j] = img_ref.getpixel((i,j))
+            synthetic_matrix[i,j] = int(image_matrix[i,j])
+
+    #Now need to somehow map percentiles for these data
+    scaled_matrix = np.zeros((img_ref.size))
+    raw_sums = np.cumsum(reference_dist)/np.sum(reference_dist)
+    for value in range(256):
+        #Find number of cells with this value OR less
+        nbelow = np.sum(synthetic_dist[:value])/np.sum(synthetic_dist)
+        #This is essentially the percentile of the current pixel value
+        #Target is the equivalent in the reference dist.
+        target = np.searchsorted(raw_sums, nbelow)
+        #Find number of cells matching this exactly and scale appropriately
+        scaled_matrix[synthetic_matrix == value] = int(target)
+
+    #Turn all zeros into the minimum nonzero value, in case a field line never goes through here
+    scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
+    hex_refs = []; hex_values = []
+    #Obtain colour codes for the cmap
+    hex_values.append((0.0, '#000000ff'))
+
+    for c_value in crefs:
+        #Get list of indices to check
+        i_values, j_values = np.where((reference_matrix > c_value - 5)*(reference_matrix < c_value + 5))
+        avg_colour = np.zeros(3)
+        if len(i_values) > 10:
+            for pix in range(len(i_values)):
+                i = i_values[pix]; j = j_values[pix]
+                colour = [img_colours.getpixel((i, j))[0], img_colours.getpixel((i, j))[1], img_colours.getpixel((i, j))[2]]
+                avg_colour += colour
+            avg_colour = avg_colour/len(i_values)
+            hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(avg_colour[0]), int(avg_colour[1]), int(avg_colour[2]))))
+    hex_values.append((1.0, '#ffffffff'))
+
+    hex_values[0] = ((0.0, hex_values[1][1]))
+
+    return scaled_matrix, hex_values
+
+
+def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_screen = True, hex_values = []):
 
     """
     Generates an image in the style of a Druckmuller eclipse picture
     """
 
-    npixels = 512
+    npixels = np.shape(image_matrix)[0]
     dpi = 100
 
-    cmap = LinearSegmentedColormap.from_list("eclipse", ["#3b444dff", "#dadadaff"])
+    image_matrix = np.flip(image_matrix, 1)
+
+    if len(hex_values) > 0:
+        cmap = LinearSegmentedColormap.from_list("eclipse", hex_values)
+    else:
+        cmap = LinearSegmentedColormap.from_list("eclipse", ["#3b444dff", "#dadadaff"])
 
     fig, ax = plt.subplots(figsize = (npixels/dpi, npixels/dpi), dpi = dpi)
     ax = fig.add_axes([0, 0, 1, 1])
     moon_face = mpimg.imread("./data/moonface_druck.png")
 
-    image_matrix = np.flip(image_matrix, 1)
-
     xs = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[0])
     ys = np.linspace(-image_extent,image_extent,np.shape(image_matrix)[1])
-    ax.imshow(image_matrix.T, cmap = cmap, extent = [-image_extent,image_extent,-image_extent,image_extent],interpolation="bilinear")
+    ax.imshow(image_matrix.T, cmap = cmap, extent = [-image_extent,image_extent,-image_extent,image_extent],interpolation="bilinear", vmin = 0, vmax = 255)
 
     moon_img = ax.imshow(moon_face, extent = [-1,1,-1,1],interpolation="bilinear")
     circle = Circle((0, 0), 0.995, transform = ax.transData)

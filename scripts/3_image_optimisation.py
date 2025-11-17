@@ -45,9 +45,9 @@ def make_image(parameter_set, image_number):
     nrho = 60
     rss = 5.0
 
-    corona_temp = 2e6
+    corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 10000
+    nseeds = 50000
 
     image_extent = 2.5
     image_resolution = 512
@@ -63,7 +63,7 @@ def make_image(parameter_set, image_number):
     # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
     # np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
-    seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[5], rss)
+    seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[3], rss)
 
     tracer = outflowpy.tracing.FastTracer()
 
@@ -71,7 +71,9 @@ def make_image(parameter_set, image_number):
 
     #outflowpy.plotting.plot_pyvista(outflow_out, field_lines)
 
-    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png')
+    image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+
+    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png', hex_values = hex_values)
 
 def compare_image(image_id, eclipse_year):
     resolution = 512
@@ -141,7 +143,7 @@ def run_optimisation():
     print('Running optimisation run')
     if os.path.exists("img_plots/log.txt"):
         os.remove("img_plots/log.txt")
-    initial_parameter_set = [-0.203,0.587,-1.063,0.002,-0.497,-0.831]
+    initial_parameter_set = [0.0,0.0,0.0,0.0]
     es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.5, {'verb_disp': 1})
     es.optimize(generate_and_compare)
     es.result_pretty()

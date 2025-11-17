@@ -300,9 +300,9 @@ class FastTracer(Tracer):
 
         xouts, image_matrix = fltrace.trace_fieldlines(seeds, output.grid.rg, output.grid.sg, output.grid.pg, np.swapaxes(output.bcx[0],0,2), np.swapaxes(-output.bcx[1],0,2), np.swapaxes(output.bcx[2],0,2), self.ds, self.max_steps, save_flag, nlines_out, image_resolution, image_extent, image_parameters)
 
-        if generate_image:
-            image_matrix = gaussian_filter(image_matrix, sigma = (1 + abs(image_parameters[3]))*image_resolution/500)
-            image_matrix = np.clip(image_matrix, 0, np.nanpercentile(image_matrix, 100 - abs(image_parameters[4])))
+        if generate_image:  #This is incompatible with the post-processing done with the image matching, so should be removed really
+            image_matrix = gaussian_filter(image_matrix, sigma = 1.0)
+            #image_matrix = np.clip(image_matrix, 0, np.nanpercentile(image_matrix, 100 - abs(image_parameters[4])))
 
         xs = xouts
 

@@ -51,9 +51,9 @@ def make_image(parameter_set, image_number):
     nrho = 60
     rss = 5.0
 
-    corona_temp = 2e6
+    corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 250000
+    nseeds = 10000
 
     image_extent = 2.5
     image_resolution = 512
@@ -63,7 +63,7 @@ def make_image(parameter_set, image_number):
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
 
-    outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
+    outflow_out = outflowpy.outflow_fortran(outflow_in)#, existing_fname = field_root)
 
     # np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
     # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
@@ -81,61 +81,6 @@ def make_image(parameter_set, image_number):
 
     return image_matrix
 
-def scale_image(image_matrix, reference_fname, image_extent, crefs = np.linspace(0.0,255.0,20)):
-    """
-    This is an experiment to scale the pixel brightness of the generated image to match that of the target comparison one. Not sure yet how well (or at all) that will work...
-    Only want to compare pixels which lie outside the picture of the moon.
-    """
-    #Find distribution of these pixels (can show in histogram form)
-    reference_dist = np.zeros(256)
-    synthetic_dist = np.zeros(256)
-
-    image_matrix = image_matrix*255/np.max(image_matrix)
-    img_ref = Image.open(reference_fname).convert("L")  #Real image in greyscale
-    img_colours = Image.open(reference_fname).convert("RGB")
-
-    reference_matrix = np.zeros((img_ref.size))
-    synthetic_matrix = np.zeros((img_ref.size))
-    res = np.shape(reference_matrix)[0]
-    for i in range(res):
-        for j in range(res):
-            radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
-            if radius>1:
-                reference_dist[img_ref.getpixel((i,j))] += 1
-                synthetic_dist[int(image_matrix[i,j])] += 1
-            reference_matrix[i,j] = img_ref.getpixel((i,j))
-            synthetic_matrix[i,j] = int(image_matrix[i,j])
-    #Now need to somehow map percentiles for these data. Hmm. Requires paper, and percentiles. I think I have a way to do it though...
-    scaled_matrix = np.zeros((img_ref.size))
-    raw_sums = np.cumsum(reference_dist)/np.sum(reference_dist)
-    for value in range(256):
-        #Find number of cells with this value OR less
-        nbelow = np.sum(synthetic_dist[:value])/np.sum(synthetic_dist)
-        #This is essentially the percentile of the current pixel value
-        #Target is the equivalent in the reference dist.
-        target = np.searchsorted(raw_sums, nbelow)
-        #Find number of cells matching this exactly and scale appropriately
-        scaled_matrix[synthetic_matrix == value] = int(target)
-
-    hex_refs = []; hex_values = []
-    #Obtain colour codes for the cmap
-    hex_values.append((0.0, '#000000ff'))
-
-    for c_value in crefs:
-        #Get list of indices to check
-        i_values, j_values = np.where((reference_matrix > c_value - 5)*(reference_matrix < c_value + 5))
-        avg_colour = np.zeros(3)
-        if len(i_values) > 10:
-            for pix in range(len(i_values)):
-                i = i_values[pix]; j = j_values[pix]
-                colour = [img_colours.getpixel((i, j))[0], img_colours.getpixel((i, j))[1], img_colours.getpixel((i, j))[2]]
-                avg_colour += colour
-            avg_colour = avg_colour/len(i_values)
-            print(c_value, avg_colour)
-            hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(avg_colour[0]), int(avg_colour[1]), int(avg_colour[2]))))
-    hex_values.append((1.0, '#ffffffff'))
-
-    return scaled_matrix, hex_values
 
 def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_screen = True, hex_values = []):
 
@@ -179,12 +124,15 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
 
 parameter_set = [-0.003,0.533,-0.165,0.000,0.000,-2.625]
 
-if False:  #Generate the image
+if True:  #Generate the image
     image_matrix = make_image(parameter_set, 0)
     np.save('./data/img_data/test1.npy', image_matrix)
 
 image_matrix = np.load('./data/img_data/test1.npy')
 image_extent = 2.5
 
-scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent,)
-plot_image(scaled_matrix, image_extent, parameter_set, f'./tweaked_plot.png', off_screen = False, hex_values = hex_values)
+scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+
+#scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
+
+outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./tweaked_plot.png', off_screen = False, hex_values = hex_values)
