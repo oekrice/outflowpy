@@ -10,7 +10,7 @@ from matplotlib.patches import Circle
 from PIL import Image
 
 
-def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace(0.0,255.0,20)):
+def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspace(0.0,255.0,20)):
     """
     This is an experiment to scale the pixel brightness of the generated image to match that of the target comparison one. Not sure yet how well (or at all) that will work...
     Only want to compare pixels which lie outside the picture of the moon.
@@ -20,28 +20,33 @@ def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace
     reference_dist = np.zeros(256)
     synthetic_dist = np.zeros(256)
 
+    if not isinstance(reference_fnames, list):
+        reference_fnames = [reference_fnames]
     image_matrix = image_matrix*255/np.max(image_matrix)
-    img_ref = Image.open(reference_fname).convert("L")  #Real image in greyscale
-    img_colours = Image.open(reference_fname).convert("RGB")
+    img_refs = []; img_colours = []
+    for img_num in range(len(reference_fnames)):
+        img_refs.append(Image.open(reference_fnames[img_num]).convert("L"))  #Real image in greyscale)
+        img_colours.append(Image.open(reference_fnames[img_num]).convert("RGB"))
 
-    if img_ref.size != image_matrix.shape:
-        print(img_ref.size, image_matrix.shape)
+    if img_refs[0].size != image_matrix.shape:
+        print(img_refs[0].size, image_matrix.shape)
         raise Exception(f'Reference image does not match generated image size. Required size is {img_ref.size}')
 
-    reference_matrix = np.zeros((img_ref.size))
-    synthetic_matrix = np.zeros((img_ref.size))
-    res = img_ref.size[0]
+    reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape))
+    synthetic_matrix = np.zeros((image_matrix.shape))
+    res = image_matrix.shape[0]
     for i in range(res):
         for j in range(res):
             radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
             if radius>1:
-                reference_dist[img_ref.getpixel((i,j))] += 1
+                for img_num in range(len(reference_fnames)):
+                    reference_dist[img_refs[img_num].getpixel((i,j))] += 1
                 synthetic_dist[int(image_matrix[i,j])] += 1
-            reference_matrix[i,j] = img_ref.getpixel((i,j))
+            for img_num in range(len(reference_fnames)):
+                reference_matrix[img_num, i,j] = img_ref.getpixel((i,j))
             synthetic_matrix[i,j] = int(image_matrix[i,j])
-
     #Now need to somehow map percentiles for these data
-    scaled_matrix = np.zeros((img_ref.size))
+    scaled_matrix = np.zeros((image_matrix.shape))
     raw_sums = np.cumsum(reference_dist)/np.sum(reference_dist)
     for value in range(256):
         #Find number of cells with this value OR less
@@ -55,20 +60,24 @@ def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace
     #Turn all zeros into the minimum nonzero value, in case a field line never goes through here
     scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
     hex_refs = []; hex_values = []
+
     #Obtain colour codes for the cmap
     hex_values.append((0.0, '#000000ff'))
-
     for c_value in crefs:
         #Get list of indices to check
-        i_values, j_values = np.where((reference_matrix > c_value - 5)*(reference_matrix < c_value + 5))
-        avg_colour = np.zeros(3)
-        if len(i_values) > 10:
-            for pix in range(len(i_values)):
-                i = i_values[pix]; j = j_values[pix]
-                colour = [img_colours.getpixel((i, j))[0], img_colours.getpixel((i, j))[1], img_colours.getpixel((i, j))[2]]
-                avg_colour += colour
-            avg_colour = avg_colour/len(i_values)
-            hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(avg_colour[0]), int(avg_colour[1]), int(avg_colour[2]))))
+        allavg_colour = np.zeros(3)
+        for img_num in range(1):
+            i_values, j_values = np.where((reference_matrix > c_value - 5)*(reference_matrix < c_value + 5))
+            avg_colour = np.zeros(3)
+            if len(i_values) > 10:
+                for pix in range(len(i_values)):
+                    i = i_values[pix]; j = j_values[pix]
+                    colour = [img_colours[0].getpixel((i, j))[0], img_colours[0].getpixel((i, j))[1], img_colours[0].getpixel((i, j))[2]]
+                    avg_colour += colour
+                avg_colour = avg_colour/len(i_values)
+            allavg_colour = allavg_colour + avg_colour
+        allavg_colour = allavg_colour/len(reference_fnames)
+        hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(avg_colour[0]), int(avg_colour[1]), int(avg_colour[2]))))
     hex_values.append((1.0, '#ffffffff'))
 
     hex_values[0] = ((0.0, hex_values[1][1]))

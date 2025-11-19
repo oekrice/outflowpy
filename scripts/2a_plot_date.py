@@ -14,15 +14,16 @@ from scipy.stats import qmc
 import matplotlib.image as mpimg
 from matplotlib.patches import Circle
 from matplotlib.colors import LinearSegmentedColormap
+from scipy.ndimage import gaussian_filter
 
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 1000
+nseeds = 10000
 image_extent = 2.5
 image_parameters = [-0.033,0.635,0.285,-5.356]
 
-obs_time = "2008-11-11T00:00:00"
+obs_time = "2017-08-21T00:00:00"
 nrho = 60
 ns = 90
 nphi = 180
@@ -35,7 +36,7 @@ model = 1
 
 for plot_count, rss in enumerate(rss_values):
 
-    corona_temp = 2e6
+    corona_temp = 1.5e6
     if model == 0:
         mf_constant = 0.0#1e-16
     else:
@@ -88,6 +89,13 @@ for plot_count, rss in enumerate(rss_values):
 
     tracing_options = ['Fast', 'Python', 'Fortran']
 
+    eclipse_fnames = []
+    eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+
+    for year in eclipse_years:
+        eclipse_fnames.append(f'./data/eclipse_images/{year}_eclipse.png')
+
+    print(eclipse_fnames)
     for tracer_option in range(1):
         if tracer_option == 0:
             tracer = outflowpy.tracing.FastTracer()
@@ -98,7 +106,8 @@ for plot_count, rss in enumerate(rss_values):
 
         field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 512, generate_image = True)
 
-        image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+        image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fnames, image_extent)
+        image_matrix = gaussian_filter(image_matrix, sigma = 1.0)
 
         outflowpy.plotting.plot_image(image_matrix, image_extent, image_parameters, f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
 

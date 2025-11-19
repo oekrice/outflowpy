@@ -79,13 +79,14 @@ python -m numpy.f2py -c fortran/outflow_calc.f90 -m outflow_calc
 ON Hamilton:
 keep venv on nobackup to do image things
 
+module load python
 python -m venv /nobackup/vgjn10/projects/outflowpy/.venv
 source /nobackup/vgjn10/projects/outflowpy/.venv/bin/activate
-module load python
-module purge
-module load python/3.13.9
 python -m pip install --upgrade pip setuptools wheel
 pip install .
+
+
+module load python/3.13.9
 
 Monday 17th November:
 
@@ -122,6 +123,8 @@ which is pretty extreme skewing! Cool. Probably would be even more so for more f
 It's probably worth compiling the whole set of images and getting some average values to use for the 'image match' algorithm. Perhaps the distribution could be hard-coded but that sounds tricksy and a bit ugly. TBD.
 
 NASA have unblocked me. Lovely. That means can run the every-day plots again, providing I make sure that the caching is working...
+
+Maybe should add extra smoothing to images after the scaling? Getting some strange artefacts sometimes otherwise
 
 
 
