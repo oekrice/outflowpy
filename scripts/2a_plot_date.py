@@ -18,11 +18,11 @@ from matplotlib.colors import LinearSegmentedColormap
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 50000
+nseeds = 1000
 image_extent = 2.5
 image_parameters = [-0.033,0.635,0.285,-5.356]
 
-obs_time = "2002-11-11T00:00:00"
+obs_time = "2008-11-11T00:00:00"
 nrho = 60
 ns = 90
 nphi = 180
@@ -95,6 +95,7 @@ for plot_count, rss in enumerate(rss_values):
             tracer = outflowpy.tracing.PythonTracer()
         else:
             tracer = outflowpy.tracing.FortranTracer()
+
         field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 512, generate_image = True)
 
         image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)

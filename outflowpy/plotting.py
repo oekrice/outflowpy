@@ -30,6 +30,7 @@ def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace
 
     reference_matrix = np.zeros((img_ref.size))
     synthetic_matrix = np.zeros((img_ref.size))
+    res = img_ref.size[0]
     for i in range(res):
         for j in range(res):
             radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)

@@ -54,6 +54,8 @@ module fltrace
     real(rk):: surface_prop, open_prop, maxb_surface, maxb_overall, maxheight
     integer, dimension(:), allocatable :: endflag
 
+    integer:: group_number, group_start, group_end, g, ngroups
+
     ! ---
     integer, intent(in):: image_res
     real(rk), intent(out), dimension(1:image_res,1:image_res):: emission_matrix
@@ -77,11 +79,28 @@ module fltrace
     maxb_overall = maxval(dsqrt(sum(db(1,:,:,:,:)**2, 3)))
     minB = 0.0000001_rk*maxb_overall
     xl = 0.0_rk
+
+    !Divide up the total number of field lies into a set of groups so that the progress prints come out in the correct order.
+    !Let's call these 'group_end' and have as an array to be looped through. Do 100 groups no matter what?
+
+    group_number = max(ceiling(float(nfl0)/101_rk), 1)
+    group_start = 1; group_end  = group_start + group_number
+
+    if (nfl0 > 9999) then
+        ngroups = 101
+    else
+        ngroups = 1
+        group_start = 1; group_end = nfl0
+    end if
+
+    do g = 1, ngroups
     !$omp parallel do default(shared) &
     !$omp& private(i, dirn, nxt, cntr, dl, dl_rkt, rl, k1r, r1, r2,  &
     !$omp& x1, x2, xstart, xl_local, xend, k1, k2, dx1, dx2, error, local_matrix,  &
     !$omp& startn, endn, line_length, maxheight, surface_prop, open_prop)
-    do i = 1, nfl0
+    do i = group_start, group_end
+        if (i > nfl0) cycle
+
         if (nfl0 .le. 100000) then
             if ((mod(i,1000) == 0 .or. i == nfl0))            print*, 100*i/nfl0, '% complete'
         else
@@ -257,6 +276,9 @@ module fltrace
 
     end do
     !$omp end parallel do
+    group_start = group_end + 1
+    group_end = group_start + group_number
+    end do
 
     end subroutine find_fieldlines
 

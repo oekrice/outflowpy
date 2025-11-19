@@ -22,7 +22,7 @@ import subprocess
 from scipy.interpolate import interp1d
 import seaborn as sns
 
-time_cadence = 1
+time_cadence = 15
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
@@ -249,23 +249,23 @@ def make_plots(batch_set, copy_data = False):
         except:
             pass
 
+    if potentialcount > 0:
+        print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
 
-    print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
+        #Plot open flux measurements
+        plt.plot(tflux, oflux, c = 'black', linewidth = 1.0)
+        plt.plot(tflux, ofluxmin, c = 'black', linewidth = 0.25)
+        plt.plot(tflux, ofluxmax, c = 'black', linewidth = 0.25)
 
-    #Plot open flux measurements
-    plt.plot(tflux, oflux, c = 'black', linewidth = 1.0)
-    plt.plot(tflux, ofluxmin, c = 'black', linewidth = 0.25)
-    plt.plot(tflux, ofluxmax, c = 'black', linewidth = 0.25)
+        #Plot outflow field predictions
 
-    #Plot outflow field predictions
-
-    plt.legend()
-    plt.xlabel('Year')
-    plt.ylabel('Open Flux at 1AU (Mx)')
-    plt.ylim(ymin = 0.0, ymax = 0.2e24)
-    plt.title(f'Corona temperature = {corona_temps[batch_set]/1000000} MK')
-    plt.savefig('./plots/0_openflux_time_fric_%d.png' % batch_set)
-    plt.close()
+        plt.legend()
+        plt.xlabel('Year')
+        plt.ylabel('Open Flux at 1AU (Mx)')
+        plt.ylim(ymin = 0.0, ymax = 0.2e24)
+        plt.title(f'Corona temperature = {corona_temps[batch_set]/1000000} MK')
+        plt.savefig('./plots/0_openflux_time_fric_%d.png' % batch_set)
+        plt.close()
 
 
 for batch_set in range(len(corona_temps)):
