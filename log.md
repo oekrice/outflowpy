@@ -70,7 +70,7 @@ Thursday 13th November:
 The images have converged resonably nicely with 10,000 field lines. I'm going to experiment with getting openmp to work so it can trace field lines more effectively, but perhaps mext week would be more wise. Also would need to automate checking whether openmp is even an option.
 
 The parameters from the 10,000 run are 
-[]-0.203,0.587,-1.063,0.002,-0.497,-0.831]
+[-0.203,0.587,-1.063,0.002,-0.497,-0.831]
 
 I've got it running with Openmp -- now will do the same with 50,000 lines using those parameters as a base
 
@@ -104,3 +104,24 @@ With 250,000 lines, the parameters are quite different:
 but the result looks pretty good. That might be the most interesting of the videos, and those are the parameters we should probably use. Interesting that the parameters seem to follow a nice pattern here!
 
 Perhaps it's worth doing some manual image manipulation on this as well to get them to match even better. Could definitely be quite snazzy about it.
+
+Wednesday 19th:
+
+Doing it manually wasn't going to work, so I automated it instead, which seems to have worked pretty well!
+
+Optimums with 50,000:
+
+[-0.023,0.42,-0.746,1.084]
+
+and with 250,000:
+
+[-0.033,0.635,0.285,-5.356],
+
+which is pretty extreme skewing! Cool. Probably would be even more so for more field lines? Notable that the magnetic field strength at a point is the only thing that is really zero.
+
+It's probably worth compiling the whole set of images and getting some average values to use for the 'image match' algorithm. Perhaps the distribution could be hard-coded but that sounds tricksy and a bit ugly. TBD.
+
+NASA have unblocked me. Lovely. That means can run the every-day plots again, providing I make sure that the caching is working...
+
+
+

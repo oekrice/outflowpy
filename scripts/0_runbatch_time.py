@@ -113,7 +113,7 @@ def run_batch(batch_id, mf_constant = 5e-17, corona_temp = 2e6, time_cadence = 3
                 rss = 2.5
 
                 print('Run parameters', obs_time, ns, nphi,1.0*5e-2/nphi, corona_temp, mf_constant)
-                hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi)   #Outputs the set of data corresponding to this particular Carrington rotation.
+                hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
                 outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
                 outflow_out = outflowpy.outflow_fortran(outflow_in)
@@ -176,6 +176,6 @@ else:
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
-run_batch(batch_id, time_cadence = 30, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
+run_batch(batch_id, time_cadence = 15, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
 
 

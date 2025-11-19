@@ -18,11 +18,11 @@ from matplotlib.colors import LinearSegmentedColormap
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 10000
+nseeds = 50000
 image_extent = 2.5
-image_parameters = [0.009,-0.432,0.5,0.625,-1.646, 2.0]
+image_parameters = [-0.033,0.635,0.285,-5.356]
 
-obs_time = "2008-08-01T00:00:00"
+obs_time = "2002-11-11T00:00:00"
 nrho = 60
 ns = 90
 nphi = 180
@@ -64,7 +64,7 @@ for plot_count, rss in enumerate(rss_values):
     header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.T.shape)
     input_map = sunpy.map.Map((br, header))
 
-    #input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = False)   #Outputs the set of data corresponding to this particular Carrington rotation.
+    input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
     outflow_out = outflowpy.outflow_fortran(outflow_in)
@@ -84,31 +84,7 @@ for plot_count, rss in enumerate(rss_values):
     lat_all = np.hstack((lat, lat))
     r_all = np.hstack((r, r))
 
-    #Start points from the lower surface
-    r = const.R_sun*1.05
-    r_skew_factor = image_parameters[5]
-    lons, lats, rs = [], [], []
-
-    sampler = qmc.LatinHypercube(d=3)
-    sample = sampler.random(n = nseeds)
-
-    l_bounds = [0., -1.0, 0.0]
-    u_bounds = [2*np.pi, 1.0, 1.0]
-    sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
-
-    lat_plots = []; s_plots = []
-    for seed in sample_scaled:
-        lons.append(seed[0] * u.rad)
-        lat = np.arccos(seed[1])
-        lat = lat - np.pi/2
-        lats.append(lat * u.rad)
-        r_select = (rss - 1.0)*seed[2]**(r_skew_factor + 1) + 1.0   #Skew this so there are more starting points lower in the domain
-        rs.append(r_select)
-    lon = np.array(lon)
-    lat = np.array(lat)
-    rs = np.array(rs) * r
-
-    seeds = SkyCoord(lons,lats,rs, frame=outflow_out.coordinate_frame)   #This can take three arrays (of the same length) for all the coordinates.
+    seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, image_parameters[3], rss)
 
     tracing_options = ['Fast', 'Python', 'Fortran']
 
@@ -119,9 +95,11 @@ for plot_count, rss in enumerate(rss_values):
             tracer = outflowpy.tracing.PythonTracer()
         else:
             tracer = outflowpy.tracing.FortranTracer()
-        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 1000, generate_image = True)
+        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 512, generate_image = True)
 
-        outflowpy.plotting.make_image(image_matrix, image_extent, image_parameters, f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
+        image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+
+        outflowpy.plotting.plot_image(image_matrix, image_extent, image_parameters, f'./plots/image_08_{model_options[model]}_{plot_count:03d}.png')
 
         if True:
             fig, ax = plt.subplots()

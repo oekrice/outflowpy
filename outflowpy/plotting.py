@@ -24,9 +24,12 @@ def match_image(image_matrix, reference_fname, image_extent, crefs = np.linspace
     img_ref = Image.open(reference_fname).convert("L")  #Real image in greyscale
     img_colours = Image.open(reference_fname).convert("RGB")
 
+    if img_ref.size != image_matrix.shape:
+        print(img_ref.size, image_matrix.shape)
+        raise Exception(f'Reference image does not match generated image size. Required size is {img_ref.size}')
+
     reference_matrix = np.zeros((img_ref.size))
     synthetic_matrix = np.zeros((img_ref.size))
-    res = np.shape(reference_matrix)[0]
     for i in range(res):
         for j in range(res):
             radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)

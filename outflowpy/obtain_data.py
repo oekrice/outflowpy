@@ -252,6 +252,10 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False):
         data = np.nan_to_num(data)
 
         if use_cached:
+
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
+
             np.save(f'{cache_dir}/{source}_{crot_number}_data.npy', data)
             np.save(f'{cache_dir}/{source}_{crot_number}_header.npy', header)
 
@@ -455,6 +459,8 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
         source = 'HMI'
 
     print(f"Obtaining data from {source}, downloading rotations, {crot_number-1, crot_number, crot_number+1}")
+    if use_cached:
+        print("Using cached data if available")
     #Download the respective sets of data
     brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached)
     brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached)

@@ -24,7 +24,7 @@ def test_data_downloads(crot_number, use_cached):
             expected_data = np.loadtxt(f'{test_data}/mdi_2000.txt')
             np.testing.assert_allclose(data, expected_data, atol=1e-10)
     else:
-        if os.path.isfile(f'{test_data}/mdi_2000.txt'):
+        if os.path.isfile(f'{test_data}/hmi_2210.txt'):
             expected_data = np.loadtxt(f'{test_data}/hmi_2210.txt')
             np.testing.assert_allclose(data, expected_data, atol=1e-10)
 

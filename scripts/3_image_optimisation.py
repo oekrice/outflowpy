@@ -34,8 +34,6 @@ def make_image(parameter_set, image_number):
     0: Brightness of field lines due to magnetic field strength at an individual point.
     1: Brightness of field lines due to the magnetic field strength where the line meets the solar surface. Always positive
     2: Weighting based on the maximum height of the field line. Allowed to skew in either direction.
-    3: Gaussian blurring factor. Always positive.
-    4: Percentile clip for saturating the image. Always positive.
     5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes.
     """
 

@@ -44,7 +44,6 @@ print('Last parameters in previous run:')
 string = ''
 for var in range(2, np.size(log_info[1])):
     string = string + str(log_info[-1, var]) + ','
-print(string)
 
 def determine_error_bounds(values, time_cadence = 20, error_bound = 0.8):
     #Function to take the messy daily data and transform into a nice smooth function with error bounds taking account of the wiggles.
@@ -63,7 +62,7 @@ def determine_error_bounds(values, time_cadence = 20, error_bound = 0.8):
 #Let's do some plots of the variables
 #for i in range(len(log_info)- 1, len(log_info)):
 counter = 0
-for i in range(0, 2000):#len(log_info), 4):#len(log_info)- 1, len(log_info)):
+for i in range(0, 3400, 4):#len(log_info), 4):#len(log_info)- 1, len(log_info)):
     #Make the plot get longer, and put some dots on for animation?
     fig = plt.figure(figsize = (20,10))
     gs = GridSpec(2, 2, figure=fig, width_ratios=[2, 2], height_ratios=[1.0, 1.0])
@@ -94,7 +93,6 @@ for i in range(0, 2000):#len(log_info), 4):#len(log_info)- 1, len(log_info)):
     ax.plot(log_info[:i,1], color = 'black', linewidth = 0.5)
     ax.plot(means, color = 'black', linewidth = 1.0)
     ax.set_xlim(0,max(100,i*1.1))
-    ax.set_ylim(0.35,0.45)
     ax.set_xticks([])
     ax.set_title('Image Match Score')
     ax.axis('off')
