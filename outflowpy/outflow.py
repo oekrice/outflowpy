@@ -281,9 +281,13 @@ def outflow_fortran(input, existing_fname = None):
         br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ls, input.grid.trigs, input.grid.legs)
 
     else:
-        br = np.load(f'{existing_fname}_br.npy')
-        bs = np.load(f'{existing_fname}_bs.npy')
-        bp = np.load(f'{existing_fname}_bp.npy')
+        try:
+            br = np.load(f'{existing_fname}_br.npy')
+            bs = np.load(f'{existing_fname}_bs.npy')
+            bp = np.load(f'{existing_fname}_bp.npy')
+        except:
+            print('Existing output file not found, so calculating a new one.')
+            br, bs, bp = compute_outflow.compute_outeqm(input.br, input.grid.rg, input.grid.sg, input.grid.pg, input.grid.rcx, input.grid.sc, input.vcx, input.vdcx, input.grid.ls, input.grid.trigs, input.grid.legs)
 
     br = np.swapaxes(br, 0, 2)
     bs = np.swapaxes(bs, 0, 2)

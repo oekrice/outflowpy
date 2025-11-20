@@ -26,7 +26,7 @@ import cma
 import matplotlib
 matplotlib.use("Agg")
 
-def make_image(parameter_set, image_number):
+def make_image(parameter_set, image_number, eclipse_year):
     """
     Runs the outflow code, makes an image and saves it out. All parameters except for the 6 variables are hard-coded.
 
@@ -34,14 +34,16 @@ def make_image(parameter_set, image_number):
     0: Brightness of field lines due to magnetic field strength at an individual point.
     1: Brightness of field lines due to the magnetic field strength where the line meets the solar surface. Always positive
     2: Weighting based on the maximum height of the field line. Allowed to skew in either direction.
-    5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes.
+    3: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes.
     """
 
-    field_root = "./data/output_08"
-    br = np.loadtxt("./data/2008_input.txt")
+    field_root = f"./data/output_{eclipse_year}"
+    #br = np.loadtxt(f"./data/{eclipse_year}_input.txt")
 
     nrho = 60
     rss = 5.0
+    ns = 180
+    nphi = 360
 
     corona_temp = 1.5e6
     mf_constant = 5e-17
@@ -50,20 +52,22 @@ def make_image(parameter_set, image_number):
     image_extent = 2.5
     image_resolution = 512
 
-    header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.T.shape)
-    input_map = sunpy.map.Map((br, header))
+    obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
+
+    input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
 
-    # np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
-    # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
-    # np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
+    if not os.path.exists(field_root):
+        np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
+        np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
+        np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
     seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[3], rss)
 
-    tracer = outflowpy.tracing.FastTracer()
+    tracer = outflowpy.tracing.FastTracer(step_size = 0.25)
 
     field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = parameter_set, image_extent = image_extent, generate_image = True, save_flag = False, image_resolution = image_resolution)
 
@@ -119,8 +123,12 @@ def generate_and_compare(parameter_set):
             for line in f.readlines():
                 run_id += 1
 
-    make_image(parameter_set, run_id)
-    similarity = compare_image(run_id, 2008)
+    year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
+
+    selected_year = random.choice(year_options)
+
+    make_image(parameter_set, run_id, selected_year)
+    similarity = compare_image(run_id, selected_year)
 
     save_line = [run_id, similarity] + parameter_set.tolist()
     with open("img_plots/log.txt", "a") as f:

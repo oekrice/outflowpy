@@ -75,12 +75,11 @@ def find_eclipse_time(eclipse_year):
              '2012-11-13',
              '2013-11-03',
              '2015-03-20',
-             '2016-03-09 ',
+             '2016-03-09',
              '2017-08-21',
              '2019-07-02',
              '2023-04-20',
              '2024-04-08']
-    dates = time_data.readlines()
     for option in dates:
         if int(option[:4]) == eclipse_year:
             return option[:10] + "T00:00:00"
