@@ -177,7 +177,7 @@ def _scale_mdi(mdi_input):
 
     return mdi_input
 
-def download_hmi_mdi_crot(crot_number, source = None, use_cached = False):
+def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_dir = None):
     r"""
     Downloads the raw HMI data with Carrington rotation number 'crot_number'.
 
@@ -222,7 +222,8 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False):
     else:
         source = 'HMI'
 
-    cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+    if cache_dir is None:
+        cache_dir = pathlib.Path(__file__).parent / '_download_cache'
     success = False; cache_exists = False
     if use_cached:
         #Check if cached data exists
@@ -261,7 +262,7 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False):
 
     return data, header
 
-def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_cached = False):
+def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_cached = False, cache_directory = None):
     r"""
     Downloads (without email etc.) the HMI or MDI data matching the rotation number above
 
@@ -281,7 +282,7 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_
     Outputs a sunpy map object
     """
     
-    data, header = download_hmi_mdi_crot(crot_number, use_cached = use_cached)
+    data, header = download_hmi_mdi_crot(crot_number, use_cached = use_cached, cache_dir = cache_directory)
     print('Data downloaded...')
     #Add smoothing in here
     data = sh_smooth(data, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
@@ -294,7 +295,7 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_
 
     return brm
 
-def _load_cached_crot_data(source):
+def _load_cached_crot_data(source, cache_dir):
     r"""
     Checks whether the Carrington Rotation data exists and if so, loads it in.
     Should be activated whenever 'use_cached' is true, to avoid multiple calls to the JSOC API
@@ -310,7 +311,9 @@ def _load_cached_crot_data(source):
     end_times: array
         End times of the requested series
     """
-    cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+
+    if cache_dir is  None:
+        cache_dir = pathlib.Path(__file__).parent / '_download_cache'
     start_times = np.load(f'{cache_dir}/{source}_start_times.npy', allow_pickle = True)
     end_times = np.load(f'{cache_dir}/{source}_end_times.npy', allow_pickle = True)
     crots = np.load(f'{cache_dir}/{source}_crots.npy', allow_pickle = True)
@@ -320,7 +323,7 @@ def _load_cached_crot_data(source):
     else:
         raise Exception('Cached data is corrupted, so will attempt to redownload')
 
-def _download_crot_data(source, use_cached = False):
+def _download_crot_data(source, use_cached = False, cache_dir = None):
     r"""
     Downloads the Carrington rotation data from JSOC -- to be used if it is not cached.
     If 'use_cached' is True, then will save this to the cache
@@ -369,7 +372,8 @@ def _download_crot_data(source, use_cached = False):
     crots = crot_times.pop("CAR_ROT")
 
     if use_cached:
-        cache_dir = pathlib.Path(__file__).parent / '_download_cache'
+        if cache_dir is None:
+            cache_dir = pathlib.Path(__file__).parent / '_download_cache'
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
         np.save(f'{cache_dir}/{source}_start_times.npy', start_times)
@@ -379,7 +383,7 @@ def _download_crot_data(source, use_cached = False):
     return crots, start_times, end_times
 
 
-def _find_crot_numbers(obs_time, use_cached = False):
+def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
     r"""
     Outputs the three Carrington rotation numbers around the time of the requested observation.
     Obtains this data from the online data series, so it should stay up to date
@@ -407,13 +411,13 @@ def _find_crot_numbers(obs_time, use_cached = False):
     cache_exists = False
     if use_cached: #Try to find if the data already exists
         try:
-            crots, start_times, end_times = _load_cached_crot_data(source)
+            crots, start_times, end_times = _load_cached_crot_data(source, cache_directory)
             cache_exists = True
         except:
             pass
 
     if not cache_exists:
-        crots, start_times, end_times = _download_crot_data(source, use_cached = use_cached)
+        crots, start_times, end_times = _download_crot_data(source, use_cached = use_cached, cache_dir = cache_directory)
 
     if np.max(end_times) < datetime.fromisoformat(obs_time) or np.min(end_times) > datetime.fromisoformat(obs_time):
         raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
@@ -428,7 +432,7 @@ def _find_crot_numbers(obs_time, use_cached = False):
 
     return rot, crot_fraction
 
-def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cached = False):
+def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cached = False, cache_directory = None):
     r"""
     Downloads (without email etc.) the HMI or MDI data corresponding to the specified time
     Obtains three HMI/MDI magnetograms and stiches them together as appropriate.
@@ -451,7 +455,7 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     """
 
     #Determine the rotation number and the fraction of time through this rotation
-    crot_number, crot_fraction = _find_crot_numbers(obs_time, use_cached = use_cached)
+    crot_number, crot_fraction = _find_crot_numbers(obs_time, use_cached = use_cached, cache_directory = cache_directory)
 
     if crot_number < 2098:
         source = 'MDI'
@@ -462,9 +466,9 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     if use_cached:
         print("Using cached data if available")
     #Download the respective sets of data
-    brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached)
-    brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached)
-    brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source, use_cached = use_cached)
+    brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached, cache_dir = cache_directory)
+    brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached, cache_dir = cache_directory)
+    brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source, use_cached = use_cached, cache_dir = cache_directory)
 
     brm_shift = 0.0*brm
     nphi = np.shape(brm_shift)[1]

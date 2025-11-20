@@ -19,7 +19,7 @@ from scipy.ndimage import gaussian_filter
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 1000
+nseeds = 250000
 image_extent = 2.5
 image_parameters = [-0.033,0.635,0.285,-5.356]
 #image_parameters = [-0.033,0.635,0.285,-4]
@@ -118,14 +118,14 @@ for plot_count, eclipse_year in enumerate(years):
         else:
             tracer = outflowpy.tracing.FortranTracer()
 
-        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = True, image_resolution = 512, generate_image = True)
+        field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = image_parameters, image_extent = image_extent, save_flag = False, image_resolution = 512, generate_image = True)
 
         image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix, eclipse_fnames, image_extent)
         #image_matrix = gaussian_filter(image_matrix, sigma = 0.5)
 
         outflowpy.plotting.plot_image(image_matrix, image_extent, image_parameters, f'./plots/image_{eclipse_year}_{plot_count:03d}.png', hex_values = hex_values)
 
-        if False:
+        if True:
             fig, ax = plt.subplots()
             ax.set_aspect('equal')
 
