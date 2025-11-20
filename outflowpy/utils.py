@@ -66,6 +66,26 @@ def _check_projection(m, proj_code, error=False):
             return False
     return True
 
+def find_eclipse_time(eclipse_year):
+    #Find the eclipse date corresponding to the specified year
+    dates = ['2006-03-29',
+             '2008-08-01',
+             '2009-07-22',
+             '2010-07-11',
+             '2012-11-13',
+             '2013-11-03',
+             '2015-03-20',
+             '2016-03-09 ',
+             '2017-08-21',
+             '2019-07-02',
+             '2023-04-20',
+             '2024-04-08']
+    dates = time_data.readlines()
+    for option in dates:
+        if int(option[:4]) == eclipse_year:
+            return option[:10] + "T00:00:00"
+    raise Exception('Eclipse date not found for the specified year')
+
 #The below checks that this map covers the full sun
 def is_full_sun_synoptic_map(m, error=False):
     """

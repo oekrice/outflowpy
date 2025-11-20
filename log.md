@@ -126,5 +126,10 @@ NASA have unblocked me. Lovely. That means can run the every-day plots again, pr
 
 Maybe should add extra smoothing to images after the scaling? Getting some strange artefacts sometimes otherwise
 
+Thursday 20th November:
+
+I've now fixed the image matching and some of them are looking pretty good! I think it's probably worth doing the optimisation runs again (perhaps on ehrenfest) with a random sample from all the eclipses and 100,000 lines. It'll definitely take longer but hopefully not too problematic.
+
+Doing some pyvista plots to check all the solutions are actually reasonable. 2006 in particular looks very odd.
 
 

@@ -124,14 +124,21 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
 
 parameter_set = [-0.003,0.533,-0.165,0.000,0.000,-2.625]
 
-if True:  #Generate the image
+eclipse_fnames = []
+eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+eclipse_years = [2017]
+
+for year in eclipse_years:
+    eclipse_fnames.append(f'./data/eclipse_images/{year}_eclipse.png')
+
+if False:  #Generate the image
     image_matrix = make_image(parameter_set, 0)
     np.save('./data/img_data/test1.npy', image_matrix)
 
-image_matrix = np.load('./data/img_data/test1.npy')
+image_matrix = np.load('./data/img_data/test2.npy')
 image_extent = 2.5
 
-scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fnames, image_extent)
 
 #scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
 

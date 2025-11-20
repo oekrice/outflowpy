@@ -8,13 +8,18 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.image as mpimg
 from matplotlib.patches import Circle
 from PIL import Image
+from scipy.ndimage import gaussian_filter
 
 
 def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspace(0.0,255.0,20)):
     """
     This is an experiment to scale the pixel brightness of the generated image to match that of the target comparison one. Not sure yet how well (or at all) that will work...
     Only want to compare pixels which lie outside the picture of the moon.
+    Now has been edited so this should work with multiple images, but that comes with some problems
     """
+    #np.save('./data/img_data/test2.npy', image_matrix)
+
+    image_matrix = gaussian_filter(image_matrix, sigma = 0.5)
 
     #Find distribution of these pixels (can show in histogram form)
     reference_dist = np.zeros(256)
@@ -32,7 +37,7 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
         print(img_refs[0].size, image_matrix.shape)
         raise Exception(f'Reference image does not match generated image size. Required size is {img_ref.size}')
 
-    reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape))
+    reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape[0], image_matrix.shape[1]))
     synthetic_matrix = np.zeros((image_matrix.shape))
     res = image_matrix.shape[0]
     for i in range(res):
@@ -43,8 +48,10 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
                     reference_dist[img_refs[img_num].getpixel((i,j))] += 1
                 synthetic_dist[int(image_matrix[i,j])] += 1
             for img_num in range(len(reference_fnames)):
-                reference_matrix[img_num, i,j] = img_ref.getpixel((i,j))
+                reference_matrix[img_num, i,j] = img_refs[img_num].getpixel((i,j))
             synthetic_matrix[i,j] = int(image_matrix[i,j])
+
+
     #Now need to somehow map percentiles for these data
     scaled_matrix = np.zeros((image_matrix.shape))
     raw_sums = np.cumsum(reference_dist)/np.sum(reference_dist)
@@ -56,18 +63,26 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
         target = np.searchsorted(raw_sums, nbelow)
         #Find number of cells matching this exactly and scale appropriately
         scaled_matrix[synthetic_matrix == value] = int(target)
-
     #Turn all zeros into the minimum nonzero value, in case a field line never goes through here
     scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
     hex_refs = []; hex_values = []
+
+    for i in range(res):
+        for j in range(res):
+            radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
+            if radius>1:
+                for img_num in range(len(reference_fnames)):
+                    reference_dist[img_refs[img_num].getpixel((i,j))] += 1
+                synthetic_dist[int(image_matrix[i,j])] += 1
 
     #Obtain colour codes for the cmap
     hex_values.append((0.0, '#000000ff'))
     for c_value in crefs:
         #Get list of indices to check
         allavg_colour = np.zeros(3)
-        for img_num in range(1):
-            i_values, j_values = np.where((reference_matrix > c_value - 5)*(reference_matrix < c_value + 5))
+        allavg_count = 0
+        for img_num in range(len(reference_fnames)):
+            i_values, j_values = np.where((reference_matrix[img_num] > c_value - 5)*(reference_matrix[img_num]  < c_value + 5))
             avg_colour = np.zeros(3)
             if len(i_values) > 10:
                 for pix in range(len(i_values)):
@@ -75,13 +90,14 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
                     colour = [img_colours[0].getpixel((i, j))[0], img_colours[0].getpixel((i, j))[1], img_colours[0].getpixel((i, j))[2]]
                     avg_colour += colour
                 avg_colour = avg_colour/len(i_values)
-            allavg_colour = allavg_colour + avg_colour
-        allavg_colour = allavg_colour/len(reference_fnames)
-        hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(avg_colour[0]), int(avg_colour[1]), int(avg_colour[2]))))
+                allavg_count += 1
+                #print(img_num, avg_colour)
+                allavg_colour = allavg_colour + avg_colour
+        if allavg_count > 0:
+            allavg_colour = allavg_colour/allavg_count
+            hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(allavg_colour[0]), int(allavg_colour[1]), int(allavg_colour[2]))))
     hex_values.append((1.0, '#ffffffff'))
-
-    hex_values[0] = ((0.0, hex_values[1][1]))
-
+    hex_values[0] = (0.0, hex_values[1][1])
     return scaled_matrix, hex_values
 
 
@@ -125,7 +141,7 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
         plt.show()
     plt.close()
 
-def plot_pyvista(output, fieldlines):
+def plot_pyvista(output, fieldlines, fname = './plots/vista.png'):
     """
     Plots calculated field lines using pyvista, along with a colourmap on the lower surface corresponding to the photospheric magnetic field.
     """
@@ -212,7 +228,7 @@ def plot_pyvista(output, fieldlines):
         #pass
         #pvplot.export_html('./plots/vista%05d.html' % Paras.run_id)
         #pvplot.add_text(Paras.data_time.strftime("%Y_%m_%d %H:%M"), position='lower_edge', font_size=36, color = 'white')
-        pvplot.show(screenshot='plots/vista%05d.png' % 0,window_size=[2160, 2160])
+        pvplot.show(screenshot=fname,window_size=[2160, 2160])
     else:
         pvplot.show()
 
