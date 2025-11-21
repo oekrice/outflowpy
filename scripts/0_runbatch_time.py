@@ -176,6 +176,6 @@ else:
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
-run_batch(batch_id, time_cadence = 15, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
+run_batch(batch_id, time_cadence = 1, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
 
 

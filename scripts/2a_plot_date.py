@@ -19,10 +19,11 @@ from scipy.ndimage import gaussian_filter
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 250000
+nseeds = 50000
 image_extent = 2.5
 image_parameters = [-0.033,0.635,0.285,-5.356]
 #image_parameters = [-0.033,0.635,0.285,-4]
+image_parameters = [-0.023,0.42,-0.746,1.084]
 
 eclipse_year = 2017
 nrho = 60
@@ -44,7 +45,8 @@ def find_obs_time(eclipse_year):
                 return option[:10] + "T00:00:00"
     raise Exception('Eclipse date not found for the specified year')
 
-years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+#years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+years = [2008]
 
 for plot_count, eclipse_year in enumerate(years):
 
@@ -68,6 +70,7 @@ for plot_count, eclipse_year in enumerate(years):
 
     # header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.shape)
     # input_map = sunpy.map.Map((br.T, header))
+    field_root = f"./data/output_{eclipse_year}"
 
 
     print('Run parameters', obs_time, ns, nphi,1.0*5e-2/nphi, corona_temp, mf_constant)
@@ -81,8 +84,12 @@ for plot_count, eclipse_year in enumerate(years):
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
 
-    field_root = "./data/output_08"
-    outflow_out = outflowpy.outflow_fortran(outflow_in)
+    outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
+
+    if not os.path.exists(field_root):
+        np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
+        np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
+        np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
     def _coord_to_cart(r, lon, lat):
         #Returns a list of cartesian positions (to be read into the SkyCoord object) based on these coordinates

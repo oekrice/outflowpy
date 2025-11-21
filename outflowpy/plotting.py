@@ -1,5 +1,5 @@
 import pyvista as pv
-import os
+import os, sys
 import numpy as np
 import astropy.constants as const
 import random
@@ -9,7 +9,7 @@ import matplotlib.image as mpimg
 from matplotlib.patches import Circle
 from PIL import Image
 from scipy.ndimage import gaussian_filter
-
+from scipy.interpolate import interp1d
 
 def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspace(0.0,255.0,20)):
     """
@@ -19,6 +19,10 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     """
     #np.save('./data/img_data/test2.npy', image_matrix)
 
+    #Need to add some kind of cutoff so that the modal value is reasonable. Currently everything is getting squished right into the first few pixels for some of the plots.
+    #This is skewed because the chance of a really high value is actually not that unlikely. But it does need to be dealt with nicely...
+    #Perhaps base it on modal values of the targets?
+
     image_matrix = gaussian_filter(image_matrix, sigma = 0.5)
 
     #Find distribution of these pixels (can show in histogram form)
@@ -27,7 +31,6 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
 
     if not isinstance(reference_fnames, list):
         reference_fnames = [reference_fnames]
-    image_matrix = image_matrix*255/np.max(image_matrix)
     img_refs = []; img_colours = []
     for img_num in range(len(reference_fnames)):
         img_refs.append(Image.open(reference_fnames[img_num]).convert("L"))  #Real image in greyscale)
@@ -40,6 +43,14 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape[0], image_matrix.shape[1]))
     synthetic_matrix = np.zeros((image_matrix.shape))
     res = image_matrix.shape[0]
+
+    unscaled_matrix = np.zeros((image_matrix.shape))
+
+    #Scale the input matrix so the median value matches the reference? Nah, that doesn't seem to have worked'
+    image_matrix = np.clip(image_matrix, 0.0, np.percentile(image_matrix, 99.0))
+    image_matrix = image_matrix*255.0/np.max(image_matrix)
+    image_matrix = np.clip(image_matrix, 0.0, 255.0)
+    #image_matrix = image_matrix*np.percentile(np.array(reference_values), 50)/np.percentile(np.array(unscaled_values), 50)
     for i in range(res):
         for j in range(res):
             radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
@@ -49,20 +60,25 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
                 synthetic_dist[int(image_matrix[i,j])] += 1
             for img_num in range(len(reference_fnames)):
                 reference_matrix[img_num, i,j] = img_refs[img_num].getpixel((i,j))
-            synthetic_matrix[i,j] = int(image_matrix[i,j])
-
+            synthetic_matrix[i,j] = image_matrix[i,j]  #Don't want this to be ints really
 
     #Now need to somehow map percentiles for these data
+    xs = []; ys = []
     scaled_matrix = np.zeros((image_matrix.shape))
     raw_sums = np.cumsum(reference_dist)/np.sum(reference_dist)
     for value in range(256):
         #Find number of cells with this value OR less
-        nbelow = np.sum(synthetic_dist[:value])/np.sum(synthetic_dist)
+        nbelow = np.sum(synthetic_dist[:value])/np.sum(synthetic_dist[:])
         #This is essentially the percentile of the current pixel value
         #Target is the equivalent in the reference dist.
         target = np.searchsorted(raw_sums, nbelow)
         #Find number of cells matching this exactly and scale appropriately
-        scaled_matrix[synthetic_matrix == value] = int(target)
+        xs.append(value); ys.append(int(target))
+    ys[0] = ys[1] #Enforce the minimum value so you don't get black blobs
+
+    f = interp1d(xs, ys, kind = 'linear')
+    scaled_matrix = f(synthetic_matrix)
+
     #Turn all zeros into the minimum nonzero value, in case a field line never goes through here
     scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
     hex_refs = []; hex_values = []

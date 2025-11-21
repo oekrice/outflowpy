@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord
 
 import outflowpy.map
 from scipy.stats import qmc
+from scipy.interpolate import interp1d
 
 def random_seed_sampler(output, nseeds, r_skew, rss):
     """
@@ -33,6 +34,47 @@ def random_seed_sampler(output, nseeds, r_skew, rss):
         lat = lat - np.pi/2
         lats.append(lat * u.rad)
         r_select = (rss - 1.0)*seed[2]**(np.abs(r_skew) + 1) + 1.0   #Skew this so there are more starting points lower in the domain
+        rs.append(r_select)
+    rs = np.array(rs) * const.R_sun
+
+    seeds = SkyCoord(lons,lats,rs, frame=output.coordinate_frame)   #This can take three arrays (of the same length) for all the coordinates.
+
+    return seeds
+
+def plane_seed_sampler(output, nseeds, r_skew, rss):
+    """
+    Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
+    """
+    sampler = qmc.LatinHypercube(d=3)
+    sample = sampler.random(n = nseeds)
+
+    lons, lats, rs = [], [], []
+
+    l_bounds = [-1.0, 0., 1.0]
+    u_bounds = [1.0, np.pi, 2.5]
+    sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
+
+    #Create distribution for thomson scattering effect.
+    res = 1000
+    def f(x):  #Explicit (monotonic) function
+        return 2/np.pi*(x/2 - np.sin(2*x)/4)
+    xs = np.linspace(0.0, np.pi, res)
+    ys = f(xs)
+
+    g = interp1d(ys, xs, kind = 'linear')
+
+    for seed in sample_scaled:
+        if seed[0] < 0.0:
+            lons.append(-g(abs(seed[0])) * u.rad)
+            #lons.append(-np.pi/2 * u.rad)
+        else:
+            lons.append(g(abs(seed[0])) * u.rad)
+            #lons.append(np.pi/2 * u.rad)
+
+        lat = seed[1]
+        lat = lat - np.pi/2
+        lats.append(lat * u.rad)
+        r_select = seed[2]
         rs.append(r_select)
     rs = np.array(rs) * const.R_sun
 

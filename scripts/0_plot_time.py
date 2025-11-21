@@ -22,7 +22,7 @@ import subprocess
 from scipy.interpolate import interp1d
 import seaborn as sns
 
-time_cadence = 15
+time_cadence = 1
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 

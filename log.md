@@ -132,4 +132,18 @@ I've now fixed the image matching and some of them are looking pretty good! I th
 
 Doing some pyvista plots to check all the solutions are actually reasonable. 2006 in particular looks very odd.
 
+Friday 21st November:
+
+Have done some runs looking at all eclipses randomly (on ehrenfest) and just the 2012 one on airy. Looking OK but a way off what it should look like. The 2008 one is still pretty great.
+
+Parameters from 2012 run:
+
+[-0.157,-0.002,0.23,1.844],
+
+which have converged pretty nicely.
+
+I think perhaps some manual intervention may be required. When it's not a dipole the image similarity thing can't tell what's what. 
+
+Until midday (maximum), let's investigate why the dipole ones worked quite well and see what's wrong with the others?
+
 

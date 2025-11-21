@@ -45,33 +45,35 @@ def make_image(parameter_set, image_number):
     5: Alters the skew with which the radial field line seeds are chosen. Sign doesn't matter as will always want to skew towards lower altitudes.
     """
 
-    field_root = "./data/output_08"
-    br = np.loadtxt("./data/2008_input.txt")
+    field_root = f"./data/output_{eclipse_year}"
 
     nrho = 60
     rss = 5.0
+    ns = 180
+    nphi = 360
 
     corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 10000
+    nseeds = 50000
 
     image_extent = 2.5
     image_resolution = 512
 
-    header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.T.shape)
-    input_map = sunpy.map.Map((br, header))
+    obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
+
+    input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
 
-    outflow_out = outflowpy.outflow_fortran(outflow_in)#, existing_fname = field_root)
+    outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
 
-    # np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
-    # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
-    # np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
+    np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
+    np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
+    np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
-    seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[5], rss)
+    seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, parameter_set[3], rss)
 
-    tracer = outflowpy.tracing.FastTracer()
+    tracer = outflowpy.tracing.FastTracer(step_size = 0.25)
 
     field_lines, image_matrix = tracer.trace(seeds, outflow_out, parameters = parameter_set, image_extent = image_extent, generate_image = True, save_flag = False, image_resolution = image_resolution)
 
@@ -122,24 +124,24 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
         plt.show()
     plt.close()
 
-parameter_set = [-0.003,0.533,-0.165,0.000,0.000,-2.625]
+parameter_set = [-0.023,0.42,-0.746,1.084]
 
-eclipse_fnames = []
 eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-eclipse_years = [2017]
+#eclipse_years = [2006]
 
-for year in eclipse_years:
-    eclipse_fnames.append(f'./data/eclipse_images/{year}_eclipse.png')
+for eclipse_year in eclipse_years:
+    eclipse_fname = f'./data/eclipse_images/{eclipse_year}_eclipse.png'
 
-if False:  #Generate the image
-    image_matrix = make_image(parameter_set, 0)
-    np.save('./data/img_data/test1.npy', image_matrix)
+    if True:  #Generate the image
+        image_matrix = make_image(parameter_set, 0)
+        np.save(f'./data/img_data/test{eclipse_years[0]}.npy', image_matrix)
 
-image_matrix = np.load('./data/img_data/test2.npy')
-image_extent = 2.5
+    image_matrix = np.load(f'./data/img_data/test{eclipse_years[0]}.npy')
+    image_extent = 2.5
 
-scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fnames, image_extent)
+    scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fname, image_extent)
 
-#scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
+    #scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
+    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./plots/raw_{eclipse_year}.png', off_screen = True)
 
-outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./tweaked_plot.png', off_screen = False, hex_values = hex_values)
+    outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./plots/tweaked_{eclipse_year}.png', off_screen = True, hex_values = hex_values)

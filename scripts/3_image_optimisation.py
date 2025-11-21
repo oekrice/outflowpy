@@ -73,7 +73,7 @@ def make_image(parameter_set, image_number, eclipse_year):
 
     #outflowpy.plotting.plot_pyvista(outflow_out, field_lines)
 
-    image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,'./data/eclipse_images/2008_eclipse.png', image_extent)
+    image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,f'./data/eclipse_images/{eclipse_year}_eclipse.png', image_extent)
 
     outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png', hex_values = hex_values)
 
@@ -123,7 +123,7 @@ def generate_and_compare(parameter_set):
             for line in f.readlines():
                 run_id += 1
 
-    year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
+    year_options = [2012]#[2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
 
     selected_year = random.choice(year_options)
 
