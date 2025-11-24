@@ -123,10 +123,11 @@ def generate_and_compare(parameter_set):
             for line in f.readlines():
                 run_id += 1
 
-    year_options = [2012]#[2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
+    year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
 
     selected_year = random.choice(year_options)
 
+    print(f'Comparing field for eclipse year {year_options}')
     make_image(parameter_set, run_id, selected_year)
     similarity = compare_image(run_id, selected_year)
 

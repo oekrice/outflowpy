@@ -36,9 +36,9 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
         img_refs.append(Image.open(reference_fnames[img_num]).convert("L"))  #Real image in greyscale)
         img_colours.append(Image.open(reference_fnames[img_num]).convert("RGB"))
 
-    if img_refs[0].size != image_matrix.shape:
-        print(img_refs[0].size, image_matrix.shape)
-        raise Exception(f'Reference image does not match generated image size. Required size is {img_ref.size}')
+    # if img_refs[0].size != image_matrix.shape:
+    #     print(img_refs[0].size, image_matrix.shape)
+    #     raise Exception(f'Reference image does not match generated image size. Required size is {img_refs[0].size}')
 
     reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape[0], image_matrix.shape[1]))
     synthetic_matrix = np.zeros((image_matrix.shape))
@@ -47,9 +47,10 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     unscaled_matrix = np.zeros((image_matrix.shape))
 
     #Scale the input matrix so the median value matches the reference? Nah, that doesn't seem to have worked'
-    image_matrix = np.clip(image_matrix, 0.0, np.percentile(image_matrix, 99.0))
+    image_matrix = np.log(image_matrix + 1.0)  #All these should be positive by adding the 1? That seems wise
+
     image_matrix = image_matrix*255.0/np.max(image_matrix)
-    image_matrix = np.clip(image_matrix, 0.0, 255.0)
+    image_matrix = np.clip(image_matrix, 0.0, 255.0)  #To stop the interpolator complaining
     #image_matrix = image_matrix*np.percentile(np.array(reference_values), 50)/np.percentile(np.array(unscaled_values), 50)
     for i in range(res):
         for j in range(res):

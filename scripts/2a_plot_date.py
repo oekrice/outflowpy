@@ -19,13 +19,13 @@ from scipy.ndimage import gaussian_filter
 os.environ["OMP_NUM_THREADS"] = "4"
 
 max_rss = 5
-nseeds = 50000
+nseeds = 1000000
 image_extent = 2.5
-image_parameters = [-0.033,0.635,0.285,-5.356]
+#image_parameters = [-0.033,0.635,0.285,-5.356]
 #image_parameters = [-0.033,0.635,0.285,-4]
 image_parameters = [-0.023,0.42,-0.746,1.084]
 
-eclipse_year = 2017
+eclipse_year = 2012
 nrho = 60
 ns = 180
 nphi = 360
@@ -46,7 +46,7 @@ def find_obs_time(eclipse_year):
     raise Exception('Eclipse date not found for the specified year')
 
 #years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-years = [2008]
+years = [eclipse_year]
 
 for plot_count, eclipse_year in enumerate(years):
 
@@ -106,6 +106,7 @@ for plot_count, eclipse_year in enumerate(years):
     lat_all = np.hstack((lat, lat))
     r_all = np.hstack((r, r))
 
+    print(f'Finding {nseeds} field line seeds')
     seeds = outflowpy.utils.random_seed_sampler(outflow_out, nseeds, image_parameters[3], rss)
 
     tracing_options = ['Fast', 'Python', 'Fortran']
