@@ -54,10 +54,10 @@ def make_image(parameter_set, image_number):
 
     corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 25000
+    nseeds = 50000
 
     image_extent = 2.5
-    image_resolution = 512
+    image_resolution = 864
 
     obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
 
@@ -127,21 +127,22 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
 parameter_set = [-0.023,0.42,-0.746,1.084]
 
 eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-eclipse_years = [2012]
+eclipse_years = [2019]
 
 for eclipse_year in eclipse_years:
     eclipse_fname = f'./data/eclipse_images/{eclipse_year}_eclipse.png'
 
-    if True:  #Generate the image
+    if False:  #Generate the image
         image_matrix = make_image(parameter_set, 0)
         np.save(f'./data/img_data/test{eclipse_years[0]}.npy', image_matrix)
 
     image_matrix = np.load(f'./data/img_data/test{eclipse_years[0]}.npy')
     image_extent = 2.5
 
+    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./plots/raw_{eclipse_year}.png', off_screen = True)
+
     scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fname, image_extent)
 
     #scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
-    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./plots/raw_{eclipse_year}.png', off_screen = True)
 
     outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./plots/tweaked_{eclipse_year}.png', off_screen = False, hex_values = hex_values)

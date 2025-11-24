@@ -40,28 +40,33 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     #     print(img_refs[0].size, image_matrix.shape)
     #     raise Exception(f'Reference image does not match generated image size. Required size is {img_refs[0].size}')
 
-    reference_matrix = np.zeros((len(reference_fnames), image_matrix.shape[0], image_matrix.shape[1]))
-    synthetic_matrix = np.zeros((image_matrix.shape))
-    res = image_matrix.shape[0]
+    target_res = image_matrix.shape[0]
+    reference_res = img_refs[0].size[0]
+
+    reference_matrix = np.zeros((len(reference_fnames), reference_res, reference_res))
+    synthetic_matrix = np.zeros((target_res, target_res))
 
     unscaled_matrix = np.zeros((image_matrix.shape))
 
     #Scale the input matrix so the median value matches the reference? Nah, that doesn't seem to have worked'
     image_matrix = np.log(image_matrix + 1.0)  #All these should be positive by adding the 1? That seems wise
-
     image_matrix = image_matrix*255.0/np.max(image_matrix)
     image_matrix = np.clip(image_matrix, 0.0, 255.0)  #To stop the interpolator complaining
-    #image_matrix = image_matrix*np.percentile(np.array(reference_values), 50)/np.percentile(np.array(unscaled_values), 50)
-    for i in range(res):
-        for j in range(res):
-            radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
+    for i in range(reference_res):
+        for j in range(reference_res):
+            radius = np.sqrt((i-reference_res//2)**2 + (j-reference_res//2)**2)*(2*image_extent/reference_res)
             if radius>1:
                 for img_num in range(len(reference_fnames)):
                     reference_dist[img_refs[img_num].getpixel((i,j))] += 1
-                synthetic_dist[int(image_matrix[i,j])] += 1
             for img_num in range(len(reference_fnames)):
                 reference_matrix[img_num, i,j] = img_refs[img_num].getpixel((i,j))
-            synthetic_matrix[i,j] = image_matrix[i,j]  #Don't want this to be ints really
+
+    for i in range(target_res):
+        for j in range(target_res):
+            radius = np.sqrt((i-target_res//2)**2 + (j-target_res//2)**2)*(2*image_extent/target_res)
+            if radius>1:
+                synthetic_dist[int(image_matrix[i,j])] += 1
+            synthetic_matrix[i,j] = image_matrix[i,j]
 
     #Now need to somehow map percentiles for these data
     xs = []; ys = []
@@ -80,17 +85,9 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     f = interp1d(xs, ys, kind = 'linear')
     scaled_matrix = f(synthetic_matrix)
 
-    #Turn all zeros into the minimum nonzero value, in case a field line never goes through here
+    #Turn all zeros into the minimum nonzero value, in case a field line never goes through here (which wouldn't be realistic)
     scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
     hex_refs = []; hex_values = []
-
-    for i in range(res):
-        for j in range(res):
-            radius = np.sqrt((i-res//2)**2 + (j-res//2)**2)*(2*image_extent/res)
-            if radius>1:
-                for img_num in range(len(reference_fnames)):
-                    reference_dist[img_refs[img_num].getpixel((i,j))] += 1
-                synthetic_dist[int(image_matrix[i,j])] += 1
 
     #Obtain colour codes for the cmap
     hex_values.append((0.0, '#000000ff'))
@@ -101,6 +98,7 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
         for img_num in range(len(reference_fnames)):
             i_values, j_values = np.where((reference_matrix[img_num] > c_value - 5)*(reference_matrix[img_num]  < c_value + 5))
             avg_colour = np.zeros(3)
+            print(np.shape(reference_matrix), np.shape(img_colours))
             if len(i_values) > 10:
                 for pix in range(len(i_values)):
                     i = i_values[pix]; j = j_values[pix]

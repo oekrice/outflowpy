@@ -155,4 +155,8 @@ That's made very little difference, but does avoid any arbitrary cutoffs at the 
 I think perhaps an image optimisation run on one of the messy eclipses (2012) on ehrenfest might be wise, and hopefully wouldn't take too long. 
 
 Also should determine the optimum number of field lines. 1000000 is clearly too many, but 10000 too few. 50,000 seems OK but it's probably better to test scientifically with the comparison code. Only one dimension so not too bad. By eye 50,000 seems fine so let's stick with that.
+
+nohup python 3_image_optimisation.py >& output.log &
+
+Have set it running on ehrenfest for the 2019 eclipse. Hopefully will look nice...
  
