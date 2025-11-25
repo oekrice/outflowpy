@@ -73,7 +73,7 @@ def make_image(parameter_set, image_number, eclipse_year):
 
     #outflowpy.plotting.plot_pyvista(outflow_out, field_lines)
 
-    image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,f'./data/eclipse_images/{eclipse_year}_eclipse.png', image_extent)
+    image_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,image_extent,reference_image = f'./data/eclipse_images/{eclipse_year}_eclipse.png')
 
     outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./img_plots/{image_number:04d}.png', hex_values = hex_values)
 

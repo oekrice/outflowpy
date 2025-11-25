@@ -30,6 +30,9 @@ Ideal parameters for given number of field lines:
 10,000 : [-0.203,0.587,-1.063,0.002,-0.497,-0.831]
 50,000 : [-0.135,0.764,-0.667,-0.003,-1.38,-1.359]
 250,000: [-0.003,0.533,-0.165,0.009,-2.314,-2.625]
+
+After matching:
+[0.216,0.377,-0.323,1.567]
 """
 
 def make_image(parameter_set, image_number):
@@ -124,25 +127,24 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
         plt.show()
     plt.close()
 
-parameter_set = [-0.023,0.42,-0.746,1.084]
+parameter_set = [0.216,0.377,-0.323,1.567]
 
 eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-eclipse_years = [2019]
+#eclipse_years = [2006]
 
 for eclipse_year in eclipse_years:
-    eclipse_fname = f'./data/eclipse_images/{eclipse_year}_eclipse.png'
 
-    if False:  #Generate the image
+    if True:  #Generate the image
         image_matrix = make_image(parameter_set, 0)
-        np.save(f'./data/img_data/test{eclipse_years[0]}.npy', image_matrix)
+        np.save(f'./data/img_data/test{eclipse_year}.npy', image_matrix)
 
-    image_matrix = np.load(f'./data/img_data/test{eclipse_years[0]}.npy')
+    image_matrix = np.load(f'./data/img_data/test{eclipse_year}.npy')
     image_extent = 2.5
 
-    outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./plots/raw_{eclipse_year}.png', off_screen = True)
+    #outflowpy.plotting.plot_image(image_matrix, image_extent, parameter_set, f'./plots/raw_{eclipse_year}.png', off_screen = True)
 
-    scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix,eclipse_fname, image_extent)
+    eclipse_fname = f'./data/eclipse_images/{2019}_eclipse.png'
 
-    #scaled_matrix, hex_values = scale_image(image_matrix,'./data/eclipse_images/sun.png', image_extent)
+    scaled_matrix, hex_values = outflowpy.plotting.match_image(image_matrix, image_extent)#, reference_image = eclipse_fname)
 
-    outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./plots/tweaked_{eclipse_year}.png', off_screen = False, hex_values = hex_values)
+    outflowpy.plotting.plot_image(scaled_matrix, image_extent, parameter_set, f'./plots/{eclipse_year}.png', off_screen = True, hex_values = hex_values)

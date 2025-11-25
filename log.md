@@ -160,3 +160,10 @@ nohup python 3_image_optimisation.py >& output.log &
 
 Have set it running on ehrenfest for the 2019 eclipse. Hopefully will look nice...
  
+Tuesday 25th November:
+
+Does indeed look quite nice. The 'best' parameters are:
+
+[0.216,0.377,-0.323,1.567]. It's not quite converged yet but not far off.
+
+I'll make some eclipse pictures based on that. Perhaps it might be wise to save the picture distribution for 2017 or something so one doesn't need an image reference? That won't take long. 

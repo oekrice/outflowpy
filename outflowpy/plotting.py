@@ -11,13 +11,12 @@ from PIL import Image
 from scipy.ndimage import gaussian_filter
 from scipy.interpolate import interp1d
 
-def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspace(0.0,255.0,20)):
+def match_image(image_matrix, image_extent, reference_image = None, crefs = np.linspace(0.0,255.0,20), overwrite_reference = False):
     """
     This is an experiment to scale the pixel brightness of the generated image to match that of the target comparison one. Not sure yet how well (or at all) that will work...
     Only want to compare pixels which lie outside the picture of the moon.
     Now has been edited so this should work with multiple images, but that comes with some problems
     """
-    #np.save('./data/img_data/test2.npy', image_matrix)
 
     #Need to add some kind of cutoff so that the modal value is reasonable. Currently everything is getting squished right into the first few pixels for some of the plots.
     #This is skewed because the chance of a really high value is actually not that unlikely. But it does need to be dealt with nicely...
@@ -25,41 +24,42 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
 
     image_matrix = gaussian_filter(image_matrix, sigma = 0.5)
 
-    #Find distribution of these pixels (can show in histogram form)
-    reference_dist = np.zeros(256)
-    synthetic_dist = np.zeros(256)
-
-    if not isinstance(reference_fnames, list):
-        reference_fnames = [reference_fnames]
-    img_refs = []; img_colours = []
-    for img_num in range(len(reference_fnames)):
-        img_refs.append(Image.open(reference_fnames[img_num]).convert("L"))  #Real image in greyscale)
-        img_colours.append(Image.open(reference_fnames[img_num]).convert("RGB"))
-
-    # if img_refs[0].size != image_matrix.shape:
-    #     print(img_refs[0].size, image_matrix.shape)
-    #     raise Exception(f'Reference image does not match generated image size. Required size is {img_refs[0].size}')
-
     target_res = image_matrix.shape[0]
-    reference_res = img_refs[0].size[0]
 
-    reference_matrix = np.zeros((len(reference_fnames), reference_res, reference_res))
     synthetic_matrix = np.zeros((target_res, target_res))
-
-    unscaled_matrix = np.zeros((image_matrix.shape))
-
-    #Scale the input matrix so the median value matches the reference? Nah, that doesn't seem to have worked'
+    synthetic_dist = np.zeros(256)
     image_matrix = np.log(image_matrix + 1.0)  #All these should be positive by adding the 1? That seems wise
     image_matrix = image_matrix*255.0/np.max(image_matrix)
     image_matrix = np.clip(image_matrix, 0.0, 255.0)  #To stop the interpolator complaining
-    for i in range(reference_res):
-        for j in range(reference_res):
-            radius = np.sqrt((i-reference_res//2)**2 + (j-reference_res//2)**2)*(2*image_extent/reference_res)
-            if radius>1:
-                for img_num in range(len(reference_fnames)):
-                    reference_dist[img_refs[img_num].getpixel((i,j))] += 1
-            for img_num in range(len(reference_fnames)):
-                reference_matrix[img_num, i,j] = img_refs[img_num].getpixel((i,j))
+
+    if reference_image is None:
+        reference_dist = [np.load('./data/img_data/reference_distribution.npy')]
+
+    else:
+        #Find distribution of these pixels (can show in histogram form)
+        reference_dist = np.zeros(256)
+
+        if not isinstance(reference_image, list):
+            reference_image = [reference_image]
+        img_refs = []; img_colours = []
+        for img_num in range(len(reference_image)):
+            img_refs.append(Image.open(reference_image[img_num]).convert("L"))  #Real image in greyscale)
+            img_colours.append(Image.open(reference_image[img_num]).convert("RGB"))
+
+        reference_res = img_refs[0].size[0]
+        reference_matrix = np.zeros((len(reference_image), reference_res, reference_res))
+
+        for i in range(reference_res):
+            for j in range(reference_res):
+                radius = np.sqrt((i-reference_res//2)**2 + (j-reference_res//2)**2)*(2*image_extent/reference_res)
+                if radius>1:
+                    for img_num in range(len(reference_image)):
+                        reference_dist[img_refs[img_num].getpixel((i,j))] += 1
+                for img_num in range(len(reference_image)):
+                    reference_matrix[img_num, i,j] = img_refs[img_num].getpixel((i,j))
+
+        if overwrite_reference:
+            np.save('./data/img_data/reference_distribution.npy', reference_dist)
 
     for i in range(target_res):
         for j in range(target_res):
@@ -89,30 +89,38 @@ def match_image(image_matrix, reference_fnames, image_extent, crefs = np.linspac
     scaled_matrix[scaled_matrix == 0] = np.min(np.ma.masked_where(scaled_matrix == 0, scaled_matrix))
     hex_refs = []; hex_values = []
 
-    #Obtain colour codes for the cmap
-    hex_values.append((0.0, '#000000ff'))
-    for c_value in crefs:
-        #Get list of indices to check
-        allavg_colour = np.zeros(3)
-        allavg_count = 0
-        for img_num in range(len(reference_fnames)):
-            i_values, j_values = np.where((reference_matrix[img_num] > c_value - 5)*(reference_matrix[img_num]  < c_value + 5))
-            avg_colour = np.zeros(3)
-            print(np.shape(reference_matrix), np.shape(img_colours))
-            if len(i_values) > 10:
-                for pix in range(len(i_values)):
-                    i = i_values[pix]; j = j_values[pix]
-                    colour = [img_colours[0].getpixel((i, j))[0], img_colours[0].getpixel((i, j))[1], img_colours[0].getpixel((i, j))[2]]
-                    avg_colour += colour
-                avg_colour = avg_colour/len(i_values)
-                allavg_count += 1
-                #print(img_num, avg_colour)
-                allavg_colour = allavg_colour + avg_colour
-        if allavg_count > 0:
-            allavg_colour = allavg_colour/allavg_count
-            hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(allavg_colour[0]), int(allavg_colour[1]), int(allavg_colour[2]))))
-    hex_values.append((1.0, '#ffffffff'))
-    hex_values[0] = (0.0, hex_values[1][1])
+    if reference_image is not None:
+        #Obtain colour codes for the cmap. This just uses the reference image -- nothing from the original
+        hex_values.append((0.0, '#000000ff'))
+        for c_value in crefs:
+            #Get list of indices to check
+            allavg_colour = np.zeros(3)
+            allavg_count = 0
+            for img_num in range(len(reference_image)):
+                i_values, j_values = np.where((reference_matrix[img_num] > c_value - 5)*(reference_matrix[img_num]  < c_value + 5))
+                avg_colour = np.zeros(3)
+                if len(i_values) > 10:
+                    for pix in range(len(i_values)):
+                        i = i_values[pix]; j = j_values[pix]
+                        colour = [img_colours[0].getpixel((i, j))[0], img_colours[0].getpixel((i, j))[1], img_colours[0].getpixel((i, j))[2]]
+                        avg_colour += colour
+                    avg_colour = avg_colour/len(i_values)
+                    allavg_count += 1
+                    #print(img_num, avg_colour)
+                    allavg_colour = allavg_colour + avg_colour
+            if allavg_count > 0:
+                allavg_colour = allavg_colour/allavg_count
+                hex_values.append((c_value/255.0, '#%02x%02x%02xff' % (int(allavg_colour[0]), int(allavg_colour[1]), int(allavg_colour[2]))))
+        hex_values.append((1.0, '#ffffffff'))
+        hex_values[0] = (0.0, hex_values[1][1])
+
+        if overwrite_reference:
+            np.save('./data/img_data/hex_values.npy', hex_values)
+    else:
+        hex_values_load = np.load('./data/img_data/hex_values.npy')
+        hex_values = []
+        for value in hex_values_load:
+            hex_values.append((float(value[0]), str(value[1])))
     return scaled_matrix, hex_values
 
 
