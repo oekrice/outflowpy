@@ -167,3 +167,9 @@ Does indeed look quite nice. The 'best' parameters are:
 [0.216,0.377,-0.323,1.567]. It's not quite converged yet but not far off.
 
 I'll make some eclipse pictures based on that. Perhaps it might be wise to save the picture distribution for 2017 or something so one doesn't need an image reference? That won't take long. 
+
+Need a function which takes in the polyomial (or otherwise, for this morning perhaps?) values and outputs only the error function. That seems doable.
+
+For reproducibility, I'm going to save out a load of seeds. There will always seemingly be undesirable wiggles otherwise and it's already getting quite slow...
+
+The algorithm seems to be working but is quite slow. I think it's probably important to do it at a high resolution though so will keep it like that, and hopefully will be reasonably quick on Hamilton. 

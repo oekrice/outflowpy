@@ -10,7 +10,7 @@ import astropy.constants as const
 from astropy.time import Time
 import sunpy
 
-def find_real_angle_distribution(eclipse_year, nbins):
+def find_real_angle_distribution(eclipse_year, nbins, doplots = False):
     r"""
     Produces an array of the average field line angles for a given eclipse year.
     Also outputs a mask of the areas to be ignored as they don't contain enough data, to allow for a fair comparison with the synthetic eclipses
@@ -33,16 +33,17 @@ def find_real_angle_distribution(eclipse_year, nbins):
     cmap.set_bad(color = 'red')
     bin_means[bin_mask < 0.5] = np.nan
 
-    R, T = np.meshgrid(rbins, thetabins)
-    R, T = -R*np.sin(T), -R*np.cos(T)
-    plt.pcolormesh(R, T, bin_means.T, vmin = 0, vmax = 0.6, cmap = cmap)
-    plt.gca().set_axis_off()
-    plt.gca().axis('equal')
-    plt.title(f'Field line deviation from radial, eclipse {eclipse_year}')
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig('./edge_detection/dist_%d.png' % (eclipse_year), dpi = 200)
-    plt.close()
+    if doplots:
+        R, T = np.meshgrid(rbins, thetabins)
+        R, T = -R*np.sin(T), -R*np.cos(T)
+        plt.pcolormesh(R, T, bin_means.T, vmin = 0, vmax = 0.6, cmap = cmap)
+        plt.gca().set_axis_off()
+        plt.gca().axis('equal')
+        plt.title(f'Field line deviation from radial, eclipse {eclipse_year}')
+        plt.colorbar()
+        plt.tight_layout()
+        plt.savefig('./edge_detection/dist_%d.png' % (eclipse_year), dpi = 200)
+        plt.close()
 
     radial_distribution = np.zeros(nbins)
     #Take the average of the not-nans in each dimension
@@ -69,7 +70,7 @@ def find_eclipse_flines(eclipse_year):
 
     corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 2500
+    nseeds = 100
 
     image_extent = 2.5
     image_resolution = 512
@@ -89,13 +90,13 @@ def find_eclipse_flines(eclipse_year):
 
     outflow_out = outflowpy.outflow_fortran(outflow_in)#, existing_fname = field_root)
 
-    np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
-    np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
-    np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
+    # np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
+    # np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
+    # np.save(f'{field_root}_bp.npy', np.swapaxes(outflow_out.bp, 0, 2))
 
     seeds = outflowpy.utils.plane_seed_sampler(outflow_out, nseeds, 0.0, rss)
 
-    tracer = outflowpy.tracing.FastTracer(step_size = 0.5)
+    tracer = outflowpy.tracing.FastTracer()
 
     field_lines = tracer.trace(seeds, outflow_out, save_flag = True)
 
@@ -121,22 +122,10 @@ def find_eclipse_flines(eclipse_year):
             dangle = np.arctan2(np.abs(dy), np.abs(dx)) #This is the direction. Which could be off by pi/2, I suppose.
             #Let's establish a precedent. All ys are +ve, and all xs are +ve
             radial_difference = np.abs(dangle - angle)
-            #print(radial_difference)
-            #xs.append(x); ys.append(y); cs.append(radial_difference)
-
-    # axs.set_xticks([]); axs.set_yticks([])
-    # axs.scatter(xs, ys, c = cs, s = 0.1, vmin = 0, vmax = np.percentile(cs, 90))
-    # axs.set_title('Field line angles')
-    # axs.set_axis_off()
-    # axs.set_xlim(-2.5,2.5)
-    # axs.set_ylim(-2.5,2.5)
-    # plt.suptitle(f"{eclipse_year} eclipse (synthetic)")
-    # plt.savefig('./edge_detection/synthetic_angles_%d.png' % (eclipse_year), dpi = 200)
-    # plt.show()
 
     return transformed_lines
 
-def find_synthetic_angle_distribution(eclipse_year, nbins):
+def find_synthetic_angle_distribution(eclipse_year, nbins, doplots = False):
     r"""
     Calculates the outflow field and saves out the field lines in a nice format
     """
@@ -149,22 +138,23 @@ def find_synthetic_angle_distribution(eclipse_year, nbins):
     # plt.show()
     bin_means, bin_mask = edge_detection.make_angle_histogram(fieldlines, nbins)
 
-    rbins = np.linspace(1.0, 2.5, nbins + 1)
-    thetabins = np.linspace(0.0, 2*np.pi, nbins + 1)
-    cmap = plt.cm.viridis.copy()
-    cmap.set_bad(color = 'red')
     bin_means[bin_mask < 0.5] = np.nan
 
-    R, T = np.meshgrid(rbins, thetabins)
-    R, T = -R*np.sin(T), -R*np.cos(T)
-    plt.pcolormesh(R, T, bin_means.T, vmin = 0, vmax = 0.6, cmap = cmap)
-    plt.gca().set_axis_off()
-    plt.gca().axis('equal')
-    plt.title(f'Field line deviation from radial, outflow field {eclipse_year}')
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig('./edge_detection/synth_dist_%d.png' % (eclipse_year), dpi = 200)
-    plt.close()
+    if doplots:
+        rbins = np.linspace(1.0, 2.5, nbins + 1)
+        thetabins = np.linspace(0.0, 2*np.pi, nbins + 1)
+        cmap = plt.cm.viridis.copy()
+        cmap.set_bad(color = 'red')
+        R, T = np.meshgrid(rbins, thetabins)
+        R, T = -R*np.sin(T), -R*np.cos(T)
+        plt.pcolormesh(R, T, bin_means.T, vmin = 0, vmax = 0.6, cmap = cmap)
+        plt.gca().set_axis_off()
+        plt.gca().axis('equal')
+        plt.title(f'Field line deviation from radial, outflow field {eclipse_year}')
+        plt.colorbar()
+        plt.tight_layout()
+        plt.savefig('./edge_detection/synth_dist_%d.png' % (eclipse_year), dpi = 200)
+        plt.close()
 
     return bin_means
 
@@ -204,7 +194,13 @@ def compare_angles(year):
     plt.savefig(f'./edge_detection/angles_{year}.png')
     plt.close()
 
+    error = np.mean((real_dists[i][1:] - synth_dists[i][1:])**2)
+
+    print(error)
+    return error
+
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+years = [2019]
 
 for year in years:
     compare_angles(year)

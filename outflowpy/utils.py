@@ -63,6 +63,43 @@ def plane_seed_sampler(output, nseeds, r_skew, rss):
 
     g = interp1d(ys, xs, kind = 'linear')
 
+    #np.savetxt('./data/sample_plane_seeds.txt', sample_scaled)
+
+    for seed in sample_scaled:
+        if seed[0] < 0.0:
+            lons.append(-g(abs(seed[0])) * u.rad)
+            #lons.append(-np.pi/2 * u.rad)
+        else:
+            lons.append(g(abs(seed[0])) * u.rad)
+            #lons.append(np.pi/2 * u.rad)
+
+        lat = seed[1]
+        lat = lat - np.pi/2
+        lats.append(lat * u.rad)
+        r_select = seed[2]
+        rs.append(r_select)
+    rs = np.array(rs) * const.R_sun
+
+    seeds = SkyCoord(lons,lats,rs, frame=output.coordinate_frame)   #This can take three arrays (of the same length) for all the coordinates.
+
+    return seeds
+
+def load_sampled_seeds(output, nseeds):
+    """
+    Loads in existing random seeds, to be used for reproducibility reasons
+    """
+    sample_scaled = np.loadtxt('./data/sample_plane_seeds.txt')[:nseeds]
+    lons, lats, rs = [], [], []
+
+    #Create distribution for thomson scattering effect.
+    res = 1000
+    def f(x):  #Explicit (monotonic) function
+        return 2/np.pi*(x/2 - np.sin(2*x)/4)
+    xs = np.linspace(0.0, np.pi, res)
+    ys = f(xs)
+
+    g = interp1d(ys, xs, kind = 'linear')
+
     for seed in sample_scaled:
         if seed[0] < 0.0:
             lons.append(-g(abs(seed[0])) * u.rad)

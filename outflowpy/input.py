@@ -37,7 +37,7 @@ class Input:
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
     """
-    def __init__(self, br, nr, rss, corona_temp = 2e6, mf_constant = 5e-17):
+    def __init__(self, br, nr, rss, corona_temp = 2e6, mf_constant = 5e-17, polynomial_coeffs = None):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):
@@ -63,19 +63,48 @@ class Input:
         nphi = self.br.shape[1]
         self._grid = Grid(ns, nphi, nr, rss)
 
-        #Assuming the solution for the isothermal corona, calculate the sound speed and critical radius etc.
-        #Could import these from astopy.constants but I don't think they're going to change any time soon, so I'll assume it's fine
-        mf_in_sensible_units = mf_constant*(6.957e10)**2 #In seconds/solar radius
-        sound_speed = np.sqrt(1.38064852e-23*corona_temp/1.67262192e-27) #Sound speed in m/s
-        self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
-        self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
+        if polynomial_coeffs is None:
 
-        self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
-        #Then finally multiply by the 'wind speed' constant calculated using physics. Should all be roughly order of magnitude 1/10 after this.
-        self.vg = self.vg*self.c_s
-        self.vcx = self.vcx*self.c_s
-        self.vdcx = self.vdcx*self.c_s
+            #Assuming the solution for the isothermal corona, calculate the sound speed and critical radius etc.
+            #Could import these from astopy.constants but I don't think they're going to change any time soon, so I'll assume it's fine
+            mf_in_sensible_units = mf_constant*(6.957e10)**2 #In seconds/solar radius
+            sound_speed = np.sqrt(1.38064852e-23*corona_temp/1.67262192e-27) #Sound speed in m/s
+            self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
+            self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
+
+            self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
+
+            #Then finally multiply by the 'wind speed' constant calculated using physics. Should all be roughly order of magnitude 1/10 after this.
+            self.vg = self.vg*self.c_s
+            self.vcx = self.vcx*self.c_s
+            self.vdcx = self.vdcx*self.c_s
         
+        else:
+            #Calculate the wind speed just as a combination of the given polynomial coefficcients (with self._grid.rg known already)
+            def poly_at_pt(r):
+                #Polynomial value at the explicit point r (don't forget the exponentials!)
+                res = 0
+                for i in range(len(polynomial_coeffs)):
+                    res = res + polynomial_coeffs[i]*np.exp(r)**i
+                return res
+
+            rgx = np.zeros((len(self._grid.rg) + 2))
+            rgx[1:-1] = self._grid.rg
+            rgx[0] = 2*rgx[1] - rgx[2]; rgx[-1] = 2*rgx[-2] - rgx[-3]
+
+            vgx = poly_at_pt(rgx)
+            vcx = poly_at_pt(self._grid.rcx)
+
+            #Make these always positive (abs does weird things so just clip to zero)
+            vgx[vgx < 0] = 0.0
+            vcx[vcx < 0] = 0.0
+
+            vdcx = np.zeros(len(vcx))
+            vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
+
+            self.vg = vgx[1:-1]; self.vcx = vcx; self.vdcx = vdcx
+
+            print('poly', polynomial_coeffs)
     def _parker_implicit_fn(self, r, v):
         """
         This is where the implicit Parker Solar Wind function is defined.

@@ -86,7 +86,7 @@ module fltrace
     group_number = max(ceiling(float(nfl0)/101_rk), 1)
     group_start = 1; group_end  = group_start + group_number
 
-    if (nfl0 > 9999) then
+    if (nfl0 > 999) then
         ngroups = 101
     else
         ngroups = 1

@@ -81,7 +81,7 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
 
     return histogram_mean, histogram_count
 
-def find_decent_lines(resolution, image_title, year):
+def find_decent_lines(resolution, image_title, year, doplots = False):
     #Let's run through a load of parameters and see what happens...'
     #Uses the edge detection algorithm to return a list of the lines which are worth having a look at
     def find_radius(x,y):
@@ -112,13 +112,14 @@ def find_decent_lines(resolution, image_title, year):
     aperture_size = 5
     edges = cv.Canny(img,t_lower, t_upper, apertureSize = aperture_size, L2gradient = True)
 
-    fig, axs = plt.subplots(2,2, figsize = (10,10))
-    axs[0,0].imshow(img_original,cmap = 'gray')
-    axs[0,0].set_title('Original Image'), axs[0,0].set_xticks([]), axs[0,0].set_yticks([])
-    # axs[1].imshow(img, cmap = 'gray')
-    # axs[1].set_title('Processed Image'), axs[1].set_xticks([]), axs[1].set_yticks([])
-    axs[0,1].imshow(edges, cmap = 'gray')
-    axs[0,1].set_title('Edges'), axs[0,1].set_xticks([]), axs[0,1].set_yticks([])
+    if doplots:
+        fig, axs = plt.subplots(2,2, figsize = (10,10))
+        axs[0,0].imshow(img_original,cmap = 'gray')
+        axs[0,0].set_title('Original Image'), axs[0,0].set_xticks([]), axs[0,0].set_yticks([])
+        # axs[1].imshow(img, cmap = 'gray')
+        # axs[1].set_title('Processed Image'), axs[1].set_xticks([]), axs[1].set_yticks([])
+        axs[0,1].imshow(edges, cmap = 'gray')
+        axs[0,1].set_title('Edges'), axs[0,1].set_xticks([]), axs[0,1].set_yticks([])
 
     #Look for contours?
     contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
@@ -135,7 +136,8 @@ def find_decent_lines(resolution, image_title, year):
                 #These are the actual ones to plot, and the parameters can be optimised based upon them
                 #axs[1].plot(np.arange(section[0], section[1]), rs[section[0]:section[1]])
                 dr = np.abs(rs[section[1]-1] - rs[section[0]])
-                axs[1,0].plot(xs[section[0]:section[1]], ys[section[0]:section[1]], c = 'blue', linewidth = 0.1)
+                if doplots:
+                    axs[1,0].plot(xs[section[0]:section[1]], ys[section[0]:section[1]], c = 'blue', linewidth = 0.1)
                 if section[1] - section[0] > 20 and np.max(rs[section[0]:section[1]]) > 1.05 and np.min(rs[section[0]:section[1]]) < 2.45:
                     line_xs = np.array([x[0] for x in xs[section[0]:section[1]]]).astype(float)
                     line_ys = np.array([y[0] for y in ys[section[0]:section[1]]]).astype(float)
@@ -143,17 +145,19 @@ def find_decent_lines(resolution, image_title, year):
                     line_xs = gaussian_filter1d(line_xs, sigma = line_smoothing)
                     line_ys = gaussian_filter1d(line_ys, sigma = line_smoothing)
                     eclipse_lines.append([line_xs, line_ys])
-                    axs[1,0].plot(eclipse_lines[-1][0], eclipse_lines[-1][1], c = 'red', linewidth = 1.0)
+                    if doplots:
+                        axs[1,0].plot(eclipse_lines[-1][0], eclipse_lines[-1][1], c = 'red', linewidth = 1.0)
                 qualities.append(dr)
 
     qualities = np.array(qualities)
     nabove = len(qualities[qualities > 0.5])
     print('Avg. line length and number of long lines', np.mean(qualities), nabove)
-    axs[1,0].imshow(img_original,cmap = 'gray',vmin=0, vmax = 255)
-    axs[1,0].axis('equal')
-    axs[1,0].set_xticks([]); axs[1,0].set_yticks([])
-    axs[1,0].set_axis_off()
-    axs[1,0].set_title('Selected Edges')
+    if doplots:
+        axs[1,0].imshow(img_original,cmap = 'gray',vmin=0, vmax = 255)
+        axs[1,0].axis('equal')
+        axs[1,0].set_xticks([]); axs[1,0].set_yticks([])
+        axs[1,0].set_axis_off()
+        axs[1,0].set_title('Selected Edges')
 
     transformed_lines = []
     #Determine the radialness of these lines
@@ -175,14 +179,16 @@ def find_decent_lines(resolution, image_title, year):
             radial_difference = np.abs(dangle - angle)
             #print(radial_difference)
             xs.append(x); ys.append(y); cs.append(radial_difference)
-    axs[1,1].set_xticks([]); axs[1,1].set_yticks([])
-    axs[1,1].scatter(xs, ys, c = cs, s = 0.1, vmin = 0, vmax = np.percentile(cs, 90))
-    axs[1,1].set_title('Field line angles')
-    axs[1,1].set_axis_off()
 
-    plt.suptitle(f"{year} eclipse")
-    plt.savefig('./edge_detection/%d.png' % (year), dpi = 200)
-    plt.close()
+    if doplots:
+        axs[1,1].set_xticks([]); axs[1,1].set_yticks([])
+        axs[1,1].scatter(xs, ys, c = cs, s = 0.1, vmin = 0, vmax = np.percentile(cs, 90))
+        axs[1,1].set_title('Field line angles')
+        axs[1,1].set_axis_off()
+
+        plt.suptitle(f"{year} eclipse")
+        plt.savefig('./edge_detection/%d.png' % (year), dpi = 200)
+        plt.close()
 
     return transformed_lines
 
