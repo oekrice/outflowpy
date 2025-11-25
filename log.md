@@ -173,3 +173,15 @@ Need a function which takes in the polyomial (or otherwise, for this morning per
 For reproducibility, I'm going to save out a load of seeds. There will always seemingly be undesirable wiggles otherwise and it's already getting quite slow...
 
 The algorithm seems to be working but is quite slow. I think it's probably important to do it at a high resolution though so will keep it like that, and hopefully will be reasonably quick on Hamilton. 
+
+Steps to run on Hamilton:
+
+module load python/3.13.9
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+mv *.so outflowpy
+python scripts/{thing}
+
+That seems to work as long as you're careful. I'm unsure why the .so files won't move on their own.
+All 12 eclipses set to run. TBD whether they're actually going to...

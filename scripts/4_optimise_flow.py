@@ -175,7 +175,7 @@ def generate_fn(parameter_set):
     #Do the global scaling and stuff here
     save_line = [run_id, error_function] + parameter_set.tolist()
     with open("batch_logs/log_%d.txt" % eclipse_year, "a") as f:
-        f.write(" ".join(f"{x:.3f}" for x in save_line) + "\n")
+        f.write(" ".join(f"{x:.6f}" for x in save_line) + "\n")
 
     print('Error fn', error_function)
     return error_function
