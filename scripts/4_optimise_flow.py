@@ -77,13 +77,13 @@ def find_eclipse_flines(eclipse_year, field_parameters):
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = field_parameters)
+    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = field_parameters, polynomial_type = 'abs')
 
     print('Maximum outflow speed', np.max(outflow_in.vg))
 
     outflow_out = outflowpy.outflow_fortran(outflow_in) #This is where parameters can live.
 
-    seeds = outflowpy.utils.plane_seed_sampler(outflow_out, nseeds, 0.0, rss)
+    #seeds = outflowpy.utils.plane_seed_sampler(outflow_out, nseeds, 0.0, rss)
 
     seeds = outflowpy.utils.load_sampled_seeds(outflow_out, nseeds)
 

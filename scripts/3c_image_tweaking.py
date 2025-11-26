@@ -56,7 +56,7 @@ def make_image(parameter_set, image_number):
     nphi = 360
 
     corona_temp = 1.5e6
-    mf_constant = 5e-17
+    mf_constant = 5e-16
     nseeds = 50000
 
     image_extent = 2.5
@@ -66,9 +66,9 @@ def make_image(parameter_set, image_number):
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
+    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = [0.0,0.0,0.0,0.0,0.0])
 
-    outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
+    outflow_out = outflowpy.outflow_fortran(outflow_in)
 
     np.save(f'{field_root}_br.npy', np.swapaxes(outflow_out.br, 0, 2))
     np.save(f'{field_root}_bs.npy', np.swapaxes(outflow_out.bs, 0, 2))
@@ -130,7 +130,7 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
 parameter_set = [0.216,0.377,-0.323,1.567]
 
 eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-#eclipse_years = [2006]
+eclipse_years = [2006]
 
 for eclipse_year in eclipse_years:
 

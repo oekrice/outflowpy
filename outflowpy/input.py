@@ -37,7 +37,7 @@ class Input:
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
     """
-    def __init__(self, br, nr, rss, corona_temp = 2e6, mf_constant = 5e-17, polynomial_coeffs = None):
+    def __init__(self, br, nr, rss, corona_temp = 2e6, mf_constant = 5e-17, polynomial_coeffs = None, polynomial_type = 'abs'):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):
@@ -96,15 +96,22 @@ class Input:
             vcx = poly_at_pt(self._grid.rcx)
 
             #Make these always positive (abs does weird things so just clip to zero)
-            vgx[vgx < 0] = 0.0
-            vcx[vcx < 0] = 0.0
+            if polynomial_type == 'abs':
+                vgx = np.abs(vgx)
+                vcx = np.abs(vcx)
+            elif polynomial_type == 'clip':
+                vgx[vgx < 0] = 0.0
+                vcx[vcx < 0] = 0.0
+            else:
+                raise Exception('Polynomial type not recognised. Currently allowed types are "clip" and "abs".')
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
 
             self.vg = vgx[1:-1]; self.vcx = vcx; self.vdcx = vdcx
 
-            print('poly', polynomial_coeffs)
+            print('poly', polynomial_coeffs, polynomial_type)
+
     def _parker_implicit_fn(self, r, v):
         """
         This is where the implicit Parker Solar Wind function is defined.

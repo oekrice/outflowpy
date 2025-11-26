@@ -185,3 +185,13 @@ python scripts/{thing}
 
 That seems to work as long as you're careful. I'm unsure why the .so files won't move on their own.
 All 12 eclipses set to run. TBD whether they're actually going to...
+
+Wednesday 26th:
+
+All have seemingly converged to an answer except 2006. I think perhaps the absolute value version might be a better bet? It stops things going to zero at least, which they clearly want to sometimes and it's NOT an optimum soution!
+
+Those logs are now saved in batch_logs_clip. I'll make a new one along the lines of batch_logs_abs which is more similar to what I did before and should stop it getting stuck in the local minimum of a potential field.
+
+Definitely best to use the LAST value, even if that be zeros (but only the case for 2006). They're interesting results! Should find a way to plot the radialness of each with individually optimised outflow, PFSS and the 'averaged outflow'. Can maybe do that by midday then sort out the washing machine.
+
+

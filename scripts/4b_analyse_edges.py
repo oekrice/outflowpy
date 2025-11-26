@@ -7,7 +7,6 @@ import sys
 
 colors = sns.color_palette('dark')
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-years = [2006,2008,2009]
 
 for counter in range(len(years)):
     file_root = "batch_logs/"
@@ -63,8 +62,9 @@ for counter in range(len(years)):
     for var_id, variable in enumerate(range(2, np.size(log_info[1]))):
         means, mins, maxs = determine_error_bounds(log_info[:,variable])
         ax.plot(means, color = colors[var_id%10], linewidth = 1.0, label = var_id)
-        ax.plot(mins, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
-        ax.plot(maxs, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
+        ax.plot(log_info[:,variable], color = colors[var_id%10], linewidth = 0.1)
+        # ax.plot(mins, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
+        # ax.plot(maxs, color = colors[var_id%10], linewidth = 0.5, linestyle = 'dashed')
 
     ax.set_title('Convergence of parameter values, run %d' % batch_id)
     ax.set_ylabel('Parameter value')
@@ -74,6 +74,8 @@ for counter in range(len(years)):
     ax = axs[1]
     means, _, _ = determine_error_bounds(log_info[:,1])
     ax.plot(log_info[:,1], color = 'black', linewidth = 0.5)
+    #ax.plot(log_info[:,1], color = 'black', linewidth = 0.1)
+    print(log_info[:,1])
     ax.plot(means, color = 'black', linewidth = 1.0)
     ax.set_yscale('log')
     #ax.set_ylim(0.0,0.1)

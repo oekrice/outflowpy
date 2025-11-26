@@ -8,13 +8,19 @@ colors = sns.color_palette('tab20')
 
 fig = plt.figure(figsize = (7,5))
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-years = [2006]
 
+sources = ['clip', 'abs']
+
+source = sources[0]
+
+allys = np.zeros(1000)
+ycount = 0
 for ei, eclipse_number in enumerate(years):
 
     os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs")
 
-    log_file = './batch_logs/log_%d.txt' % eclipse_number
+    #log_file = './batch_logs/log_%d.txt' % eclipse_number
+    log_file = f'./batch_logs_{source}/log_{eclipse_number}.txt'
 
     if not os.path.exists(log_file):
         continue
@@ -40,24 +46,36 @@ for ei, eclipse_number in enumerate(years):
             best_id = i
             score = log_info[i,1]
 
-    for extras in range(0, np.shape(log_info)[0], 1):
+    for extras in range(0, np.shape(log_info)[0], 10):
         #Plot some extra ones as thin lines
-        ys = np.abs(generate_poly(log_info[extras,2:], xs))
+        ys = generate_poly(log_info[extras,2:], xs)
 
         ys[ys < 0.0] = 0.0
+
+        print(extras, np.min(ys), np.max(ys))
         plt.plot(xs, ys, linewidth = 0.1, c = colors[ei])
 
-        print(log_info[extras,1], extras, np.min(ys), np.max(ys))
     string = ''
     for var in range(2, np.size(log_info[1])):
         string = string + str(log_info[-1, var]) + ','
     print('Eclipse', eclipse_number, string)
     ys = generate_poly(log_info[-1,2:], xs)
 
-    ys[ys < 0.0] = 0.0
+    if source == 'clip':
+        ys[ys < 0.0] = 0.0
+    else:
+        ys = np.abs(ys)
 
-    plt.plot(xs, ys, linewidth = 10.0, c = colors[ei], label = f'Eclipse {eclipse_number}', linestyle = 'dashed')
+    if np.max(ys) > 0.0:
+        allys += ys
+        ycount += 1
+
+    plt.plot(xs, ys, linewidth = 2.0, c = colors[ei], label = f'Eclipse {eclipse_number}', linestyle = 'dashed')
     #print(log_info[best_id,2:])
+    with open(f"batch_logs_{source}/optimums.txt", mode = "a") as f:
+        f.write(f"{log_info[-1, 2:].tolist()}\n")
+
+plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')
 
 plt.ylim(0,10)
 plt.title('Optimum outflow functions for various eclipses')
