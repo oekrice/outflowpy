@@ -52,8 +52,8 @@ def make_image(parameter_set, image_number):
 
     nrho = 60
     rss = 5.0
-    ns = 180
-    nphi = 360
+    ns = 90
+    nphi = 180
 
     corona_temp = 1.5e6
     mf_constant = 5e-16
@@ -66,7 +66,7 @@ def make_image(parameter_set, image_number):
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = [0.0,0.0,0.0,0.0,0.0])
+    outflow_in = outflowpy.Input(input_map, nrho, rss)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in)
 

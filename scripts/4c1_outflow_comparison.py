@@ -9,19 +9,21 @@ colors = sns.color_palette('tab20')
 fig = plt.figure(figsize = (9,5))
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
-sources = ['clip', 'abs']
+sources = ['clip', 'abs', 'raw']
 
-source = sources[0]
+source = sources[2]
 
 allys = np.zeros(1000)
 ycount = 0
-os.remove(f"batch_logs_{source}/optimums.txt")
+
+if os.path.exists(f"batch_logs_{source}/optimums.txt"):
+    os.remove(f"batch_logs_{source}/optimums.txt")
 
 
 for counter in range(0,1):
     for ei, eclipse_number in enumerate(years):
 
-        #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_abs")
+        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_raw")
 
         #log_file = './batch_logs/log_%d.txt' % eclipse_number
         log_file = f'./batch_logs_{source}/log_{eclipse_number}.txt'
@@ -72,8 +74,10 @@ for counter in range(0,1):
 
         if source == 'clip':
             ys[ys < 0.0] = 0.0
-        else:
+        elif source == 'abs':
             ys = np.abs(ys)
+        else:
+            ys = ys
 
         if np.max(ys) > 0.0:
             allys += ys
