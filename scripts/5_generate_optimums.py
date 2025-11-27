@@ -70,4 +70,7 @@ meanys = allys/ycount
 data[:,0] = xs
 data[:,1] = meanys
 
-np.savetxt(f'./data/opt_flow_{source}.txt', data, delimiter = ',')
+plt.plot(xs, meanys, c = 'black')
+plt.show()
+
+np.savetxt(f'./data/opt_flow.txt', data, delimiter = ',')

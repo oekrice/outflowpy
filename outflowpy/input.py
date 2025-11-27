@@ -123,6 +123,12 @@ class Input:
             self.vcx = self.vcx*self.c_s
             self.vdcx = self.vdcx*self.c_s
 
+        elif mf_constant == 0.0:
+            print('Zero-outflow solution (mf = 0)')
+            self.vg = np.zeros((len(self._grid.rg)))
+            self.vcx = np.zeros((len(self._grid.rcx)))
+            self.vdcx = np.zeros((len(self._grid.rcx)))
+
         else:
             print('Using the default outflow profile optimised for field line shapes')
             flow_data = np.loadtxt('./data/opt_flow.txt', delimiter = ',')

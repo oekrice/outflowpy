@@ -107,15 +107,21 @@ def run_batch(batch_id, mf_constant = 5e-17, corona_temp = 2e6, time_cadence = 3
                 #SCRIPT IS RUN HERE
                 arg1 = (start + timedelta(days=next_id*time_cadence))
                 obs_time = arg1.isoformat()
-                nrho = 30
+                nrho = 60
                 ns = 90
                 nphi = 180
-                rss = 2.5
+                rss = 5.0
 
                 print('Run parameters', obs_time, ns, nphi,1.0*5e-2/nphi, corona_temp, mf_constant)
                 hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True, cache_directory = "/extra/tmp/vgjn10/projects/outflowpy/test_location/_download_cache")   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-                outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
+                if batch_id == 50:
+                    outflow_in = outflowpy.Input(hmi_map, nrho, rss, mf_constant = 0.0)
+                elif batch_id == 51:
+                    outflow_in = outflowpy.Input(hmi_map, nrho, rss)
+                else:
+                    outflow_in = outflowpy.Input(hmi_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
+
                 outflow_out = outflowpy.outflow_fortran(outflow_in)
 
                 #Calculate the open flux and save. Take care with the units
@@ -176,6 +182,8 @@ else:
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
 corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
 
-run_batch(batch_id, time_cadence = 1, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
-
+if batch_id < 50:
+    run_batch(batch_id, time_cadence = 1, mf_constant = mf_constants[batch_id%10], corona_temp = corona_temps[batch_id//10])
+else:
+    run_batch(batch_id, time_cadence = 1)
 
