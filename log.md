@@ -194,4 +194,15 @@ Those logs are now saved in batch_logs_clip. I'll make a new one along the lines
 
 Definitely best to use the LAST value, even if that be zeros (but only the case for 2006). They're interesting results! Should find a way to plot the radialness of each with individually optimised outflow, PFSS and the 'averaged outflow'. Can maybe do that by midday then sort out the washing machine.
 
+That has all now been acheived. Lovely.
+
+Thursday 27th:
+
+Doing some snazzy plots. The abs logs have now converged nicely and are producing a sensible result. Can use these to produce the comparisons, but need both the mean value for all eclipses and the individuals. The mean values might be the most tricky, but I do need to set that as the default so poof... Or could just fit the closest one to the mean line and go with that? Would be a decent conclusion to the paper at least...
+
+Maybe do one with no clipping? Might force it to converge to something nicer? Would have polynomial coefficcients in that case at least.
+
+Let's establish a way of saving the means. Would need an array of r points and v points at the bare minimum.
+
+
 

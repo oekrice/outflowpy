@@ -77,22 +77,19 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
 
     obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
 
-    year_options = np.array([2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024])
+    year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
     poly_values = [0.0,0.0,0.0,0.0,0.0]
-    source = 'clip'
+    source = 'abs'
     if optimised:
+        allpolys = np.load(f"batch_logs_{source}/optimums.npy")
         #Load the correct polynomial coefficients.
-        eclipse_index = np.where(eclipse_year == year_options)[0]
-        with open(f"batch_logs_{source}/optimums.txt") as f:
-            for i, line in enumerate(f):
-                if i == eclipse_index:
-                    poly_string = line.strip()
-                    break
-        poly_values = [float(x) for x in poly_string[1:-1].split(",")]
+        eclipse_index = year_options.index(eclipse_year)
+
+        poly_values = allpolys[eclipse_index]
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = 'clip')
+    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = source)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in)#, existing_fname = field_root)
 
@@ -213,7 +210,18 @@ def compare_angles(year):
     return
 
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-#years = [2019]
+
+allpolys = []
+source = 'abs'
+
+with open(f"batch_logs_{source}/optimums.txt") as f:
+    for i, line in enumerate(f):
+        poly_string = line.strip()
+        poly_values = [float(x) for x in poly_string[1:-1].split(",")]
+        allpolys.append(poly_values)
+
+allpolys = np.array(allpolys)
+np.save(f"batch_logs_{source}/optimums.npy", allpolys)
 
 for year in years:
     compare_angles(year)

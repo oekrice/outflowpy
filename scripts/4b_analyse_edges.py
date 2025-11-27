@@ -9,7 +9,7 @@ colors = sns.color_palette('dark')
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
 for counter in range(len(years)):
-    file_root = "batch_logs/"
+    file_root = "batch_logs_abs/"
     batch_id = years[counter]
 
     log_file = file_root + f'log_{batch_id}.txt'
@@ -57,7 +57,7 @@ for counter in range(len(years)):
 
     #Let's do some plots of the variables
 
-    fig, axs = plt.subplots(2,1, figsize = (12,10))
+    fig, axs = plt.subplots(2,1, figsize = (8,5))
     ax = axs[0]
     for var_id, variable in enumerate(range(2, np.size(log_info[1]))):
         means, mins, maxs = determine_error_bounds(log_info[:,variable])

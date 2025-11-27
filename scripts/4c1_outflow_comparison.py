@@ -6,19 +6,19 @@ import os
 
 colors = sns.color_palette('tab20')
 
+fig = plt.figure(figsize = (9,5))
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
 sources = ['clip', 'abs']
 
-source = sources[1]
+source = sources[0]
+
+allys = np.zeros(1000)
+ycount = 0
+os.remove(f"batch_logs_{source}/optimums.txt")
 
 
-
-for counter in range(0,1600):
-
-    allys = np.zeros(1000)
-    ycount = 0
-    fig = plt.figure(figsize = (9,5))
+for counter in range(0,1):
     for ei, eclipse_number in enumerate(years):
 
         #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_abs")
@@ -36,7 +36,7 @@ for counter in range(0,1600):
                 log_info.append(line.split(" "))
         log_info = np.array(log_info, dtype = 'float')
 
-        log_info = log_info[:counter+1,:]
+        #log_info = log_info[:counter+1,:]
 
         xs = np.linspace(1.0,2.5,1000)  #Basis for the x axis
 
@@ -52,18 +52,17 @@ for counter in range(0,1600):
                 best_id = i
                 score = log_info[i,1]
 
-        minextra = max(0, counter - 30)
-        maxextra = counter
-        for extras in range(minextra, maxextra):
-            #Plot some extra ones as thin lines
-            ys = generate_poly(log_info[extras,2:], xs)
-
-            if source == 'clip':
-                ys[ys < 0.0] = 0.0
-            else:
-                ys = np.abs(ys)
-
-            plt.plot(xs, ys, linewidth = 0.1, c = colors[2*ei%20 + ei//10], zorder = 0)
+        # for extras in range(0, np.shape(log_info)[0], 0):
+        #     #Plot some extra ones as thin lines
+        #     ys = generate_poly(log_info[extras,2:], xs)
+        #
+        #     if source == 'clip':
+        #         ys[ys < 0.0] = 0.0
+        #     else:
+        #         ys = np.abs(ys)
+        #
+        #     print(extras, np.min(ys), np.max(ys))
+        #     plt.plot(xs, ys, linewidth = 0.1, c = colors[ei])
 
         string = ''
         for var in range(2, np.size(log_info[0])):
@@ -82,18 +81,16 @@ for counter in range(0,1600):
 
         plt.plot(xs, ys, linewidth = 2.0, c = colors[2*ei%20 + ei//10], label = f'{eclipse_number}', linestyle = 'dashed')
         #print(log_info[best_id,2:])
-        # os.remove(f"batch_logs_{source}/optimums.txt")
-        #
-        # with open(f"batch_logs_{source}/optimums.txt", mode = "a") as f:
-        #     f.write(f"{log_info[-1, 2:].tolist()}\n")
+
+        with open(f"batch_logs_{source}/optimums.txt", mode = "a") as f:
+            f.write(f"{log_info[-1, 2:].tolist()}\n")
 
     plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')
 
-    plt.ylim(0,10)
-    plt.title('Optimum outflow functions for various eclipses')
+    plt.title('Optimum outflow speeds for various eclipses')
+    plt.xlabel('Radius')
+    plt.ylabel('Outflow speed (code units)')
     plt.legend()
-    plt.savefig('./comps/allcomp%04d.png' % counter)
+    plt.savefig('./comp.png')
+    plt.show()
     plt.close()
-
-    #ffmpeg -framerate 30 -i ./comps/allcomp%04d.png -c:v mpeg4 -q:v 1 comps.mp4
-

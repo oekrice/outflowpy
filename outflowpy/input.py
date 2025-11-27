@@ -102,8 +102,12 @@ class Input:
             elif polynomial_type == 'clip':
                 vgx[vgx < 0] = 0.0
                 vcx[vcx < 0] = 0.0
+
+            elif polynomial_type == 'raw':
+                vgx = vgx
+                vcx = vcx
             else:
-                raise Exception('Polynomial type not recognised. Currently allowed types are "clip" and "abs".')
+                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs" and "raw"')
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
