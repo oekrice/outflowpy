@@ -65,7 +65,15 @@ def make_image(parameter_set, image_number):
     obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
+    source = 'abs'
 
+    allpolys = np.load(f"batch_logs_{source}/optimums.npy")
+    #Load the correct polynomial coefficients.
+    eclipse_index = eclipse_years.index(eclipse_year)
+
+    poly_values = allpolys[eclipse_index]
+
+    #outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = source)
     outflow_in = outflowpy.Input(input_map, nrho, rss)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in)
@@ -130,7 +138,6 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
 parameter_set = [0.216,0.377,-0.323,1.567]
 
 eclipse_years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-eclipse_years = [2006]
 
 for eclipse_year in eclipse_years:
 

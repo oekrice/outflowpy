@@ -204,5 +204,9 @@ Maybe do one with no clipping? Might force it to converge to something nicer? Wo
 
 Let's establish a way of saving the means. Would need an array of r points and v points at the bare minimum.
 
+Friday 28th:
+
+Alas the absolute value method has not worked well at all. Abs is definitely the best, and we could use that for the paper easily enough. Perhaps it would be better to parameterise based on the parker coeficients? The powers would probably break the algorithm so I can unitise them I suppose.
+
 
 

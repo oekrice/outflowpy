@@ -21,6 +21,7 @@ import portalocker
 import subprocess
 from scipy.interpolate import interp1d
 import seaborn as sns
+import outflowpy
 
 time_cadence = 1
 mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
@@ -245,7 +246,7 @@ def make_plots(copy_data = False):
             if batch_id == 50:
                 label = 'PFSS'
             else:
-                label = 'Optimised outflow'
+                label = 'Average optimised ouflow'
 
             plt.plot(dates, ofluxes, color = colors[plot_num], linewidth = 0.1, linestyle = 'dashed')
             plt.plot(dates_mean, oflux_mean, color = colors[plot_num], label = label, linewidth = 1.0)
@@ -253,6 +254,18 @@ def make_plots(copy_data = False):
             plt.plot(dates_mean, oflux_max, color = colors[plot_num], linewidth = 0.5, linestyle = 'dashed')
         except:
             pass
+
+    if True:
+        #Load in the individual eclipse open fluxes
+        eclipse_ofluxes = np.loadtxt('./data/eclipse_ofluxes.txt', delimiter = ',')
+        times =  []
+        years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
+        for eclipse_year in years:
+            times.append(toYearFraction(datetime.fromisoformat(outflowpy.utils.find_eclipse_time(eclipse_year))))
+
+        plt.scatter(times, eclipse_ofluxes, c = 'green', marker = 'x', label = 'Individually optimised eclipse')
+        print(eclipse_ofluxes)
+        print(times)
 
     if potentialcount > 0:
         print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
@@ -270,8 +283,7 @@ def make_plots(copy_data = False):
         plt.ylim(ymin = 0.0, ymax = 0.2e24)
         plt.title(f'PFSS vs. optimised outflow with rss = 5.0')
         plt.savefig('./plots/0_openflux_optimised.png')
-        plt.close()
-
+        plt.show()
 
 make_plots(copy_data = True)
 

@@ -79,7 +79,7 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
 
     year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
     poly_values = [0.0,0.0,0.0,0.0,0.0]
-    source = 'abs'
+    source = 'raw'
     if optimised:
         allpolys = np.load(f"batch_logs_{source}/optimums.npy")
         #Load the correct polynomial coefficients.
@@ -212,7 +212,7 @@ def compare_angles(year):
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
 allpolys = []
-source = 'abs'
+source = 'raw'
 
 with open(f"batch_logs_{source}/optimums.txt") as f:
     for i, line in enumerate(f):
