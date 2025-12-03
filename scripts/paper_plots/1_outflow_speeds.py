@@ -50,7 +50,7 @@ print('Downloading data')
 
 hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi)   
 
-temps = [0.5e6, 1e6, 1.5e6, 2e6, 3e6]
+temps = [0.5e6, 1e6, 1.5e6, 2e6, 2.5e6, 3e6]
 
 fig = plt.figure(figsize = (6.9, 3.5))
 
@@ -68,5 +68,5 @@ plt.xlabel('Radius $r$ ($R_\odot$)')
 plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')
 plt.legend()
 plt.tight_layout()
-plt.savefig('0_outflow_speeds.pdf')
+plt.savefig('1_outflow_speeds.pdf')
 plt.show()

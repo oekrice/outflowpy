@@ -79,17 +79,32 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
 
     year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
     poly_values = [0.0,0.0,0.0,0.0,0.0]
-    source = 'raw'
-    if optimised:
+    source = 'parker'
+    if False:
         allpolys = np.load(f"batch_logs_{source}/optimums.npy")
         #Load the correct polynomial coefficients.
         eclipse_index = year_options.index(eclipse_year)
 
         poly_values = allpolys[eclipse_index]
 
+    allpolys = np.load(f"batch_logs_{source}/optimums.npy")
+
+    eclipse_index = year_options.index(eclipse_year)
+
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = source)
+    if optimised:
+        mf_constant = np.abs(allpolys[eclipse_index,0])*1e-17
+        corona_temp = np.abs(allpolys[eclipse_index,1])*1e6
+
+        print('Parameters', mf_constant, corona_temp)
+
+    else:
+        mf_constant = 0.0
+        corona_temp = 1.5e6
+
+    #outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = source)
+    outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = mf_constant, corona_temp = corona_temp)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in)#, existing_fname = field_root)
 
@@ -173,6 +188,9 @@ def compare_angles(year):
     outflow_means = find_synthetic_angle_distribution(year, nbins, optimised = True, rss = 5.0)
     outflow_distribution = np.zeros(nbins)
 
+    outflow_in_means = find_synthetic_angle_distribution(year, nbins, optimised = True, rss = 2.5)
+    outflow_in_distribution = np.zeros(nbins)
+
     pfss_means = find_synthetic_angle_distribution(year, nbins, optimised = False, rss = 5.0)
     pfss_distribution = np.zeros(nbins)
 
@@ -183,12 +201,14 @@ def compare_angles(year):
         nvalues = nbins - np.isnan(bin_mask[ri,:]).sum()
         if nvalues > 0:
             outflow_distribution[ri] = np.nansum(outflow_means[ri,:])/nvalues
+            outflow_in_distribution[ri] = np.nansum(outflow_in_means[ri,:])/nvalues
             pfss_distribution[ri] = np.nansum(pfss_means[ri,:])/nvalues
             pfss_in_distribution[ri] = np.nansum(pfss_in_means[ri,:])/nvalues
         else:
             outflow_distribution[ri] = np.nan
-            pfss_distribution[ri] = np.nansum(pfss_means[ri,:])/nvalues
-            pfss_in_distribution[ri] = np.nansum(pfss_in_means[ri,:])/nvalues
+            outflow_in_distribution[ri] = np.nan
+            pfss_distribution[ri] = np.nan
+            pfss_in_distribution[ri] = np.nan
 
 
     rbins = np.linspace(1.0, 2.5, 31)
@@ -198,6 +218,7 @@ def compare_angles(year):
     plt.plot(rcs[1:], pfss_distribution[1:], label = f"{year} PFSS, rss = 5.0")
     plt.plot(rcs[1:], pfss_in_distribution[1:], label = f"{year} PFSS, rss = 2.5")
     plt.plot(rcs[1:], outflow_distribution[1:], label = f"{year} optimised outflow, rss = 5.0")
+    plt.plot(rcs[1:], outflow_in_distribution[1:], label = f"{year} optimised outflow, rss = 2.5")
 
     plt.title(f"{year} eclipse")
     #plt.ylim(ymin = 0.0)
@@ -212,7 +233,7 @@ def compare_angles(year):
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
 allpolys = []
-source = 'raw'
+source = 'parker'
 
 with open(f"batch_logs_{source}/optimums.txt") as f:
     for i, line in enumerate(f):

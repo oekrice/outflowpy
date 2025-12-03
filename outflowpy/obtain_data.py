@@ -401,6 +401,7 @@ def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
     Fraction in time through this rotation. 0.5 would be precisely at the observation time, 0 is 13 days beforehand etc.
     """
 
+
     if datetime.fromisoformat(obs_time) < datetime.fromisoformat("2010-08-15T10:00:00"):
         source = 'MDI'
     else:
@@ -422,9 +423,11 @@ def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
     if np.max(end_times) < datetime.fromisoformat(obs_time) or np.min(end_times) > datetime.fromisoformat(obs_time):
         raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
 
-    time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
+
+    time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time)) - 1
     rot = int(crots[time_index])   #This is the rotation at this time
 
+    print(obs_time, crots[time_index], start_times[time_index], end_times[time_index])
     crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
 
     if rot < 1909 or rot > 2299:
@@ -465,6 +468,8 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     print(f"Obtaining data from {source}, downloading rotations, {crot_number-1, crot_number, crot_number+1}")
     if use_cached:
         print("Using cached data if available")
+
+    print(crot_number)
     #Download the respective sets of data
     brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached, cache_dir = cache_directory)
     brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached, cache_dir = cache_directory)
@@ -484,6 +489,7 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     ncells_start = nphi + ncells_shift
 
     brm_shift[:,:] = brm3[:, ncells_start:ncells_start + nphi]
+
 
     del(brm, brm_l, brm_r)
 

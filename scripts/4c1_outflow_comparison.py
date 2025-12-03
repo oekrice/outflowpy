@@ -27,7 +27,8 @@ for counter in range(0,1):
 
     for ei, eclipse_number in enumerate(years):
 
-        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_{source}")
+        #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_{source}")
+        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs")
 
         #log_file = './batch_logs/log_%d.txt' % eclipse_number
         log_file = f'./batch_logs_{source}/log_{eclipse_number}.txt'

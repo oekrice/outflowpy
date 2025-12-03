@@ -208,5 +208,15 @@ Friday 28th:
 
 Alas the absolute value method has not worked well at all. Abs is definitely the best, and we could use that for the paper easily enough. Perhaps it would be better to parameterise based on the parker coeficients? The powers would probably break the algorithm so I can unitise them I suppose.
 
+Monday 1st:
 
+That's all worked pretty nicely and definitely have enough for a paper. Wil write that later in the week...
+
+https://www.maths.dur.ac.uk/users/anthony.yeates/NOTES/at3_201400e/
+
+Need some extreme pictures to prove a point.
+
+Temp = 2MK and mf = 5e-16 gives open flux values which are pretty close. But what do they look like? 
+
+Make some scripts which use these. Let's go for 3x, 5x etc.?
 

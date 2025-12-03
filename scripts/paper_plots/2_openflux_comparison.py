@@ -12,7 +12,6 @@ import seaborn as sns
 
 from cycler import cycler
 
-plt.rcParams['axes.prop_cycle'] = cycler('linestyle', ['-', '--', '-.', ':'])
 # plt.rcParams.update({
 #     "text.usetex": True,                 # Use LaTeX for all text
 #     "font.family": "serif",              # Use serif (Computer Modern)
@@ -29,34 +28,57 @@ plt.rcParams.update({
 
 #Set up parameters
 mfs = [0.0, 5e-17, 5e-17]
-temps = [1e6, 1e6,2e6]
+temps = [1e6, 1.5e6, 2.5e6]
+
+rsses = np.linspace(1.5,5.0,8)
 
 colors = sns.color_palette('colorblind')
 
-ns = 60
-nphi = 120
+ns = 180
+nphi = 360
 nrho = 120
 
 obs_time = "2017-08-21T00:00:00"
 
-hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi)   
+hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
+
+def find_oflux_profile(br):
+    """
+    Outputs the open flux profile (in the correct units) as an array aligned with radial grid centres
+    """
+    rsun_cm = 6.957e10
+    ofluxes = np.zeros(np.shape(br)[2])
+    for i in range(np.shape(br)[2]):
+        surface_area = 4*np.pi*(np.exp(outflow_in.grid.rg[i])*rsun_cm)**2
+        ofluxes[i] = np.sum(np.abs(outflow_out.br)[:,:,i])*surface_area/(nphi*ns)
+    return ofluxes
+
 
 fig = plt.figure(figsize = (6.9, 3.5))
 
-for i, corona_temp in enumerate(temps):
-    mf_in_sensible_units = 5e-17*(6.957e10)**2 #In seconds/solar radius
-    sound_speed = np.sqrt(1.38064852e-23*corona_temp/1.67262192e-27) #Sound speed in m/s
-    r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
-    c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
+for mi, model in enumerate(mfs[:]):
+    mf_constant = mfs[mi]
+    corona_temp = temps[mi]
+    for ri, rss in enumerate(rsses[:]):
+        print(mf_constant, corona_temp, rss)
+        outflow_in = outflowpy.Input(hmi_map, nrho, rss, mf_constant = mf_constant, corona_temp = corona_temp)
+        outflow_out = outflowpy.outflow_fortran(outflow_in)
 
-    outflow_in = outflowpy.Input(hmi_map, nrho, 5.0, mf_constant = 5e-17, corona_temp = corona_temp)
-    outflow_out = outflowpy.outflow_fortran(outflow_in)
+        ofluxes = find_oflux_profile(outflow_out.br)
 
-    plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg, c= colors[i], label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$", linewidth = 2.)
+        if ri == 0:
+            if mi == 0:
+                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = "PFSS")
+            else:
+                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$")
+        else:
+            plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5)
+        plt.scatter(np.exp(outflow_in.grid.rg)[-1], ofluxes[-1], color = colors[mi], edgecolor = 'black', s = 25)
 
+plt.ylim(ymin = 0, ymax = 9e22)
 plt.xlabel('Radius $r$ ($R_\odot$)')
-plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')
+plt.ylabel('Open Flux (Mx)')
 plt.legend()
 plt.tight_layout()
-plt.savefig('0_outflow_speeds.pdf')
+plt.savefig('2_openflux_comparison.pdf')
 plt.show()
