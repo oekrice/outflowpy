@@ -424,7 +424,7 @@ def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
         raise Exception('Failed to find a Carrington rotation corresponding to this observation time')
 
 
-    time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time)) - 1
+    time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
     rot = int(crots[time_index])   #This is the rotation at this time
 
     print(obs_time, crots[time_index], start_times[time_index], end_times[time_index])

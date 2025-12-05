@@ -70,13 +70,13 @@ for mi, model in enumerate(mfs[:]):
             if mi == 0:
                 plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = "PFSS")
             else:
-                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$")
+                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$ K")
         else:
             plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5)
         plt.scatter(np.exp(outflow_in.grid.rg)[-1], ofluxes[-1], color = colors[mi], edgecolor = 'black', s = 25)
 
 plt.ylim(ymin = 0, ymax = 9e22)
-plt.xlabel('Radius $r$ ($R_\odot$)')
+plt.xlabel('Altitude $r/R_\odot$)')
 plt.ylabel('Open Flux (Mx)')
 plt.legend()
 plt.tight_layout()

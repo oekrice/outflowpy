@@ -65,9 +65,13 @@ ax = axs[0]
 lon_edges = np.linspace(-np.pi, np.pi, np.shape(raw_data)[1] + 1)
 lat_edges = np.arccos(np.linspace(1., -1., np.shape(raw_data)[0] + 1)) - np.pi/2
 im = ax.pcolormesh(lon_edges, lat_edges, raw_data, vmin = -50, vmax = 50, cmap = cmap, rasterized=True)
-ax.patch.set_linewidth(3)   # or any thickness you want
+ax.patch.set_linewidth(2)
 ax.patch.set_edgecolor("black")
-#
+
+for spine in ax.spines.values():
+    spine.set_edgecolor("black")
+    spine.set_linewidth(2)
+
 ax.set_xticks([])
 ax.set_yticks([])
 plt.colorbar(im, label = 'Magnetic field strength (Gauss)')
@@ -80,9 +84,13 @@ data = outflow_in.br
 lon_edges = np.linspace(-np.pi, np.pi, nphi+1)
 lat_edges = np.arccos(np.linspace(1., -1., ns+1)) - np.pi/2
 im = ax.pcolormesh(lon_edges, lat_edges, data, vmin = -50, vmax = 50, cmap = cmap, rasterized=True)
-ax.patch.set_linewidth(3)   # or any thickness you want
+ax.patch.set_linewidth(2)
 ax.patch.set_edgecolor("black")
-#
+
+for spine in ax.spines.values():
+    spine.set_edgecolor("black")
+    spine.set_linewidth(2)
+
 ax.set_xticks([])
 ax.set_yticks([])
 plt.colorbar(im, label = 'Magnetic field strength (Gauss)')

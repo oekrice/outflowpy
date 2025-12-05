@@ -41,6 +41,28 @@ def random_seed_sampler(output, nseeds, r_skew, rss):
 
     return seeds
 
+def equal_seed_sampler(output, nseeds, r_start):
+    """
+    Returns equally distributed seeds starting from a given altitude r_start
+    """
+
+    dtheta = np.pi/(nseeds//2)
+    lats_equal = np.linspace(dtheta/2 - np.pi/2, np.pi/2 - dtheta/2, nseeds//2)
+
+    lons, lats, rs = [], [], []
+
+    for seed in range(nseeds//2):
+        lons.append(-np.pi/2 * u.rad)
+        lats.append(lats_equal[seed]* u.rad)
+        rs.append(r_start * const.R_sun)
+
+        lons.append(np.pi/2 * u.rad)
+        lats.append(lats_equal[seed]* u.rad)
+        rs.append(r_start * const.R_sun)
+
+    seeds = SkyCoord(lons,lats,rs, frame=output.coordinate_frame)   #This can take three arrays (of the same length) for all the coordinates.
+    return seeds
+
 def plane_seed_sampler(output, nseeds, r_skew, rss):
     """
     Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
@@ -58,6 +80,7 @@ def plane_seed_sampler(output, nseeds, r_skew, rss):
     res = 1000
     def f(x):  #Explicit (monotonic) function
         return 2/np.pi*(x/2 - np.sin(2*x)/4)
+
     xs = np.linspace(0.0, np.pi, res)
     ys = f(xs)
 
