@@ -10,12 +10,18 @@ from astropy.time import Time
 import sunpy
 import cv2 as cv
 from scipy.ndimage import gaussian_filter, gaussian_filter1d
+import seaborn as sns
+from matplotlib.collections import LineCollection
+from matplotlib.colors import Normalize
 
 plt.rcParams.update({
     "text.usetex": False,
     "mathtext.fontset": "cm",  # LaTeX-like Computer Modern
     "font.family": "serif",
 })
+
+cmap = sns.color_palette("magma", as_cmap=True)
+
 
 def determine_monotonic_sections(rs, length_limit = 50):
     #Use this to separate out the bits of field lines which are probably those which we care about. Some may loop back on each other and things, which is undesirable.
@@ -74,7 +80,7 @@ def find_decent_lines(resolution, image_title, year, doplots = True):
     if doplots:
         fig, axs = plt.subplots(2,2, figsize = (10,10))
         axs[0,0].imshow(img_original,cmap = 'gray', rasterized=True)
-        axs[0,0].set_title('Original Image'), axs[0,0].set_xticks([]), axs[0,0].set_yticks([])
+        axs[0,0].set_title('Pre-processed Image'), axs[0,0].set_xticks([]), axs[0,0].set_yticks([])
         # axs[1].imshow(img, cmap = 'gray')
         # axs[1].set_title('Processed Image'), axs[1].set_xticks([]), axs[1].set_yticks([])
         axs[0,1].imshow(edges, cmap = 'gray', rasterized=True)
@@ -137,43 +143,66 @@ def find_decent_lines(resolution, image_title, year, doplots = True):
     def pt_to_xy(pt):
         return 5.0*(pt[0] - resolution/2)/resolution, -5.0*(pt[1] - resolution/2)/resolution
     #Determine the radialness of these lines
-    xs, ys, cs = [], [], []
     for line in eclipse_lines[:]:
         line_xs = 2*2.5*(np.array(line)[0,:] - resolution/2)/resolution
         line_ys = -2*2.5*(np.array(line)[1,:] - resolution/2)/resolution
+        xs, ys, cs = [], [], []
 
-        if line_xs[0]**2 + line_ys[0]**2 < line_xs[-1]**2 + line_ys[-1]**2:
-             #Reverse the direction, for consistency. So they always go outwards.
-            line[0] = line[0][::-1]
-            line[1] = line[1][::-1]
-        #For every point along the line, log the position (do angle from the top, clockwise?. Maybe just arctan2 is best) and the angle
-        for i in range(1,len(line[0])-1):
-            x, y = pt_to_xy([line[0][i], line[1][i]])
-            #x = line[0][i] - resolution/2; y = -1.0*(line[1][i] - resolution/2)
-            angle = np.arctan2(y, x) + np.pi
-            x_up, y_up     = pt_to_xy([line[0][i+1], line[1][i+1]])
-            x_down, y_down = pt_to_xy([line[0][i-1], line[1][i-1]])
+        if True:#line_xs[0]**2 + line_ys[0]**2 < line_xs[-1]**2 + line_ys[-1]**2:
+            #  #Reverse the direction, for consistency. So they always go outwards. Not really necessary but meh.
+            # line[0] = line[0][::-1]
+            # line[1] = line[1][::-1]
+            #For every point along the line, log the position (do angle from the top, clockwise?. Maybe just arctan2 is best) and the angle
+            for i in range(1,len(line[0])-1):
 
-            dx = x_up - x_down
-            dy = y_up - y_down
-            #Make sure that the angle is always less than pi/2, as it doesn't matter which direction the line was traced.
+                x, y = pt_to_xy([line[0][i], line[1][i]])
+                #x = line[0][i] - resolution/2; y = -1.0*(line[1][i] - resolution/2)
+                angle = np.arctan2(y, x)
+                x_up, y_up     = pt_to_xy([line[0][i+1], line[1][i+1]])
+                x_down, y_down = pt_to_xy([line[0][i-1], line[1][i-1]])
 
-            dangle = np.arctan2(dy, dx) + np.pi #This is the direction. Which could be off by pi/2, I suppose.
+                dx = x_up - x_down
+                dy = y_up - y_down
+                #Make sure that the angle is always less than pi/2, as it doesn't matter which direction the line was traced.
 
-            #Pick the angle opposite this if necessary. They should be close
 
-            radial_difference = absangle(angle, dangle)
-            xs.append(x); ys.append(y); cs.append(radial_difference)
-    axs[1,1].scatter(xs, ys, c = cs, s = 0.1, marker = ',', vmin = 0.0, vmax = np.percentile(cs, 98))
+                #Calculate angle using cosine similarity
+                top = np.abs(x*dx + y*dy)
+                bottom = np.sqrt(x**2 + y**2)*np.sqrt(dx**2 + dy**2)
+
+                dangle = np.arccos(top/bottom)
+
+                #dangle = np.arctan2(dy, dx) + np.pi #This is the direction. Which could be off by pi/2, I suppose.
+
+                #Pick the angle opposite this if necessary. They should be close
+                radial_difference = dangle#absangle(angle, dangle)
+
+                xs.append(x); ys.append(y); cs.append(radial_difference)
+
+        if len(xs) > 0:
+            # Normalize color range
+            norm = Normalize(0.0, np.pi/3)
+
+            points = np.array([xs, ys]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-1], points[1:]], axis=1)
+            # Create LineCollection
+            lc = LineCollection(segments, cmap=cmap, norm=norm)
+            lc.set_array(cs)            # Assign values for colormap
+            lc.set_linewidth(2)
+            axs[1,1].add_collection(lc)
+
+    #axs[1,1].scatter(xs, ys, c = cs, s = 0.5, marker = ',', vmin = 0.0, vmax = np.percentile(cs, 98), cmap = cmap)
 
     if doplots:
         axs[1,1].set_xticks([]); axs[1,1].set_yticks([])
         #axs[1,1].scatter(xs, ys, c = cs, s = 0.1, vmin = 0, vmax = np.percentile(cs, 90))
-        axs[1,1].set_title('Field line angles')
+        axs[1,1].set_title('Field line deviation from radial')
         axs[1,1].set_axis_off()
-
+        axs[1,1].set_xlim(-2.5,2.5)
+        axs[1,1].set_ylim(-2.5,2.5)
         plt.tight_layout()
         plt.savefig('7_real_images.png', dpi = 700)
+        plt.show()
         plt.close()
 
     return transformed_lines

@@ -42,6 +42,9 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
         #Given coordinates x, y, determine the radius in suns
         return np.sqrt(x**2 + y**2)
 
+    def pt_to_xy(pt):
+        return 5.0*(pt[0] - resolution/2)/resolution, -5.0*(pt[1] - resolution/2)/resolution
+
     histogram_sum = np.zeros((nbins_r, nbins_theta))
     histogram_count = np.zeros((nbins_r, nbins_theta))
     xs, ys, cs = [], [], []
@@ -52,11 +55,25 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
             angle = np.arctan2(np.abs(y), np.abs(x))
             dx = line[0][i+1] - line[0][i-1]
             dy = line[1][i+1] - line[1][i-1]
-            #Make sure that the angle is always less than pi/2, as it doesn't matter which direction the line was traced.
-            dangle = np.arctan2(np.abs(dy), np.abs(dx)) #This is the direction. Which could be off by pi/2, I suppose.
-            #Let's establish a precedent. All ys are +ve, and all xs are +ve
 
-            radial_difference = np.abs(dangle - angle)
+
+
+            x, y = pt_to_xy([line[0][i], line[1][i]])
+            #x = line[0][i] - resolution/2; y = -1.0*(line[1][i] - resolution/2)
+            angle = np.arctan2(y, x)
+            x_up, y_up     = pt_to_xy([line[0][i+1], line[1][i+1]])
+            x_down, y_down = pt_to_xy([line[0][i-1], line[1][i-1]])
+
+            dx = x_up - x_down
+            dy = y_up - y_down
+
+            #Calculate angle using cosine similarity
+            top = np.abs(x*dx + y*dy)
+            bottom = np.sqrt(x**2 + y**2)*np.sqrt(dx**2 + dy**2)
+
+            dangle = np.arccos(top/bottom)
+
+            radial_difference = dangle
             #print(radial_difference)
             xs.append(x); ys.append(y); cs.append(radial_difference)
 
