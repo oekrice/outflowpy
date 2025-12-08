@@ -179,10 +179,10 @@ if len(sys.argv) > 1:
 else:                                                                              
     raise Exception('Specify batch number.')
 
-corona_temps = [1e6,1.25e6, 1.5e6,1.75e6, 2e6,2.25e6, 2.5e6,2.75e6, 3e6]
+corona_temps = [1e6, 1e6,1.25e6, 1.5e6,1.75e6, 2e6,2.25e6, 2.5e6,2.75e6, 3e6]
 
-if batch_id < 50:
-    run_batch(batch_id, time_cadence = 1, mf_constant = 5e-17, corona_temp = corona_temps[batch_id])
+if batch_id == 0:
+    run_batch(batch_id, time_cadence = 1, mf_constant = 0.0, corona_temp = corona_temps[batch_id])
 else:
-    run_batch(batch_id, time_cadence = 1)
+    run_batch(batch_id, time_cadence = 1, mf_constant = 5e-17, corona_temp = corona_temps[batch_id])
 
