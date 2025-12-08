@@ -173,9 +173,24 @@ def _scale_mdi(mdi_input):
 
         return prop*strong_value + (1. - prop)*weak_value
 
-    mdi_input = scale_pixel(mdi_input)
+    mdi_output = scale_pixel(mdi_input)
 
-    return mdi_input
+    return mdi_output
+
+def _scale_hmi(hmi_input):
+    #Converts each pixel of the HMI magnetogram so it matches MDI.
+    #The only reason for this particularly is that the Open Flux discrepancies will be lessened. I had originally assumed the other way around because HMI is newer, but in hindsight that was perhaps silly.
+
+    def scale_pixel(value):
+        strong_value = hmi_input*1.31 + 10.2
+        weak_value = hmi_input*1.4 - 0.18
+        prop = np.clip((value - 400) / 200.0, 0.0, 1.0)
+
+        return prop*strong_value + (1. - prop)*weak_value
+
+    hmi_output = scale_pixel(hmi_input)
+
+    return hmi_output
 
 def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_dir = None):
     r"""
@@ -241,10 +256,10 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
                 if mdi_flag:
                     seg = c.query(('mdi.synoptic_mr_polfil_96m[%4.4i]' % crot_number), seg='Br_polfil')
                     data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Br_polfil[0], header=True)
-                    data = _scale_mdi(data)   #Scale the magfield data from MDI so that it matches HMI. Using the correlation deduced by "https://link.springer.com/article/10.1007/s11207-012-9976-x"
                 else:
                     seg = c.query(('hmi.synoptic_mr_polfil_720s[%4.4i]' % crot_number), seg='Mr_polfil')
                     data, header = fits.getdata('http://jsoc.stanford.edu' + seg.Mr_polfil[0], header=True)
+                    data = _scale_hmi(data)   #Scale the magfield data from HMI so that it matches MDI "https://link.springer.com/article/10.1007/s11207-012-9976-x"
                 success = True
             except:
                 print("Failed to find the Carrington Rotation database. This is likely due to an internet error caused by multiple threads, and so will try again shortly.")
