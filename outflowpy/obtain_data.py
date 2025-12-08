@@ -180,7 +180,6 @@ def _scale_mdi(mdi_input):
 def _scale_hmi(hmi_input):
     #Converts each pixel of the HMI magnetogram so it matches MDI.
     #The only reason for this particularly is that the Open Flux discrepancies will be lessened. I had originally assumed the other way around because HMI is newer, but in hindsight that was perhaps silly.
-
     def scale_pixel(value):
         strong_value = hmi_input*1.31 + 10.2
         weak_value = hmi_input*1.4 - 0.18
@@ -248,7 +247,7 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
             cache_exists = True
         except:
             pass
-    
+
     if not cache_exists:
         while not success:
             try:

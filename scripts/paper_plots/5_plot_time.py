@@ -195,10 +195,10 @@ def make_plot():
     fig = plt.figure(figsize = (6.9,4.0))
 
     time_cadence = 1
-    mf_constants = [0.0,1e-17,5e-17,1e-16,5e-16]
-    corona_temps = [1e6,1.5e6,2e6,2.5e6,3e6]
+    mf_constants = [0.0,5e-17,5e-17,5e-17,5e-17,5e-17,5e-17,5e-17,5e-17,5e-17]
+    corona_temps = [1e6, 1e6,1.25e6, 1.5e6,1.75e6, 2e6,2.25e6, 2.5e6,2.75e6, 3e6]
 
-    batch_ids = [22,32,42,0]
+    batch_ids = [3,5,7,0]
 
     #Do frost 'interpolation' here
     frost_xs = tflux
@@ -207,13 +207,14 @@ def make_plot():
     frost_interp = interp1d(frost_xs, frost_ys, kind = 'linear', fill_value = 'extrapolate')
 
 
+    os.system("scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/*_*.txt ./data/batch_logs_mdi")
+
     overallcount = 0; potentialcount = 0
     for plot_num, batch_id in enumerate(batch_ids):
-        mf_constant = mf_constants[batch_id%10]
-        corona_temp = corona_temps[batch_id//10]
-        print(batch_id, mf_constant, corona_temp)
+        mf_constant = mf_constants[batch_id]
+        corona_temp = corona_temps[batch_id]
     #Read in the data
-        with LockedLog("./data/batch_logs_5/0_%d.txt" % batch_id, mode = "r+") as f:
+        with LockedLog("./data/batch_logs_mdi/0_%d.txt" % batch_id, mode = "r+") as f:
             #This does now appear to be thread-safe, so we can be a bit smarter now and it'll run even faster and not get particularly baffled.
             #Look at the runs which satisfy the requirements and pick a random one from them.
             ofluxes = []; dates = []
@@ -269,7 +270,7 @@ def make_plot():
         plt.xlabel('Year')
         plt.ylabel('Open Flux at 1AU (Mx)')
         plt.xlim(2000,2022)
-        plt.ylim(ymin = 0.0, ymax = 0.16e24)
+        plt.ylim(ymin = 0.0, ymax = 0.18e24)
         plt.savefig('./5_plot_time.pdf')
         plt.show()
         plt.close()

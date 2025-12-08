@@ -196,7 +196,6 @@ def compare_angles(year):
 
     error = np.mean((real_dists[i][1:] - synth_dists[i][1:])**2)
 
-    print(error)
     return error
 
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]

@@ -75,7 +75,7 @@ for mi, model in enumerate(mfs[:]):
             plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5)
         plt.scatter(np.exp(outflow_in.grid.rg)[-1], ofluxes[-1], color = colors[mi], edgecolor = 'black', s = 25)
 
-plt.ylim(ymin = 0, ymax = 9e22)
+plt.ylim(ymin = 0, ymax = 1.2e23)
 plt.xlabel('Altitude $r/R_\odot$)')
 plt.ylabel('Open Flux (Mx)')
 plt.legend()

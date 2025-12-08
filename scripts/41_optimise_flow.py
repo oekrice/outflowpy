@@ -106,8 +106,11 @@ def find_eclipse_flines(eclipse_year, field_parameters):
             angle = np.arctan2(np.abs(y), np.abs(x))
             dx = line[0][i+1] - line[0][i-1]
             dy = line[1][i+1] - line[1][i-1]
-            dangle = np.arctan2(np.abs(dy), np.abs(dx)) #This is the direction. Which could be off by pi/2, I suppose.
-            radial_difference = np.abs(dangle - angle)
+
+            top = np.abs(x*dx + y*dy)
+            bottom = np.sqrt(x**2 + y**2)*np.sqrt(dx**2 + dy**2)
+
+            dangle = np.arccos(top/bottom)
 
     return transformed_lines
 

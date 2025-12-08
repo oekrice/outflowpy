@@ -62,7 +62,7 @@ for i, corona_temp in enumerate(temps):
 
     outflow_in = outflowpy.Input(hmi_map, nrho, 5.0, mf_constant = 5e-17, corona_temp = corona_temp)
 
-    plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg, c= colors[i], label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$ K", linewidth = 2.)
+    plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg, c= colors[i], label = f"$T_0 = {corona_temp*1e-6}$MK", linewidth = 2.)
 
 plt.xlabel('Radius $r$ ($R_\odot$)')
 plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')

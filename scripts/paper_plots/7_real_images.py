@@ -78,7 +78,7 @@ def find_decent_lines(resolution, image_title, year, doplots = True):
     edges = cv.Canny(img,t_lower, t_upper, apertureSize = aperture_size, L2gradient = True)
 
     if doplots:
-        fig, axs = plt.subplots(2,2, figsize = (10,10))
+        fig, axs = plt.subplots(2,2, figsize = (6.9, 6.9))
         axs[0,0].imshow(img_original,cmap = 'gray', rasterized=True)
         axs[0,0].set_title('Pre-processed Image'), axs[0,0].set_xticks([]), axs[0,0].set_yticks([])
         # axs[1].imshow(img, cmap = 'gray')
@@ -188,7 +188,7 @@ def find_decent_lines(resolution, image_title, year, doplots = True):
             # Create LineCollection
             lc = LineCollection(segments, cmap=cmap, norm=norm)
             lc.set_array(cs)            # Assign values for colormap
-            lc.set_linewidth(2)
+            lc.set_linewidth(1)
             axs[1,1].add_collection(lc)
 
     #axs[1,1].scatter(xs, ys, c = cs, s = 0.5, marker = ',', vmin = 0.0, vmax = np.percentile(cs, 98), cmap = cmap)

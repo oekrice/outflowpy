@@ -30,14 +30,14 @@ nrho = 60
 
 obs_time = "2017-08-21T00:00:00"
 mfs = [0.0, 5e-17]
-temps = [1e6, 4.239854e6]
-rsses = [1.2824, 2.5]
+temps = [1e6, 2.6255e6]
+rsses = [1.5898, 2.5]
 
 hmi_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
 
 fig, axs = plt.subplots(1,2, figsize = (6.9, 4.0))
 
-model_labs = ["PFSS, $r_{ss} = 1.28R_\odot$", "Outflow, $T_0 = 4.24$MK"]
+model_labs = ["PFSS, $r_{ss} = 1.59R_\odot$", "Outflow, $T_0 = 2.63$MK"]
 
 for mi, model in enumerate(mfs[:]):
 
