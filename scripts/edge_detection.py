@@ -42,9 +42,6 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
         #Given coordinates x, y, determine the radius in suns
         return np.sqrt(x**2 + y**2)
 
-    def pt_to_xy(pt):
-        return 5.0*(pt[0] - resolution/2)/resolution, -5.0*(pt[1] - resolution/2)/resolution
-
     histogram_sum = np.zeros((nbins_r, nbins_theta))
     histogram_count = np.zeros((nbins_r, nbins_theta))
     xs, ys, cs = [], [], []
@@ -56,13 +53,10 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
             dx = line[0][i+1] - line[0][i-1]
             dy = line[1][i+1] - line[1][i-1]
 
-
-
-            x, y = pt_to_xy([line[0][i], line[1][i]])
             #x = line[0][i] - resolution/2; y = -1.0*(line[1][i] - resolution/2)
             angle = np.arctan2(y, x)
-            x_up, y_up     = pt_to_xy([line[0][i+1], line[1][i+1]])
-            x_down, y_down = pt_to_xy([line[0][i-1], line[1][i-1]])
+            x_up, y_up     = line[0][i+1], line[1][i+1]
+            x_down, y_down = line[0][i-1], line[1][i-1]
 
             dx = x_up - x_down
             dy = y_up - y_down

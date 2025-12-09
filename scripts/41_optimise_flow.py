@@ -99,8 +99,9 @@ def find_eclipse_flines(eclipse_year, field_parameters):
         coords.representation_type = 'cartesian'
         line = np.zeros((2, len(coords)))
         line[0,:] = coords.y/const.R_sun; line[1,:] = coords.z/const.R_sun
+
         transformed_lines.append([line[0,:], line[1,:]])
-        #For every point along the line, log the position (do angle from the top, clockwise?. Maybe just arctan2 is best) and the angle
+
         for i in range(1,len(line[0])-1):
             x = line[0][i]; y = line[1][i]
             angle = np.arctan2(np.abs(y), np.abs(x))
@@ -199,8 +200,8 @@ def run_optimisation():
     print('Doing optimisation run on eclipse', eclipse_year)
     if os.path.exists("batch_logs/log_%d.txt" % eclipse_year):
         os.remove("batch_logs/log_%d.txt" % eclipse_year)
-    initial_parameter_set = np.array([5.0,1.5])
-    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.5, {'verb_disp': 1})
+    initial_parameter_set = np.array([5.0,2.5])
+    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.25, {'verb_disp': 1})
     es.optimize(generate_fn)
     es.result_pretty()
 
