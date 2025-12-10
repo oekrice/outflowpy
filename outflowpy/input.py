@@ -13,6 +13,8 @@ from outflowpy.grid import Grid
 
 from skimage import measure
 
+from pathlib import Path
+
 class Input:
     r"""
     Input to PFSS/outflow field modelling.
@@ -131,7 +133,11 @@ class Input:
 
         else:
             print('Using the default outflow profile optimised for field line shapes')
-            flow_data = np.loadtxt('./data/opt_flow.txt', delimiter = ',')
+
+            BASE_DIR = Path(__file__).resolve().parent
+            file_path = BASE_DIR / "data" / "opt_flow.txt"
+
+            flow_data = np.loadtxt(file_path, delimiter = ',')
             rs_interp = flow_data[:,0]
             vs_interp = flow_data[:,1]
 

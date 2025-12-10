@@ -4,13 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
+import os
 
 colors = sns.color_palette('dark')
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 
 for counter in range(len(years)):
-    file_root = "batch_logs_parker/"
+    file_root = "batch_logs/"
     batch_id = years[counter]
+
+    os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{years[counter]}.txt ./batch_logs")
 
     log_file = file_root + f'log_{batch_id}.txt'
 
@@ -30,14 +33,14 @@ for counter in range(len(years)):
     print('Best so far:', best_id, log_info[best_id])
     print('Best parameters:')
     string = ''
-    for var in range(2, np.size(log_info[1])):
+    for var in range(2, np.size(log_info[0])):
         string = string + str(log_info[best_id, var]) + ','
 
     print(string)
 
     print('Last parameters in previous run:')
     string = ''
-    for var in range(2, np.size(log_info[1])):
+    for var in range(2, np.size(log_info[0])):
         string = string + str(log_info[-1, var]) + ','
     print(string)
 
@@ -59,7 +62,7 @@ for counter in range(len(years)):
 
     fig, axs = plt.subplots(2,1, figsize = (8,5))
     ax = axs[0]
-    for var_id, variable in enumerate(range(2, np.size(log_info[1]))):
+    for var_id, variable in enumerate(range(2, np.size(log_info[0]))):
         means, mins, maxs = determine_error_bounds(log_info[:,variable])
         ax.plot(means, color = colors[var_id%10], linewidth = 1.0, label = var_id)
         ax.plot(log_info[:,variable], color = colors[var_id%10], linewidth = 0.1)

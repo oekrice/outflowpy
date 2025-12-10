@@ -220,3 +220,10 @@ Temp = 2MK and mf = 5e-16 gives open flux values which are pretty close. But wha
 
 Make some scripts which use these. Let's go for 3x, 5x etc.?
 
+Wednesday 10th December:
+
+Optimised speeds are sorted. There isn't a mf/temp profile which matches this nicely, unfortunately, so will set things as the interpolated data. Will need to put that in ./data/
+
+
+
+

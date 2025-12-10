@@ -5,23 +5,24 @@ import seaborn as sns
 import os
 from scipy.optimize import root_scalar, minimize_scalar
 from scipy import interpolate
-from cycler import cycler
+
+plt.rcParams.update({
+    "text.usetex": False,
+    "mathtext.fontset": "cm",  # LaTeX-like Computer Modern
+    "font.family": "serif",
+})
 
 colors = sns.color_palette('tab20')
 
-fig = plt.figure(figsize = (9,5))
+fig = plt.figure(figsize = (6.9,3.5))
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
-
-sources = ['clip', 'abs', 'raw', 'parker']
-
-source = sources[3]
 
 nx = 100
 allys = np.zeros((nx))
 ycount = 0
 
-if os.path.exists(f"batch_logs/optimums.txt"):
-    os.remove(f"batch_logs/optimums.txt")
+if os.path.exists(f"./data/batch_logs/optimums.txt"):
+    os.remove(f"./data/batch_logs/optimums.txt")
 
 for counter in range(0,1):
     xs = np.linspace(1.0,2.5,nx)  #Basis for the x axis
@@ -29,10 +30,10 @@ for counter in range(0,1):
     for ei, eclipse_number in enumerate(years):
 
         #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_{source}")
-        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs")
+        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./data/batch_logs")
 
         #log_file = './batch_logs/log_%d.txt' % eclipse_number
-        log_file = f'./batch_logs/log_{eclipse_number}.txt'
+        log_file = f'./data/batch_logs/log_{eclipse_number}.txt'
 
         if not os.path.exists(log_file):
             continue
@@ -158,13 +159,6 @@ for counter in range(0,1):
         print(mf_constant, corona_temp)
         ys = find_speed_parker(mf_constant, corona_temp)
 
-        if source == 'clip':
-            ys[ys < 0.0] = 0.0
-        elif source == 'abs':
-            ys = np.abs(ys)
-        else:
-            ys = ys
-
         if np.max(ys) > 0.0:
             allys += ys
             ycount += 1
@@ -172,15 +166,15 @@ for counter in range(0,1):
         plt.plot(xs, ys, linewidth = 2.0, c = colors[2*ei%20 + ei//10], label = f'{eclipse_number}', linestyle = 'dashed')
         #print(log_info[best_id,2:])
 
-        with open(f"batch_logs/optimums.txt", mode = "a") as f:
+        with open(f"./data/batch_logs/optimums.txt", mode = "a") as f:
             f.write(f"{log_info[-1, 2:].tolist()}\n")
 
     plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')
 
-    plt.title('Optimum outflow speeds for various eclipses')
-    plt.xlabel('Radius')
-    plt.ylabel('Outflow speed (code units)')
-    plt.legend()
-    plt.savefig('./comp.png')
+    plt.xlabel('Radius $r$ ($R_\odot$)')
+    plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')
+    plt.legend(ncols = 3)
+    plt.tight_layout()
+    plt.savefig('./10_optimums.pdf')
     plt.show()
     plt.close()
