@@ -402,7 +402,6 @@ def compare_angles(year):
     if year == 2017:
         plt.savefig('11_quality_check.pdf')
     plt.close()
-
     return
 
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
@@ -420,3 +419,8 @@ np.save(f"./data/batch_logs/optimums.npy", allpolys)
 
 for year in years:
     compare_angles(year)
+
+
+
+
+

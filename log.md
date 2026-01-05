@@ -230,6 +230,7 @@ Will wait for Anthony to add paper commments, but that hopefully won't be too mu
 
 Today -- sort out the unit testing. Set up a Hamilton Run with r_ss  5.0 to make figure 11 better. And maybe look at pointwise comparisons of the images, which could potentially look better. And remove the xs on Fig. 11.
 
+Calling these 60 and 61
 
 
 

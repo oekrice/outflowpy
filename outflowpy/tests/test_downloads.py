@@ -70,8 +70,8 @@ def test_smoothing_errors():
                           [2210],
                           ])
 def test_prepare_script(crot_number):
-    #Tests that the headers and map creation works for both HMI and MDI
-    #Checks against a previously-saved smoothed file
+    #Tests that the headers and map creation works for both HMI and MDI.
+    #Checks against a previously-saved smoothed file.
     data_map = obtain_data.prepare_hmi_mdi_crot(crot_number, 60, 120, smooth = 5e-2/180)
     if crot_number < 2098:
         expected_data = np.loadtxt(f'{test_data}/mdi_2000_smooth.txt')
