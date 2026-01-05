@@ -27,7 +27,7 @@ colors = sns.color_palette('colorblind')
 #plt.rcParams['axes.prop_cycle'] = cycler('linestyle', ['-', '--', '-.', ':'])
 
 
-def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0):
+def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0, match_flux = False):
 
     nrho = 60
     rss = rss
@@ -54,7 +54,14 @@ def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0):
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
     year_index = year_options.index(eclipse_year)
-    if optimised:
+
+    if match_flux:
+        mf_constant = 5e-17
+        corona_temp = 2.718*1e6
+        print('Parameters', mf_constant, corona_temp)
+
+
+    elif optimised:
         mf_constant = allpolys[year_index][0]*1e-17
         corona_temp = allpolys[year_index][1]*1e6
         print('Parameters', mf_constant, corona_temp)
@@ -110,8 +117,10 @@ def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0):
     ax.set_xticks([])
     ax.set_yticks([])
 
-    if optimised:
-        ax.set_title('Outflow Field')
+    if match_flux:
+        ax.set_title('Outflow - Matched Open Flux')
+    elif optimised:
+        ax.set_title('Outflow - Matched Topology')
     else:
         ax.set_title('PFSS Field')
 
@@ -120,15 +129,18 @@ def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0):
     #     plt.show()
     # plt.close()
 
-fig, axs = plt.subplots(1,3, figsize = (6.9, 2.5))
+fig, axs = plt.subplots(2,2, figsize = (6.9, 6.9))
 
-ax = axs[2]
+ax = axs[1,1]
+generate_eclipse_image(2017, optimised = True, rss = 5.0, match_flux = True)
+
+ax = axs[1,0]
 generate_eclipse_image(2017, optimised = True, rss = 5.0)
 
-ax = axs[1]
+ax = axs[0,1]
 generate_eclipse_image(2017, optimised = False, rss = 5.0)
 
-ax = axs[0]
+ax = axs[0,0]
 moon_face = mpimg.imread('./data/eclipse_images/2017_eclipse.png')
 ax.imshow(moon_face, extent = [-2.5,2.5,-2.5,2.5],interpolation="bilinear")
 ax.set_xlim(-2.5,2.5)

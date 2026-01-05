@@ -393,7 +393,7 @@ def compare_angles(year):
     #plt.title(f"{year} eclipse")
     #plt.ylim(ymin = 0.0)
     plt.xlim(1.0, 2.5)
-    plt.xlabel('Altitude ($R_\odot$)')
+    plt.xlabel('Altitude r ($R_\odot$)')
     plt.ylabel('Avg. deviation from radial direction (radians)')
     plt.legend()
     plt.tight_layout()
@@ -407,6 +407,7 @@ def compare_angles(year):
 
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 allpolys = []
+years = [2017]
 
 with open(f"./data/batch_logs/optimums.txt") as f:
     for i, line in enumerate(f):

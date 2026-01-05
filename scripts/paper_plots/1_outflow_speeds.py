@@ -64,7 +64,7 @@ for i, corona_temp in enumerate(temps):
 
     plt.plot(np.exp(outflow_in.grid.rg), outflow_in.vg, c= colors[i], label = f"$T_0 = {corona_temp*1e-6}$MK", linewidth = 2.)
 
-plt.xlabel('Radius $r$ ($R_\odot$)')
+plt.xlabel('Altitude $r$ ($R_\odot$)')
 plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')
 plt.legend()
 plt.tight_layout()

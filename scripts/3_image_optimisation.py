@@ -47,7 +47,7 @@ def make_image(parameter_set, image_number, eclipse_year):
 
     corona_temp = 1.5e6
     mf_constant = 5e-17
-    nseeds = 50000
+    nseeds = 25000
 
     image_extent = 2.5
     image_resolution = 512
@@ -56,7 +56,7 @@ def make_image(parameter_set, image_number, eclipse_year):
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    outflow_in = outflowpy.Input(input_map, nrho, rss, corona_temp = corona_temp, mf_constant = mf_constant)
+    outflow_in = outflowpy.Input(input_map, nrho, rss)#, corona_temp = corona_temp, mf_constant = mf_constant)
 
     outflow_out = outflowpy.outflow_fortran(outflow_in, existing_fname = field_root)
 
@@ -98,7 +98,6 @@ def compare_image(image_id, eclipse_year):
     synthetic_root = './img_plots/'
 
     print('%s%04d.png' % (synthetic_root, image_id))
-    print(fname)
     img1 = Image.open('%s%04d.png' % (synthetic_root, image_id)).convert("RGB")   #Synthetic one
     img2 = Image.open(fname).convert("RGB")  #Real one
 
@@ -124,6 +123,7 @@ def generate_and_compare(parameter_set):
                 run_id += 1
 
     year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]  #Pick from these eclipses
+    year_options = [2017] #Let's just attempt 2023 for now, to try to match the Green proposal
 
     selected_year = random.choice(year_options)
 

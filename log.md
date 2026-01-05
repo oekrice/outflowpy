@@ -206,7 +206,7 @@ Let's establish a way of saving the means. Would need an array of r points and v
 
 Friday 28th:
 
-Alas the absolute value method has not worked well at all. Abs is definitely the best, and we could use that for the paper easily enough. Perhaps it would be better to parameterise based on the parker coeficients? The powers would probably break the algorithm so I can unitise them I suppose.
+Alas the absolute value method has not worked well at all. Abs is definitely the best, and we could use that for the paper easily enough. Perhaps it would be better to parameterise based on the parker coeficcients? The powers would probably break the algorithm so I can unitise them I suppose.
 
 Monday 1st:
 
@@ -223,6 +223,12 @@ Make some scripts which use these. Let's go for 3x, 5x etc.?
 Wednesday 10th December:
 
 Optimised speeds are sorted. There isn't a mf/temp profile which matches this nicely, unfortunately, so will set things as the interpolated data. Will need to put that in ./data/
+
+Monday 5th January:
+
+Will wait for Anthony to add paper commments, but that hopefully won't be too much work, it's just the citations that might take ages. Work on getting the testing working for outflowpy and then look into packaging it up nicely with the precompiled Fortran. That might be hard... 
+
+Today -- sort out the unit testing. Set up a Hamilton Run with r_ss  5.0 to make figure 11 better. And maybe look at pointwise comparisons of the images, which could potentially look better. And remove the xs on Fig. 11.
 
 
 

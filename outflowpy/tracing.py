@@ -288,7 +288,7 @@ class FastTracer(Tracer):
 
         image_parameters = np.zeros(100)
         if parameters is None:
-            image_parameters[:6] = [0.009,-0.432,-0.026,0.625,-1.646, 5.0]
+            image_parameters[:4] = [0.216,0.377,-0.323,1.567]
         else:
             image_parameters[:len(parameters)] = parameters
 

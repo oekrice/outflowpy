@@ -209,8 +209,8 @@ def make_plot():
 
     os.system("scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/*_*.txt ./data/batch_logs_mdi")
 
-    overallcount = 0; potentialcount = 0
     for plot_num, batch_id in enumerate(batch_ids):
+        overallcount = 0; potentialcount = 0
         mf_constant = mf_constants[batch_id]
         corona_temp = corona_temps[batch_id]
     #Read in the data
@@ -254,6 +254,7 @@ def make_plot():
         plt.plot(dates_mean, oflux_mean, color = colors[plot_num], label = label, linewidth = 1.0)
         plt.plot(dates_mean, oflux_min, color = colors[plot_num], linewidth = 0.5)
         plt.plot(dates_mean, oflux_max, color = colors[plot_num], linewidth = 0.5)
+        print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
 
     #Plot open flux measurements
     plt.plot(tflux, oflux, c = 'black', linewidth = 1.0, label = 'In-situ measurement')
@@ -261,7 +262,6 @@ def make_plot():
     plt.plot(tflux, ofluxmax, c = 'black', linewidth = 0.25)
     plt.xticks(ticks = [2000,2005,2010,2015,2020])
     if potentialcount > 0:
-        print('Overall percentage complete: %.1f' % (100*(overallcount/potentialcount)))
 
 
         #Plot outflow field predictions
