@@ -46,6 +46,9 @@ jobs:
         run: |
           which gfortran
           gfortran --version
+          echo "FC=gfortran" >> $GITHUB_ENV
+          echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
 
       - name: Set OpenMP & Fortran environment
         shell: bash
