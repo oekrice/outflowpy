@@ -37,7 +37,9 @@ jobs:
         run: |
           brew update
           brew install gcc
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
           export FC=gfortran
+          echo "FC=gfortran" >> $GITHUB_ENV
 
       - name: Set OpenMP & Fortran environment
         shell: bash
