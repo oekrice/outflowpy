@@ -41,6 +41,12 @@ jobs:
           export FC=gfortran
           echo "FC=gfortran" >> $GITHUB_ENV
 
+      - name: Check Fortran compiler
+        if: runner.os == 'macOS'
+        run: |
+          which gfortran
+          gfortran --version
+
       - name: Set OpenMP & Fortran environment
         shell: bash
         run: |
