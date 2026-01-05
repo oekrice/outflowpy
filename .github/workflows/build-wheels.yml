@@ -38,29 +38,21 @@ jobs:
           brew update
           brew install gcc
 
-      - name: Set OpenMP & Fortran environment (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          export FC=gfortran
-          export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
-          echo "FC=gfortran" >> $GITHUB_ENV
-          echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
+      - name: Set OpenMP & Fortran environment
+      shell: bash
+      run: |
+            if [[ "$(uname)" == "Linux" ]]; then
+                  export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
+            elif [[ "$(uname)" == "Darwin" ]]; then
+                  export FC=gfortran
+                  export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
+            elif [[ "$RUNNER_OS" == "Windows" ]]; then
+                  set OPENMP_FLAGS="--f90flags=/openmp"
+            fi
+            echo "FC=${FC:-}" >> $GITHUB_ENV
+            echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
+            echo "OpenMP flags: $OPENMP_FLAGS"
 
-
-      - name: Set OpenMP environment
-        shell: bash
-        run: |
-          if [[ "$(uname)" == "Linux" ]]; then
-            export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
-          elif [[ "$(uname)" == "Darwin" ]]; then
-            export FC=gfortran
-            export OPENMP_FLAGS="--f90flags='-Xpreprocessor -fopenmp' -lomp"
-          elif [[ "$RUNNER_OS" == "Windows" ]]; then
-            set OPENMP_FLAGS="--f90flags=/openmp"
-          fi
-          echo "OpenMP flags: $OPENMP_FLAGS"
-          echo "export OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
 
 
       # Step 4: Build the wheel
