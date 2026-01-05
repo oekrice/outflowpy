@@ -1,6 +1,5 @@
-name: Build outflowpy wheels
+name: Build Linux Wheels
 
-# Trigger on push to tags or manual run
 on:
   push:
     tags:
@@ -8,11 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout code
@@ -23,58 +19,33 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"  # or 3.9, 3.11
+          python-version: "3.10"
           cache: "pip"
 
-      # Step 3: Install build dependencies
-      - name: Install dependencies
+      # Step 3: Install dependencies and GCC for Fortran
+      - name: Install build dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
           python -m pip install --upgrade pip
-          pip install numpy build
+          pip install numpy build wheel
 
-      - name: Install Homebrew dependencies (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install gcc
-          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-          export FC=gfortran
-          echo "FC=gfortran" >> $GITHUB_ENV
-
-      - name: Check Fortran compiler
-        if: runner.os == 'macOS'
-        run: |
-          which gfortran
-          gfortran --version
-          echo "FC=gfortran" >> $GITHUB_ENV
-          echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-
-      - name: Set OpenMP & Fortran environment
+      # Step 4: Set OpenMP flags for Linux
+      - name: Set OpenMP environment
         shell: bash
         run: |
-          if [[ "$(uname)" == "Linux" ]]; then
-            export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
-          elif [[ "$(uname)" == "Darwin" ]]; then
-            export FC=gfortran
-            export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
-          elif [[ "$RUNNER_OS" == "Windows" ]]; then
-            set OPENMP_FLAGS="--f90flags=/openmp"
-          fi
-            echo "FC=${FC:-}" >> $GITHUB_ENV
-            echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
-            echo "OpenMP flags: $OPENMP_FLAGS"
+          export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
+          echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
+          echo "OpenMP flags: $OPENMP_FLAGS"
 
-
-
-      # Step 4: Build the wheel
+      # Step 5: Build the wheel
       - name: Build wheel
         shell: bash
         run: python -m build --wheel
 
-      # Step 5: Upload wheels as artifact
+      # Step 6: Upload wheel as artifact
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: linux-wheels
           path: dist/*.whl

@@ -11,33 +11,29 @@ class F2PyBuild(build_py):
         build_dir = Path(self.build_lib) / "outflowpy"
         build_dir.mkdir(parents=True, exist_ok=True)
         # Attempt to compile the fotran code as per
+
+        # Read OpenMP flags from environment
+        openmp_flags = os.environ.get("OPENMP_FLAGS", "")
+
+        # Compile outflow_calc.f90
         subprocess.check_call([
             "python", "-m", "numpy.f2py",
             "-c", "fortran/outflow_calc.f90",
             "-m", "outflow_calc"
-        ])
+        ] + openmp_flags.split())
 
+        # Compile fast_tracer.f90
         subprocess.check_call([
             "python", "-m", "numpy.f2py",
             "-c", "fortran/fast_tracer.f90",
-            "-m", "fast_tracer", "--f90flags='-fopenmp'", "-lgomp"
-        ])
+            "-m", "fast_tracer"
+        ] + openmp_flags.split())
 
-        for file in Path(".").glob("outflow_calc*.so"):
-            print('File found and moving', build_dir / file.name)
-            file.rename(build_dir / file.name)
-        for file in Path(".").glob("outflow_calc*.pyd"):
-            file.rename(build_dir / file.name)
-        for file in Path(".").glob("outflow_calc*.c"):
-            file.rename(build_dir / file.name)
-
-        for file in Path(".").glob("fast_tracer*.so"):
-            print('File found and moving', build_dir / file.name)
-            file.rename(build_dir / file.name)
-        for file in Path(".").glob("fast_tracer*.pyd"):
-            file.rename(build_dir / file.name)
-        for file in Path(".").glob("fast_tracer*.c"):
-            file.rename(build_dir / file.name)
+        # Move generated files into package directory
+        for pattern in ["outflow_calc*.so", "outflow_calc*.pyd", "fast_tracer*.so", "fast_tracer*.pyd"]:
+            for file in Path(".").glob(pattern):
+                print(f"Moving {file} -> {build_dir / file.name}")
+                file.rename(build_dir / file.name)
 
         super().run()
 
