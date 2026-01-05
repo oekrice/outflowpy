@@ -39,16 +39,16 @@ jobs:
           brew install gcc
 
       - name: Set OpenMP & Fortran environment
-      shell: bash
-      run: |
-            if [[ "$(uname)" == "Linux" ]]; then
-                  export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
-            elif [[ "$(uname)" == "Darwin" ]]; then
-                  export FC=gfortran
-                  export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
-            elif [[ "$RUNNER_OS" == "Windows" ]]; then
-                  set OPENMP_FLAGS="--f90flags=/openmp"
-            fi
+        shell: bash
+        run: |
+          if [[ "$(uname)" == "Linux" ]]; then
+            export OPENMP_FLAGS="--f90flags=-fopenmp -lgomp"
+          elif [[ "$(uname)" == "Darwin" ]]; then
+            export FC=gfortran
+            export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
+          elif [[ "$RUNNER_OS" == "Windows" ]]; then
+            set OPENMP_FLAGS="--f90flags=/openmp"
+          fi
             echo "FC=${FC:-}" >> $GITHUB_ENV
             echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
             echo "OpenMP flags: $OPENMP_FLAGS"
