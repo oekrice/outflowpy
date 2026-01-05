@@ -38,6 +38,16 @@ jobs:
           brew update
           brew install gcc
 
+- name: Set OpenMP & Fortran environment (macOS)
+  if: runner.os == 'macOS'
+  shell: bash
+  run: |
+    export FC=gfortran
+    export OPENMP_FLAGS="--f90flags=-Xpreprocessor -fopenmp -lomp"
+    echo "FC=gfortran" >> $GITHUB_ENV
+    echo "OPENMP_FLAGS=$OPENMP_FLAGS" >> $GITHUB_ENV
+
+
       - name: Set OpenMP environment
         shell: bash
         run: |
