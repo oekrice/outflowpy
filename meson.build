@@ -5,13 +5,11 @@ project(
 )
 
 py = import('python').find_installation()
-np = dependency('numpy')
 
 # Build Fortran extension modules via f2py
 py.extension_module(
   'outflow_calc',
   'fortran/outflow_calc.f90',
-  dependencies: np,
   install: true,
   subdir: 'outflowpy'
 )
@@ -19,7 +17,6 @@ py.extension_module(
 py.extension_module(
   'fast_tracer',
   'fortran/fast_tracer.f90',
-  dependencies: np,
   install: true,
   subdir: 'outflowpy'
 )
