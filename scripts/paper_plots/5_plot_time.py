@@ -271,6 +271,7 @@ def make_plot():
         plt.ylabel('Open Flux at 1AU (Mx)')
         plt.xlim(2000,2022)
         plt.ylim(ymin = 0.0, ymax = 0.18e24)
+        plt.tight_layout()
         plt.savefig('./5_plot_time.pdf')
         plt.show()
         plt.close()

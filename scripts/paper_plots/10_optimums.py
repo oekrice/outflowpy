@@ -172,7 +172,7 @@ for counter in range(0,1):
     plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')
 
     plt.xlabel('Altitude $r$ ($R_\odot$)')
-    plt.ylabel('Outflow speed $v_(r)$ ($s/R_\odot$)')
+    plt.ylabel('Dimensionless outflow speed $V_(r)$')
     plt.legend(ncols = 3)
     plt.tight_layout()
     plt.savefig('./10_optimums.pdf')

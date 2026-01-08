@@ -70,7 +70,7 @@ for mi, model in enumerate(mfs[:]):
             if mi == 0:
                 plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = "PFSS")
             else:
-                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = f"$T_0 = {corona_temp*1e-6} \\times 10^6$ K")
+                plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5, label = f"$T_0 = {corona_temp*1e-6}$ MK")
         else:
             plt.plot(np.exp(outflow_in.grid.rg), ofluxes, c = colors[mi], zorder = 0, linewidth = 1.5)
         plt.scatter(np.exp(outflow_in.grid.rg)[-1], ofluxes[-1], color = colors[mi], edgecolor = 'black', s = 25)

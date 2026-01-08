@@ -483,7 +483,6 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     if use_cached:
         print("Using cached data if available")
 
-    print(crot_number)
     #Download the respective sets of data
     brm  , header   = download_hmi_mdi_crot(crot_number  , source = source, use_cached = use_cached, cache_dir = cache_directory)
     brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached, cache_dir = cache_directory)

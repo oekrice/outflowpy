@@ -26,7 +26,7 @@ with open(log_file, "r") as f:
         log_info.append(line.split(" "))
 log_info = np.array(log_info, dtype = 'float')
 
-best_id = 0; score = 1.
+best_id = 0; score = 1000000.
 for i in range(np.size(log_info,0)):
     if log_info[i,1] < score:
         best_id = i
@@ -65,7 +65,7 @@ def determine_error_bounds(values, time_cadence = 20, error_bound = 0.8):
 counter = 0
 for i in range(len(log_info)- 1, len(log_info)):
     #Make the plot get longer, and put some dots on for animation?
-    fig = plt.figure(figsize = (20,10))
+    fig = plt.figure(figsize = (10,7))
     gs = GridSpec(2, 2, figure=fig, width_ratios=[2, 2], height_ratios=[1.0, 1.0])
     ax_left = fig.add_subplot(gs[:, 0])
     ax_top_right = fig.add_subplot(gs[0, 1])
@@ -93,8 +93,8 @@ for i in range(len(log_info)- 1, len(log_info)):
     means, _, _ = determine_error_bounds(log_info[:i,1])
     ax.plot(log_info[:i,1], color = 'black', linewidth = 0.5)
     ax.plot(means, color = 'black', linewidth = 1.0)
-    ax.set_xlim(0,max(100,i*1.1))
-    ax.set_ylim(0.35,0.45)
+    #ax.set_xlim(0,max(100,i*1.1))
+    #ax.set_ylim(0.35,0.45)
     ax.set_xticks([])
     ax.set_title('Image Match Score')
     ax.axis('off')
@@ -107,7 +107,7 @@ for i in range(len(log_info)- 1, len(log_info)):
     ax.axis('off')
 
     plt.tight_layout()
-
+    plt.show()
     #ffmpeg -framerate 30 -i ./img_plots/converges/converge%04d.png -c:v mpeg4 -q:v 1 converges.mp4
     plt.savefig(file_root + 'converge.png')
     plt.close()

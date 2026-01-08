@@ -42,7 +42,10 @@ def generate_eclipse_image(eclipse_year, optimised = True, rss = 5.0, match_flux
     image_resolution = 512
 
     obs_time = outflowpy.utils.find_eclipse_time(eclipse_year)
-    parameter_set = [0.216,0.377,-0.323,1.567]
+    #0.633,-0.006,-4.299,-2.38
+    #parameter_set = [0.216,0.377,-0.323,1.567]
+    #parameter_set = [0.633,-0.006,-4.299,-2.38]
+    parameter_set = [-0.195,0.279,-2.986,-1.759]
 
     year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
     poly_values = [0.0,0.0,0.0,0.0,0.0]

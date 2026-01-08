@@ -232,5 +232,5 @@ Today -- sort out the unit testing. Set up a Hamilton Run with r_ss  5.0 to make
 
 Calling these 60 and 61
 
-
+[0.633,-0.006,-4.299,-2.38] are parameters from matching the 2017 eclipse. Seems to have worked OK, but maybe try out on all the eclipses next? Scripts 3d to run and 3a to analyse work it seems.
 
