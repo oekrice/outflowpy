@@ -15,10 +15,14 @@ extensions = [
     Extension(
         name="outflowpy.outflow_calc",
         sources=["fortran/outflow_calc.f90"],
+        extra_compile_args=extra_args,
+        extra_link_args=extra_args,
     ),
     Extension(
         name="outflowpy.fast_tracer",
         sources=["fortran/fast_tracer.f90"],
+        extra_compile_args=extra_args,
+        extra_link_args=extra_args,
     ),
 ]
 
