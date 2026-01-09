@@ -12,3 +12,5 @@ description = "Outflow field modelling"
 requires-python = ">=3.9"
 dependencies = ["numpy",  "astropy", "matplotlib","sunpy","reproject","mpl_animators","bs4","lxml","zeep","drms","scikit-image", "pyvista"]
 
+[tool.setuptools]
+packages = ["outflowpy"]
