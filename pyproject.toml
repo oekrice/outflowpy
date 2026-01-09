@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "numpy>=2.0"]
-build-backend = "setuptools.build_meta"
+requires = [
+  "meson-python>=0.15",
+  "numpy>=2.0"
+]
+build-backend = "meson_python"
 
 [project]
 name = "outflowpy"
@@ -9,5 +12,5 @@ description = "Outflow field modelling"
 requires-python = ">=3.9"
 dependencies = ["numpy"]
 
-[tool.setuptools]
-packages = ["outflowpy"]
+[tool.meson-python]
+module-name = "outflowpy"

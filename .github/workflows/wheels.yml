@@ -8,13 +8,32 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
-      - uses: pypa/cibuildwheel@v2
+
+      # Platform-specific toolchains
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y gfortran ninja-build
+
+      - name: Install macOS deps
+        if: runner.os == 'macOS'
+        run: brew install gcc ninja
+
+      - name: Install Windows deps
+        if: runner.os == 'Windows'
+        run: |
+          choco install mingw ninja
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: "*musllinux*"
+          CIBW_ENVIRONMENT: >
+            CMAKE_GENERATOR=Ninja
