@@ -30,6 +30,6 @@ py.install_sources(
 )
 
 py.install_sources(
-  files(outflowpy + '/*.so'),
+  files('./outflowpy' + '/*.so'),
   subdir: 'outflowpy'
 )
