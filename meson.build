@@ -16,7 +16,7 @@ py.install_sources(
     'outflowpy/input.py',
     'outflowpy/interpolator.py',
     'outflowpy/map.py',
-    'outflowpy/obtain_data.py'
+    'outflowpy/obtain_data.py',
     'outflowpy/outflow.py',
     'outflowpy/output.py',
     'outflowpy/pfss.py',
@@ -24,6 +24,7 @@ py.install_sources(
     'outflowpy/sample_data.py',
     'outflowpy/tracing.py',
     'outflowpy/utils.py',
+    'outflowpy/_version.py'
     # add all .py files here
   ],
   subdir: 'outflowpy'
