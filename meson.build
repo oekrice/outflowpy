@@ -24,9 +24,12 @@ py.install_sources(
     'outflowpy/sample_data.py',
     'outflowpy/tracing.py',
     'outflowpy/utils.py',
-    'outflowpy/_version.py',
-    'outflowpy/*.so',
-    'outflowpy/*.so'
+    'outflowpy/_version.py'
   ],
+  subdir: 'outflowpy'
+)
+
+py.install_sources(
+  files(outflowpy + '/*.so'),
   subdir: 'outflowpy'
 )
