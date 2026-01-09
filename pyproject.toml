@@ -5,7 +5,7 @@ requires = [
   "meson>=1.0.0",
   "ninja>=1.0.0"
 ]
-build-backend = "meson_python"
+build-backend = "mesonpy"
 
 [project]
 name = "outflowpy"
