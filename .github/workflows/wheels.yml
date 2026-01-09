@@ -12,9 +12,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       - name: Install build dependencies
-        run: python -m pip install meson-python
+        run: python -m pip install --upgrade pip
+        
+        run: python -m pip install build meson-python meson ninja
 
       # Platform-specific toolchains
       - name: Install Linux deps
@@ -23,6 +28,7 @@ jobs:
 
       - name: Install macOS deps
         if: runner.os == 'macOS'
+        run: brew update
         run: brew install gcc ninja
 
       - name: Install Windows deps
