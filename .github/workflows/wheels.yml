@@ -28,8 +28,7 @@ jobs:
 
       - name: Install macOS deps
         if: runner.os == 'macOS'
-        run: brew update
-        run: brew install gcc ninja
+        run: brew update && brew install gcc ninja
 
       - name: Install Windows deps
         if: runner.os == 'Windows'
