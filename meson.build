@@ -6,6 +6,7 @@ project(
 
 py = import('python').find_installation(pure: false)
 
+
 py.install_sources(  
   [
     'outflowpy/__init__.py',
@@ -24,22 +25,9 @@ py.install_sources(
     'outflowpy/sample_data.py',
     'outflowpy/tracing.py',
     'outflowpy/utils.py',
-    'outflowpy/_version.py'
-    # add all .py files here
+    'outflowpy/_version.py',
+    'outflowpy/outflow_calc.cpython-313-x86_64-linux-gnu.so',
+    'outflowpy/fast_tracer.cpython-313-x86_64-linux-gnu.so'
   ],
-  subdir: 'outflowpy'
-)
-
-py.extension_module(
-  'outflow_calc',
-  'fortran/outflow_calc.f90',
-  install: true,
-  subdir: 'outflowpy'
-)
-
-py.extension_module(
-  'fast_tracer',
-  'fortran/fast_tracer.f90',
-  install: true,
   subdir: 'outflowpy'
 )
