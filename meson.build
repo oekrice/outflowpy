@@ -1,6 +1,5 @@
 project(
   'outflowpy',
-  ['fortran'],
   version: '0.0.1'
 )
 
