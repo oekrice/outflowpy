@@ -25,8 +25,8 @@ py.install_sources(
     'outflowpy/tracing.py',
     'outflowpy/utils.py',
     'outflowpy/_version.py',
-    'outflowpy/outflow_calc.cpython-313-x86_64-linux-gnu.so',
-    'outflowpy/fast_tracer.cpython-313-x86_64-linux-gnu.so'
+    'outflowpy/*.so',
+    'outflowpy/*.so'
   ],
   subdir: 'outflowpy'
 )
