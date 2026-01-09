@@ -10,7 +10,5 @@ name = "outflowpy"
 version = "0.0.1"
 description = "Outflow field modelling"
 requires-python = ">=3.9"
-dependencies = ["numpy"]
+dependencies = ["numpy",  "astropy", "matplotlib","sunpy","reproject","mpl_animators","bs4","lxml","zeep","drms","scikit-image", "pyvista"]
 
-[tool.meson-python.metadata]
-dynamic = ["dependencies"]
