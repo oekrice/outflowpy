@@ -4,9 +4,9 @@ project(
   version: '0.0.1'
 )
 
-py = import('python').find_installation()
+py = import('python').find_installation(pure: false)
 
-# Build Fortran extension modules via f2py
+
 py.extension_module(
   'outflow_calc',
   'fortran/outflow_calc.f90',
