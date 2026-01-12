@@ -1,12 +1,12 @@
 project(
   'outflowpy',
+  'fortran',
   version: '0.0.1'
 )
 
 py = import('python').find_installation(pure: false)
 
-
-py.install_sources(  
+py.install_sources(
   [
     'outflowpy/__init__.py',
     'outflowpy/analytic.py',
@@ -29,7 +29,4 @@ py.install_sources(
   subdir: 'outflowpy'
 )
 
-py.install_sources(
-  files('./outflowpy' + '/*.so'),
-  subdir: 'outflowpy'
-)
+subdir('fortran')
