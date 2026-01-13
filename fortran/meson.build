@@ -7,7 +7,7 @@ build_dir = meson.current_build_dir()
 outflow_calc_build = custom_target(
   'outflow_calc_build',
   input: 'outflow_calc.f90',
-  output: 'outflow_calc.cpython-313-x86_64-linux-gnu.so',
+  output: 'outflow_fake.so',
   command: [
     'sh', '-c',
     'cp @INPUT@ ' + build_dir + '/ && ' +
@@ -25,7 +25,7 @@ outflow_calc_build = custom_target(
 fast_tracer_build = custom_target(
   'fast_tracer_build',
   input: 'fast_tracer.f90',
-  output: 'fast_tracer.cpython-313-x86_64-linux-gnu.so',
+  output: 'tracer_fake.so',
   command: [
     'sh', '-c',
     'cp @INPUT@ ' + build_dir + '/ && ' +
