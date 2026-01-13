@@ -30,3 +30,12 @@ py.install_sources(
 )
 
 subdir('fortran')
+
+# Install data files
+py.install_sources(
+  [
+    'outflowpy/data/opt_flow.txt',
+    # Add any other data files here
+  ],
+  subdir: 'outflowpy/data'
+)
