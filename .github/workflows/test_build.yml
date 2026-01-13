@@ -1,0 +1,37 @@
+name: Test Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test_build:
+    name: Test build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.11']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install gfortran
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+      
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      
+      - name: Test import
+        run: |
+          python -c "from outflowpy import outflow_calc, fast_tracer; print('Import successful!')"
