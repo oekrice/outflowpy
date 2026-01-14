@@ -1,5 +1,6 @@
 py = import('python').find_installation(pure: false)
 
+ext_suffix = py.get_variable('EXT_SUFFIX')
 # Build directory path
 build_dir = meson.current_build_dir()
 
@@ -7,7 +8,7 @@ build_dir = meson.current_build_dir()
 outflow_calc_build = custom_target(
   'outflow_calc_build',
   input: 'outflow_calc.f90',
-  output: 'outflow_calc.cpython-313-x86_64-linux-gnu.so',
+  output: 'outflow_calc' + ext_suffix,
   command: [
     'sh', '-c',
     'cp @INPUT@ ' + build_dir + '/ && ' +
@@ -25,7 +26,7 @@ outflow_calc_build = custom_target(
 fast_tracer_build = custom_target(
   'fast_tracer_build',
   input: 'fast_tracer.f90',
-  output: 'fast_tracer.cpython-313-x86_64-linux-gnu.so',
+  output: 'fast_tracer' + ext_suffix,
   command: [
     'sh', '-c',
     'cp @INPUT@ ' + build_dir + '/ && ' +
