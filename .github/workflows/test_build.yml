@@ -32,14 +32,24 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build
+          pip install cibuildwheel meson numpy
       
-      - name: Build wheel
-        run: python -m build --wheel
-      
-      - name: Build sdist
-        run: python -m build --sdist
-      
+      - name: Build wheels with cibuildwheel
+        run: |
+          # Use Meson to build your .so modules
+          meson setup build
+          meson compile -C build
+          
+          # cibuildwheel needs output dir
+          mkdir -p dist
+          
+          # Copy the built .so files into cibuildwheel output dir
+          cp build/fortran/outflow_calc*.so dist/
+          cp build/fortran/fast_tracer*.so dist/
+          
+          # Build wheels in manylinux format
+          cibuildwheel --output-dir dist
+          
       - name: Install from wheel
         run: |
           pip install dist/*.whl
