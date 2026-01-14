@@ -13,8 +13,7 @@ outflow_calc_build = custom_target(
     'cp @INPUT@ ' + build_dir + '/ && ' +
     'cd ' + build_dir + ' && ' +
     py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower && ' +
-    'cp $(find . -name "outflow_calc*.so" -print -quit) ' +
-    '@MESON_BUILD_ROOT@/@MESON_SUBDIR@/@OUTPUT@'   
+    'cp `find . -name "outflow_calc*.so"` @OUTPUT@'
   ],
   install: true,
   install_dir: py.get_install_dir() / 'outflowpy',
@@ -31,9 +30,8 @@ fast_tracer_build = custom_target(
     'sh', '-c',
     'cp @INPUT@ ' + build_dir + '/ && ' +
     'cd ' + build_dir + ' && ' +
-    py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower && ' + 
-    'cp $(find . -name "fast_tracer*.so" -print -quit) ' + 
-    '@MESON_BUILD_ROOT@/@MESON_SUBDIR@/@OUTPUT@'
+    py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower && ' +
+    'cp `find . -name "fast_tracer*.so"` @OUTPUT@'
   ],
   install: true,
   install_dir: py.get_install_dir() / 'outflowpy',
