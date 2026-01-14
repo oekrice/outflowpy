@@ -35,10 +35,9 @@ jobs:
       # Step 4: Build wheels using cibuildwheel (manylinux compliant)
       - name: Build manylinux wheels
         run: |
-          # cibuildwheel will build in a manylinux Docker environment
-          # CIBW_BUILD can be set to custom build commands
-          export CIBW_BUILD="meson setup build && meson compile -C build"
-          cibuildwheel --output-dir dist
+          python -m pip install --upgrade cibuildwheel
+          export CIBW_BEFORE_BUILD="meson setup build && meson compile -C build"
+          cibuildwheel --platform linux --output-dir dist
 
       # Step 5: Test installation of the wheel
       - name: Install wheel and test imports
