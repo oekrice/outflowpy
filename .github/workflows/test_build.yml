@@ -37,7 +37,7 @@ jobs:
         run: |
           # cibuildwheel will build in a manylinux Docker environment
           # CIBW_BUILD can be set to custom build commands
-          export CIBW_BUILD=": meson setup build && meson compile -C build"
+          export CIBW_BUILD="meson setup build && meson compile -C build"
           cibuildwheel --output-dir dist
 
       # Step 5: Test installation of the wheel
