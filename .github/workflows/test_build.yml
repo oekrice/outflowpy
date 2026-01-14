@@ -1,67 +1,54 @@
-name: Test Build
+name: Build Manylinux Wheels
 
 on:
   push:
     branches: [main, master]
   pull_request:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
-  test_build:
-    name: Test build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  build_wheels:
+    name: Build and test wheels on Linux
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         python-version: ['3.10', '3.11', '3.12', '3.13']
-    
+
     steps:
+      # Step 1: Checkout repository
       - uses: actions/checkout@v4
-      
-      - name: Set up Python
+
+      # Step 2: Setup Python
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      
-      - name: Install gfortran
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gfortran
-      
+
+      # Step 3: Install gfortran and build tools
       - name: Install build dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran meson ninja-build
           python -m pip install --upgrade pip
-          pip install cibuildwheel meson numpy
-      
-      - name: Build wheels with cibuildwheel
+          pip install cibuildwheel numpy
+
+      # Step 4: Build wheels using cibuildwheel (manylinux compliant)
+      - name: Build manylinux wheels
         run: |
-          # Use Meson to build your .so modules
-          meson setup build
-          meson compile -C build
-          
-          # cibuildwheel needs output dir
-          mkdir -p dist
-          
-          # Copy the built .so files into cibuildwheel output dir
-          cp build/fortran/outflow_calc*.so dist/
-          cp build/fortran/fast_tracer*.so dist/
-          
-          # Build wheels in manylinux format
+          # cibuildwheel will build in a manylinux Docker environment
+          # CIBW_BUILD can be set to custom build commands
+          export CIBW_BUILD=": meson setup build && meson compile -C build"
           cibuildwheel --output-dir dist
-          
-      - name: Install from wheel
+
+      # Step 5: Test installation of the wheel
+      - name: Install wheel and test imports
         run: |
-          pip install dist/*.whl
-      
-      - name: Test imports
-        run: |
-          cd /tmp
+          python -m pip install --upgrade dist/*.whl
           python -c "from outflowpy import outflow_calc, fast_tracer; print('Import successful!')"
-          python -c "import outflowpy; print(outflowpy.__file__)"
-      
-      - name: Upload artifacts
+
+      # Step 6: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.os }}-py${{ matrix.python-version }}
+          name: dist-py${{ matrix.python-version }}
           path: dist/
