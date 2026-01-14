@@ -1,7 +1,7 @@
 project(
   'outflowpy',
   ['fortran','c'],
-  version: '0.0.1'
+  version: '0.0.2'
 )
 
 py = import('python').find_installation(pure: false)
