@@ -1,68 +1,57 @@
-name: Test Build (Linux)
+name: Test Build
 
 on:
   push:
     branches: [main, master]
   pull_request:
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   test_build:
-    name: Test build on ${{ matrix.os }} Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.runner }}
+    name: Test build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        runner: [fedora-latest]
+        os: [ubuntu-latest]
         python-version: ['3.10', '3.11', '3.12', '3.13']
-
+    
     steps:
-      # Checkout repository
       - uses: actions/checkout@v4
-
-      # Setup Python
-      - name: Setup Python ${{ matrix.python-version }}
+      
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      # Install Fortran compiler (Ubuntu vs Fedora differences)
-      - name: Install Fortran compiler
+      
+      - name: Install gfortran
         run: |
-          if [[ "${{ matrix.runner }}" == ubuntu* ]]; then
-            sudo apt-get update
-            sudo apt-get install -y gfortran
-          elif [[ "${{ matrix.runner }}" == fedora* ]]; then
-            sudo dnf install -y gcc-gfortran
-          fi
-
-      # Install Python build tools
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+      
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build wheel meson numpy
-
-      # Build wheel
+          pip install build
+      
       - name: Build wheel
         run: python -m build --wheel
-
-      # Build sdist
+      
       - name: Build sdist
         run: python -m build --sdist
-
-      # Install from wheel
+      
       - name: Install from wheel
-        run: pip install --force-reinstall dist/*.whl
-
-      # Test imports
+        run: |
+          pip install dist/*.whl
+      
       - name: Test imports
         run: |
+          cd /tmp
           python -c "from outflowpy import outflow_calc, fast_tracer; print('Import successful!')"
-          python -c "import outflowpy; print('outflowpy path:', outflowpy.__file__)"
-
-      # Upload artifacts
-      - name: Upload build artifacts
+          python -c "import outflowpy; print(outflowpy.__file__)"
+      
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.runner }}-py${{ matrix.python-version }}
+          name: dist-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
