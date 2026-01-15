@@ -52,6 +52,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD: "cp313-*"
+          CIBW_SKIP: "*-win32"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=15.0"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
