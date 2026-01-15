@@ -8,11 +8,11 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.os }}
+    
     strategy:
       matrix:
-        python-version: [3.13]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python (host, not build env)
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.x'
 
       - name: Install cibuildwheel
         run: |
@@ -34,5 +34,5 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.python-version }}
+          name: wheels-${{ matrix.matrix.os }}
           path: wheelhouse/*.whl
