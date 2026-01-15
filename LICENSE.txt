@@ -1,4 +1,6 @@
-Original code is copyright (C) Oliver E. Rice, Durham University 2025
+Original code is copyright (C) Oliver E. Rice, Durham University 2025.
+Uses elements from the open-source 'pfsspy' package by David Stansby:
+https://github.com/dstansby/pfsspy
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
