@@ -39,14 +39,17 @@ jobs:
           source .venv/bin/activate
           python -m pip install --upgrade pip
 
-      - name: Install wheel for testing
+      - name: Create test venv and install wheel
         run: |
+          python -m venv .venv
           source .venv/bin/activate
+          pip install --upgrade pip
           pip install wheelhouse/*.whl
-          pip install pytest 
-
+          pip install pytest
+      
       - name: Run tests from repo
         run: |
           source .venv/bin/activate
-          cd $GITHUB_WORKSPACE
-          pytest
+          # Make sure we're in the repo root where tests/ directory is
+          cd ${{ github.workspace }}
+          pytest outflowpy/tests/
