@@ -39,6 +39,21 @@ jobs:
           source .venv/bin/activate
           python -m pip install --upgrade pip
 
+      - name: Debug wheel info
+        run: |
+          echo "=== Built wheels ==="
+          ls -lh wheelhouse/
+          echo ""
+          echo "=== Wheel filename ==="
+          basename wheelhouse/*.whl
+          echo ""
+          echo "=== Python version and platform ==="
+          python --version
+          python -c "import sys; print(f'Python: {sys.version}'); print(f'Platform: {sys.platform}')"
+          echo ""
+          echo "=== Supported tags ==="
+          python -m pip debug --verbose | grep -A 20 "Compatible tags"
+          
       - name: Install wheel for testing
         run: |
           source .venv/bin/activate
