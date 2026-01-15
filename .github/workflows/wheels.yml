@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,21 +22,27 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install gfortran (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          ln -s /opt/homebrew/bin/gfortran-15 /opt/homebrew/bin/gfortran || true
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
-      - name: Install gfortran (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install mingw -y
-          echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Setup Fortran (Windows)
-        if: runner.os == 'Windows'
+      - name: Set up Fortran
         uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 'latest'
+
+      # - name: Install gfortran (macOS)
+      #   if: runner.os == 'macOS'
+      #   run: |
+      #     ln -s /opt/homebrew/bin/gfortran-15 /opt/homebrew/bin/gfortran || true
+      #     echo "/opt/homebrew/bin" >> $GITHUB_PATH
+
+      # - name: Install gfortran (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     choco install mingw -y
+      #     echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # - name: Setup Fortran (Windows)
+      #   if: runner.os == 'Windows'
+      #   uses: fortran-lang/setup-fortran@v1
         
       - name: Install cibuildwheel
         run: |
