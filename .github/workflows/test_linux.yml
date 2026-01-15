@@ -44,8 +44,8 @@ jobs:
 
       - name: Install build dependencies
         run: |
-        source .venv/bin/activate
-        pip install wheel meson
+          source .venv/bin/activate
+          pip install wheel meson
 
       # 5. Install your package (editable mode so compiled modules are visible)
       - name: Install Outflowpy
