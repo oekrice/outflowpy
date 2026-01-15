@@ -15,7 +15,7 @@ All code designed around the pfsspy package should work with outflowpy, except f
 
 Below is an example script to calculate and plot an outflow field with a dipolar lower boundary condition. Hopefully this should work "out of the box" and produce the below plot:
 
-![Field line plot of a dipolar outflow field] (https://github.com/oekrice/outflowpy/blob/main/test1.png)
+![Field line plot of a dipolar outflow field](test1.png)
 
 ```
 import outflowpy
@@ -82,7 +82,7 @@ plt.gca().axis('equal')
 plt.gca().set_xticks([])
 plt.gca().set_yticks([])
 plt.gca().set_axis_off()
-plt.gca().set_title("Dipole test")
+plt.gca().set_title("Outflow Field Dipole Test")
 
 plt.tight_layout()
 plt.show()
