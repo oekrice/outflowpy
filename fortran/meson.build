@@ -16,9 +16,9 @@ if is_windows
     output: 'outflow_calc' + ext_suffix,
     command: [
         'cmd', '/c',
-        'if not exist "' + build_dir + '\fortran" mkdir "' + build_dir + '\fortran" && ' +
-        'copy @INPUT@ "' + build_dir + '\fortran" && ' +
-        'cd /d "' + build_dir + '\fortran" && ' +
+        'if not exist "' + build_dir.replace("\\","/") + '/fortran" mkdir "' + build_dir.replace("\\","/") + '/fortran" && ' +
+        'copy @INPUT@ "' + build_dir.replace("\\","/") + '/fortran" && ' +
+        'cd /d "' + build_dir.replace("\\","/") + '/fortran" && ' +
         py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower && ' +
         'for %I in (outflow_calc*.pyd) do copy %I @OUTPUT@'
     ],
@@ -26,7 +26,7 @@ if is_windows
     install_dir: py.get_install_dir() / 'outflowpy',
     build_by_default: true,
     console: true,
-  )
+)
 else
   outflow_calc_build = custom_target(
     'outflow_calc_build',
@@ -54,11 +54,11 @@ if is_windows
     output: 'fast_tracer' + ext_suffix,
     command: [
         'cmd', '/c',
-        'if not exist "' + build_dir + '\fortran" mkdir "' + build_dir + '\fortran" && ' +
-        'copy @INPUT@ "' + build_dir + '\fortran" && ' +
-        'cd /d "' + build_dir + '\fortran" && ' +
+        'if not exist "' + build_dir.replace("\\","/") + '/fortran" mkdir "' + build_dir.replace("\\","/") + '/fortran" && ' +
+        'copy @INPUT@ "' + build_dir.replace("\\","/") + '/fortran" && ' +
+        'cd /d "' + build_dir.replace("\\","/") + '/fortran" && ' +
         py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower && ' +
-        'for %I in (outflow_calc*.pyd) do copy %I @OUTPUT@'
+        'for %I in (fast_tracer*.pyd) do copy %I @OUTPUT@'
     ],
     install: true,
     install_dir: py.get_install_dir() / 'outflowpy',
