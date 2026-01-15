@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  test-linux:
     runs-on: ubuntu-latest
     
     steps:
@@ -26,10 +26,22 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel
 
-      - name: Build wheels
+      - name: Build single wheel for testing
         env:
           CIBW_BUILD: "cp313-manylinux_x86_64"
           
         run: |
           python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Create test venv
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+
+      - name: Install wheel for testing
+        run: |
+          source .venv/bin/activate
+          pip install wheelhouse/*.whl
+          pip install pytest 
           
