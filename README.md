@@ -11,9 +11,11 @@ pip install outflowpy
 
 ## Usage
 
-All code designed around the pfsspy package should work with outflowpy, except for those directly involving downloading data. These funcitons have been replaced with new versions for downloading from HMI/MDO in outflowpy, but I am happy to work on alternatives if the need arises. 
+All code designed around the pfsspy package should work with outflowpy, except for those directly involving downloading data. These funcitons have been replaced with new versions for downloading from HMI/MDI in outflowpy, but I am happy to work on alternatives if the need arises. 
 
-Below is an example script to calculate and plot an outflow field with a dipolar lower boundary condition. Hopefully this should work "out of the box" and produce a plot.
+Below is an example script to calculate and plot an outflow field with a dipolar lower boundary condition. Hopefully this should work "out of the box" and produce the below plot:
+
+![Field line plot of a dipolar outflow field] (https://github.com/oekrice/outflowpy/blob/main/test1.png)
 
 ```
 import outflowpy
@@ -85,3 +87,4 @@ plt.gca().set_title("Dipole test")
 plt.tight_layout()
 plt.show()
 ```
+
