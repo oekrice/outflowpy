@@ -15,12 +15,12 @@ if is_windows
     input: 'outflow_calc.f90',
     output: 'outflow_calc' + ext_suffix,
     command: [
-      'cmd', '/c',
-      'if not exist \'@BUILD_ROOT@/fortran\' mkdir \'@BUILD_ROOT@/fortran\' && ' +
-      'copy @INPUT@ \'@BUILD_ROOT@/fortran\' && ' +
-      'cd /d \'@BUILD_ROOT@/fortran\' && ' +
-      '@PYTHON@ -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower && ' +
-      'for %I in (outflow_calc*.pyd) do copy %I \'@OUTPUT@\''
+      'powershell', '-NoProfile', '-Command',
+      'New-Item -ItemType Directory -Force "' + build_dir + '\\fortran"; '
+      'Copy-Item "@INPUT@" "' + build_dir + '\\fortran\\outflow_calc.f90"; '
+      'Set-Location "' + build_dir + '\\fortran"; '
+      '"' + py.full_path() + '" -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower; '
+      'Copy-Item outflow_calc*.pyd "@OUTPUT@"'
     ],
     install: true,
     install_dir: py.get_install_dir() / 'outflowpy',
@@ -53,12 +53,12 @@ if is_windows
     input: 'fast_tracer.f90',
     output: 'fast_tracer' + ext_suffix,
     command: [
-      'cmd', '/c',
-      'if not exist \'@BUILD_ROOT@/fortran\' mkdir \'@BUILD_ROOT@/fortran\' && ' +
-      'copy @INPUT@ \'@BUILD_ROOT@/fortran\' && ' +
-      'cd /d \'@BUILD_ROOT@/fortran\' && ' +
-      '@PYTHON@ -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower && ' +
-      'for %I in (fast_tracer*.pyd) do copy %I \'@OUTPUT@\''
+      'powershell', '-NoProfile', '-Command',
+      'New-Item -ItemType Directory -Force "' + build_dir + '\\fortran"; '
+      'Copy-Item "@INPUT@" "' + build_dir + '\\fortran\\fast_tracer.f90"; '
+      'Set-Location "' + build_dir + '\\fortran"; '
+      '"' + py.full_path() + '" -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower; '
+      'Copy-Item fast_tracer*.pyd "@OUTPUT@"'
     ],
     install: true,
     install_dir: py.get_install_dir() / 'outflowpy',
