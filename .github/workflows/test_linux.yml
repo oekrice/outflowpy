@@ -37,10 +37,18 @@ jobs:
       - name: Install dependencies
         run: |
           source .venv/bin/activate
-          pip install pytest streamtracer
+          pip install pytest
+
+      - name: Install ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Install build dependencies
+        run: |
+        source .venv/bin/activate
+        pip install wheel meson
 
       # 5. Install your package (editable mode so compiled modules are visible)
-      - name: Install OutflowPy
+      - name: Install Outflowpy
         run: |
           source .venv/bin/activate
           pip install -e .
