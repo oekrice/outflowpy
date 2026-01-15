@@ -35,6 +35,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD: "cp313-*"
+          CIBW_BEFORE_ALL_MACOS: "ln -sf /usr/local/bin/gfortran-15 /usr/local/bin/gfortran || ln -sf /opt/homebrew/bin/gfortran-15 /opt/homebrew/bin/gfortran"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
