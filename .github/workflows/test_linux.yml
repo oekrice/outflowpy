@@ -45,7 +45,8 @@ jobs:
           pip install wheelhouse/*.whl
           pip install pytest 
 
-      - name: Run tests
+      - name: Run tests from repo
         run: |
           source .venv/bin/activate
-          pytest -v -s --tb=long outflowpy/tests
+          cd $GITHUB_WORKSPACE
+          pytest
