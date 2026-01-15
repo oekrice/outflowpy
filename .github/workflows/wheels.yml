@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +28,8 @@ jobs:
           python -m pip install cibuildwheel
 
       - name: Build wheels
+        env:
+          CIBW_BUILD: "cp313-*"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
