@@ -1,0 +1,52 @@
+name: Test OutflowPy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.13]  # add more Python versions later if needed
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 3. Create and activate virtual environment
+      - name: Create venv
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+
+      # 4. Install test dependencies
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          pip install pytest streamtracer
+
+      # 5. Install your package (editable mode so compiled modules are visible)
+      - name: Install OutflowPy
+        run: |
+          source .venv/bin/activate
+          pip install -e .
+
+      # 6. Run pytest
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest outflowpy/tests -v
