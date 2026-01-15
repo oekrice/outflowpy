@@ -1,60 +1,35 @@
-name: Test OutflowPy
+name: Test Outflowpy build
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  test:
+  build-linux:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [3.13]  # add more Python versions later if needed
-
+    
     steps:
-      # 1. Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2. Set up Python
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python (host, not build env)
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.x'
 
-      # 3. Create and activate virtual environment
-      - name: Create venv
+      - name: Set up Fortran
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 'latest'
+        
+      - name: Install cibuildwheel
         run: |
-          python -m venv .venv
-          source .venv/bin/activate
           python -m pip install --upgrade pip
+          python -m pip install cibuildwheel
 
-      # 4. Install test dependencies
-      - name: Install dependencies
+      - name: Build wheels
+        env:
+          CIBW_BUILD: "cp313-manylinux_x86_64"
+          
         run: |
-          source .venv/bin/activate
-          pip install pytest
-
-      - name: Install ninja
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
-
-      - name: Install build dependencies
-        run: |
-          source .venv/bin/activate
-          pip install wheel meson
-
-      # 5. Install your package (editable mode so compiled modules are visible)
-      - name: Install Outflowpy
-        run: |
-          source .venv/bin/activate
-          pip install -e .
-
-      # 6. Run pytest
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          pytest outflowpy/tests -v
+          python -m cibuildwheel --output-dir wheelhouse
+          
