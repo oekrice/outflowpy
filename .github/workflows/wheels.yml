@@ -29,9 +29,10 @@ jobs:
 
       - name: Build wheels
         env:
-          CIBW_BUILD: "cp${{ replace(matrix.python-version, '.', '') }}-manylinux_x86_64"
-          CIBW_ARCHS: "x86_64"
-          CIBW_BUILD_VERBOSITY: "3"
+          VERSION_NO_DOT=$(echo "${{ matrix.python-version }}" | tr -d '.')
+          export CIBW_BUILD="cp${VERSION_NO_DOT}-manylinux_x86_64"
+          export CIBW_ARCHS="x86_64"
+          export CIBW_BUILD_VERBOSITY="3"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
