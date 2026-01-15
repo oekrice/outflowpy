@@ -26,9 +26,9 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD: "cp313-manylinux_x86_64"
-          CIBW_SKIP: "*"
           CIBW_ARCHS: "x86_64"
           CIBW_BUILD_VERBOSITY: "3"
+          CIBW_PLATFORM: linux
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
