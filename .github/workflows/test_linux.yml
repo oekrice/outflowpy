@@ -14,42 +14,28 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - name: Set up Fortran
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
           version: 'latest'
-        
-      - name: Install cibuildwheel
+      
+      - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install cibuildwheel
-
-      - name: Build single wheel for testing
-        env:
-          CIBW_BUILD: "cp313-manylinux_x86_64"
-          
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-
-      - name: Create test venv
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-
-      - name: Create test venv and install wheel
+          python -m pip install build
+      
+      - name: Build package
+        run: python -m build
+      
+      - name: Create test venv and install
         run: |
           python -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install wheelhouse/*.whl
-          pip install pytest
+          pip install -e .[test]
       
-      - name: Run tests from repo
+      - name: Run tests
         run: |
           source .venv/bin/activate
-          # Make sure we're in the repo root where tests/ directory is
-          cd ${{ github.workspace }}
           pytest outflowpy/tests/
