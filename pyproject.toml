@@ -17,12 +17,4 @@ dependencies = ["numpy",  "astropy", "matplotlib","sunpy","reproject","mpl_anima
 [tool.meson-python]
 limited-api = false
 
-[project.optional-dependencies]
-test = ["pytest"]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["outflowpy*"]
-
-[tool.setuptools.package-data]
-outflowpy = ["data/**/*"]  # Adjust path to your data files
