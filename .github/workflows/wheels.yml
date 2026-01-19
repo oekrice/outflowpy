@@ -28,22 +28,6 @@ jobs:
           compiler: gcc
           version: 'latest'
 
-      # - name: Install gfortran (macOS)
-      #   if: runner.os == 'macOS'
-      #   run: |
-      #     ln -s /opt/homebrew/bin/gfortran-15 /opt/homebrew/bin/gfortran || true
-      #     echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
-      # - name: Install gfortran (Windows)
-      #   if: runner.os == 'Windows'
-      #   run: |
-      #     choco install mingw -y
-      #     echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      # - name: Setup Fortran (Windows)
-      #   if: runner.os == 'Windows'
-      #   uses: fortran-lang/setup-fortran@v1
-        
       - name: Install cibuildwheel
         run: |
           python -m pip install --upgrade pip
@@ -52,7 +36,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_SKIP: "cp36-* cp37-* cp38-* *-win32 pp*"
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=11.0"
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=14.0"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
