@@ -38,7 +38,8 @@ jobs:
       
       - name: Run tests from checkout
         run: |
-          # Stay in the repo directory so tests can find their data files
-          # The package itself is installed, but tests run from checkout
-          cd ${{ github.workspace }}
-          python -m pytest outflowpy/tests/ -v
+          # Copy tests to a temp location, so they use the correct package (rather than the local file)
+          cp -r outflowpy/tests /tmp/tests
+          # Run from there - will use installed package
+          cd /tmp
+          python -m pytest tests/ -v
