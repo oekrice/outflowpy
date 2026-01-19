@@ -23,10 +23,19 @@ jobs:
           python-version: '3.x'
 
       - name: Set up Fortran
+        if: runner.os == 'Linux'
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
           version: 'latest'
+
+      - name: Set up Fortran (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Use Homebrew's gcc which should have better compatibility
+          brew install gcc@13
+          # Set to use this specific version
+          echo "FC=$(brew --prefix gcc@13)/bin/gfortran-13" >> $GITHUB_ENV
 
       - name: Install cibuildwheel
         run: |
@@ -36,7 +45,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_SKIP: cp38-* *-win32 pp*"
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=14.0"
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=11.0 FC=/opt/homebrew/opt/gcc@13/bin/gfortran-13"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
