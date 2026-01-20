@@ -39,18 +39,20 @@ jobs:
           python -m pip install cibuildwheel
           
       - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_SKIP: "*-win32"
           CIBW_BUILD: "cp313-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
-
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+          
       - name: Check wheel contents
         run: |
-          python -m pip install wheelhouse/*.whl
-          python -c "import outflowpy; print(dir(outflowpy)); import os; print(os.listdir(os.path.dirname(outflowpy.__file__)))"
+          $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
+          python -m pip install numpy
+          python -m pip install $wheel.FullName
+          python -c "import outflowpy; print('Module contents:', dir(outflowpy)); import os; print('Files:', os.listdir(os.path.dirname(outflowpy.__file__)))"
       
       - name: Upload wheels
         uses: actions/upload-artifact@v4
