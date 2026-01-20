@@ -52,10 +52,32 @@ jobs:
           $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
           python -m pip install numpy
           python -m pip install $wheel.FullName
-          python -c "import outflowpy; print('Module contents:', dir(outflowpy)); import os; print('Files:', os.listdir(os.path.dirname(outflowpy.__file__)))"
-          python -c "from outflowpy import outflow_calc; print('outflow_calc imported successfully'); print('outflow_calc contents:', dir(outflow_calc))"
-          python -c "from outflowpy import fast_tracer; print('fast_tracer imported successfully'); print('fast_tracer contents:', dir(fast_tracer))"
           
+          # Show what's in the wheel file itself
+          echo "=== WHEEL CONTENTS ==="
+          python -m zipfile -l $wheel.FullName
+          
+          # Show package location and contents
+          echo "=== PACKAGE LOCATION AND CONTENTS ==="
+          python -c "import outflowpy, os; print('Package location:', outflowpy.__file__); pkg_dir = os.path.dirname(outflowpy.__file__); print('Package dir contents:', os.listdir(pkg_dir)); subdirs = [d for d in os.listdir(pkg_dir) if os.path.isdir(os.path.join(pkg_dir, d))]; print('Subdirectories:', subdirs); [print(f'Contents of {d}:', os.listdir(os.path.join(pkg_dir, d))) for d in subdirs if d != '__pycache__']"
+          
+          # Show what's importable from outflowpy
+          echo "=== OUTFLOWPY MODULE CONTENTS ==="
+          python -c "import outflowpy; print('dir(outflowpy):', [x for x in dir(outflowpy) if not x.startswith('_')])"
+          
+          # Show __init__.py contents
+          echo "=== __INIT__.PY CONTENTS ==="
+          python -c "import outflowpy, os; init_file = outflowpy.__file__; print(open(init_file).read())"
+          
+          # Try different import paths
+          echo "=== TESTING IMPORT PATHS ==="
+          python -c "try: from outflowpy import outflow_calc; print('SUCCESS: from outflowpy import outflow_calc'); print('Contents:', dir(outflow_calc)); except Exception as e: print('FAILED: from outflowpy import outflow_calc -', e)"
+          python -c "try: from outflowpy import fast_tracer; print('SUCCESS: from outflowpy import fast_tracer'); print('Contents:', dir(fast_tracer)); except Exception as e: print('FAILED: from outflowpy import fast_tracer -', e)"
+          python -c "try: from outflowpy.fortran import outflow_calc; print('SUCCESS: from outflowpy.fortran import outflow_calc'); except Exception as e: print('FAILED: from outflowpy.fortran import outflow_calc -', e)"
+          python -c "try: from outflowpy.fortran import fast_tracer; print('SUCCESS: from outflowpy.fortran import fast_tracer'); except Exception as e: print('FAILED: from outflowpy.fortran import fast_tracer -', e)"
+          python -c "try: import outflowpy.outflow_calc; print('SUCCESS: import outflowpy.outflow_calc'); except Exception as e: print('FAILED: import outflowpy.outflow_calc -', e)"
+          python -c "try: import outflowpy.fast_tracer; print('SUCCESS: import outflowpy.fast_tracer'); except Exception as e: print('FAILED: import outflowpy.fast_tracer -', e)"
+            
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
