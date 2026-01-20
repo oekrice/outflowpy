@@ -55,10 +55,10 @@ endif
 outflow_calc_build = custom_target(
   'outflow_calc_build',
   input: 'outflow_calc.f90',
-  output: '../outflowpy/outflow_calc' + ext_suffix,  # Go up one level then into outflowpy
+  output: 'outflow_calc' + ext_suffix,
   command: outflow_calc_cmd,
   install: true,
-  install_dir: py.get_install_dir() / 'outflowpy',
+  install_dir: py.get_install_dir(pure: false, subdir: 'outflowpy'),
   build_by_default: true,
   console: true,
 )
@@ -66,7 +66,7 @@ outflow_calc_build = custom_target(
 fast_tracer_build = custom_target(
   'fast_tracer_build',
   input: 'fast_tracer.f90',
-  output: '../outflowpy/fast_tracer' + ext_suffix,  # Go up one level then into outflowpy
+  output: 'fast_tracer' + ext_suffix,
   command: fast_tracer_cmd,
   install: true,
   install_dir: py.get_install_dir(pure: false, subdir: 'outflowpy'),
