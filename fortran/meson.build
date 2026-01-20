@@ -52,40 +52,26 @@ else
   ]
 endif
 
+# Build outflow_calc
 outflow_calc_build = custom_target(
   'outflow_calc_build',
   input: 'outflow_calc.f90',
   output: 'outflow_calc' + ext_suffix,
   command: outflow_calc_cmd,
-  #install: true,
-  #install_dir: py.get_install_dir(pure: false, subdir: 'outflowpy'),
+  install: true,
+  install_dir: py.get_install_dir() / 'outflowpy',
   build_by_default: true,
   console: true,
 )
 
+# Build fast_tracer
 fast_tracer_build = custom_target(
   'fast_tracer_build',
   input: 'fast_tracer.f90',
   output: 'fast_tracer' + ext_suffix,
   command: fast_tracer_cmd,
-  #install: true,
-  #install_dir: py.get_install_dir(pure: false, subdir: 'outflowpy'),
+  install: true,
+  install_dir: py.get_install_dir() / 'outflowpy',
   build_by_default: true,
   console: true,
-)
-
-meson.add_install_script(
-  py.full_path(),
-  '-c',
-  '''
-import sys, shutil, site, pathlib
-
-build = pathlib.Path(sys.argv[1])
-dest = pathlib.Path(site.getsitepackages()[0]) / "outflowpy"
-dest.mkdir(exist_ok=True)
-
-for p in list(build.rglob("*.pyd")) + list(build.rglob("*.so")):
-    shutil.copy2(p, dest)
-  ''',
-  meson.current_build_dir()
 )
