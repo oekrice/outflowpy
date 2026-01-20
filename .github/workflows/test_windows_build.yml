@@ -47,13 +47,15 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
           
-      - name: Check wheel contents
+      - name: Check wheel contents and test Fortran module imports
         run: |
           $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
           python -m pip install numpy
           python -m pip install $wheel.FullName
           python -c "import outflowpy; print('Module contents:', dir(outflowpy)); import os; print('Files:', os.listdir(os.path.dirname(outflowpy.__file__)))"
-      
+          python -c "from outflowpy import outflow_calc; print('outflow_calc imported successfully'); print('outflow_calc contents:', dir(outflow_calc))"
+          python -c "from outflowpy import fast_tracer; print('fast_tracer imported successfully'); print('fast_tracer contents:', dir(fast_tracer))"
+          
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
