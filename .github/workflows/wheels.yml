@@ -38,6 +38,7 @@ jobs:
           echo "FC=$(brew --prefix gcc@13)/bin/gfortran-13" >> $GITHUB_ENV
           
       - name: Set up Fortran (Windows)
+        if: runner.os == 'Windows'
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
@@ -64,6 +65,7 @@ jobs:
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.0 FC=gfortran-12 F90=gfortran-12 F77=gfortran-12
           
       - name: Build wheels (Windows)
+        if: runner.os == 'Windows'
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
