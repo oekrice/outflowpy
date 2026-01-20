@@ -39,33 +39,3 @@ py.install_sources(
   subdir: 'outflowpy/data'
 )
 
-#Install tests
-# Install tests
-py.install_sources(
-  [
-    'outflowpy/tests/__init__.py',
-    'outflowpy/tests/example_maps.py',
-    'outflowpy/tests/test_analytic.py',
-    'outflowpy/tests/test_coords.py',
-    'outflowpy/tests/test_downloads.py',
-    'outflowpy/tests/test_fieldline.py',
-    'outflowpy/tests/test_outflow.py',
-    'outflowpy/tests/test_pfss.py',
-    'outflowpy/tests/test_tracers.py',
-    'outflowpy/tests/test_utils.py',
-  ],
-  subdir: 'outflowpy/tests'
-)
-
-# Install test data if you have any
-py.install_sources(
-  [
-    'outflowpy/tests/data/br_in.txt',
-    'outflowpy/tests/data/br_out.txt',
-    'outflowpy/tests/data/hmi_2210_smooth.txt',
-    'outflowpy/tests/data/mdi_2000_smooth.txt',
-    # Add any other test data files here
-  ],
-  subdir: 'outflowpy/tests/data',
-  preserve_path: true
-)
