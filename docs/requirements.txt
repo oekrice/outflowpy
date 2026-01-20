@@ -1,2 +1,1 @@
-sphinx
-numpy
+sphinx>=7.0
