@@ -63,7 +63,7 @@ jobs:
           python -m pip install --force-reinstall --verbose $wheel.FullName
 
           #Change to temporary directory
-          cd /tmp
+          cd $env:TEMP
           
           # Show package location and ALL files (including .pyd)
           echo "=== INSTALLED FILES ==="
