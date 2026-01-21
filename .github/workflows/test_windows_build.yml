@@ -1,4 +1,4 @@
-name: Test Windows Compilation
+name: Minimal Windows Build Test
 
 on:
   #push:
@@ -61,6 +61,9 @@ jobs:
           # Install wheel with verbose output
           echo "=== INSTALLING WHEEL ==="
           python -m pip install --force-reinstall --verbose $wheel.FullName
+
+          #Change to temporary directory
+          cd /tmp
           
           # Show package location and ALL files (including .pyd)
           echo "=== INSTALLED FILES ==="
