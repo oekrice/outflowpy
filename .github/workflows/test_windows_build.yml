@@ -75,8 +75,8 @@ jobs:
           
           # Try importing with full names
           echo "=== TESTING IMPORTS ==="
-          python -c "try:`n    import outflowpy.outflow_calc`n    print('SUCCESS')`nexcept Exception as e:`n    print('FAILED:', e)"
-          python -c "try:`n    import outflowpy.fast_tracer`n    print('SUCCESS')`nexcept Exception as e:`n    print('FAILED:', e)"
+          python -c "import outflowpy.outflow_calc; print('outflow_calc imported successfully')"
+          python -c "import outflowpy.fast_tracer; print('fast_tracer imported successfully')"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
