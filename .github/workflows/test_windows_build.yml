@@ -71,10 +71,6 @@ jobs:
           echo "=== INSTALLED FILES ==="
           python -c "import outflowpy, os, glob; pkg_dir = os.path.dirname(outflowpy.__file__); print('Package dir:', pkg_dir); all_files = os.listdir(pkg_dir); print('All files:', sorted(all_files)); pyd_files = glob.glob(os.path.join(pkg_dir, '*.pyd')); print('PYD files found:', pyd_files)"
           
-          # Check if they exist but can't be imported
-          echo "=== CHECKING PYD FILES DIRECTLY ==="
-          python -c "import os; pkg_dir = r'D:\a\outflowpy\outflowpy\outflowpy'; print('outflow_calc.pyd exists:', os.path.exists(os.path.join(pkg_dir, 'outflow_calc.cp313-win_amd64.pyd'))); print('fast_tracer.pyd exists:', os.path.exists(os.path.join(pkg_dir, 'fast_tracer.cp313-win_amd64.pyd')))"
-          
           # Try importing with full names
           echo "=== TESTING IMPORTS ==="
           python -c "import outflowpy.outflow_calc; print('outflow_calc imported successfully')"
