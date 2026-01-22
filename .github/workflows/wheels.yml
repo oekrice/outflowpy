@@ -50,15 +50,11 @@ jobs:
           python -m pip install cibuildwheel
 
       - name: Get gfortran path (Windows)
-        if: runner.os == 'Windows'
         id: gfortran
         shell: pwsh
         run: |
-          gfortran --version
-          where gfortran
-          # Store the gfortran bin path for later use
           $gfortranPath = (Get-Command gfortran).Path | Split-Path
-          echo "GFORTRAN_BIN=$gfortranPath" >> $env:GITHUB_ENV
+          "dir=$gfortranPath" >> $env:GITHUB_OUTPUT
     
       - name: Build wheels (Linux)
         if: runner.os == 'linux'
@@ -92,7 +88,8 @@ jobs:
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
           CIBW_ENVIRONMENT_WINDOWS: LDFLAGS='-static-libgfortran -static-libgcc'
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}
           
       - name: Upload wheels
         uses: actions/upload-artifact@v4
