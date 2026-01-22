@@ -90,9 +90,9 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
           CIBW_ENVIRONMENT_WINDOWS: LDFLAGS='-static-libgfortran -static-libgcc'
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair
+            delvewheel repair -v
             --add-path C:\Strawberry\c\bin
-            --lib-sdir fast_tracer/.libs
+            --lib-sdir .libs
             -w {dest_dir} {wheel}
           
       - name: Upload wheels
