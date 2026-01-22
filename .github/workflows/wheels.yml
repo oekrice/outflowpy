@@ -50,6 +50,7 @@ jobs:
           python -m pip install cibuildwheel
 
       - name: Get gfortran path (Windows)
+        if: runner.os == 'Windows'
         id: gfortran
         shell: pwsh
         run: |
