@@ -54,8 +54,11 @@ jobs:
         id: gfortran
         shell: pwsh
         run: |
-          $gfortranDir = Split-Path (Get-Command gfortran).Source
-          echo "dir=$gfortranDir" >> $env:GITHUB_OUTPUT
+          gfortran --version
+          where gfortran
+          # Store the gfortran bin path for later use
+          $gfortranPath = (Get-Command gfortran).Path | Split-Path
+          echo "GFORTRAN_BIN=$gfortranPath" >> $env:GITHUB_ENV
     
       - name: Build wheels (Linux)
         if: runner.os == 'linux'
@@ -71,6 +74,12 @@ jobs:
           CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
           CIBW_BEFORE_BUILD: brew install gcc@12
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.0 FC=gfortran-12 F90=gfortran-12 F77=gfortran-12
+
+      - name: Add gfortran to PATH for windows
+        if: runner.os == 'Windows'
+        run: |
+          $gfortranPath = (Get-Command gfortran).Path | Split-Path
+          echo "$gfortranPath" >> $env:GITHUB_PATH
           
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
@@ -82,7 +91,8 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
+          CIBW_ENVIRONMENT_WINDOWS: "PATH=$PATH;$(gfortran --print-file-name=)"
           
       - name: Upload wheels
         uses: actions/upload-artifact@v4
