@@ -90,7 +90,10 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
           CIBW_ENVIRONMENT_WINDOWS: LDFLAGS='-static-libgfortran -static-libgcc'
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}
+            delvewheel repair
+            --ignore-existing
+            --add-path C:\Strawberry\c\bin
+            -w {dest_dir} {wheel}
           
       - name: Upload wheels
         uses: actions/upload-artifact@v4
