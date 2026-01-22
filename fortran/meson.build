@@ -23,7 +23,7 @@ if is_windows
     'powershell', '-Command',
     'Copy-Item @INPUT@ ' + build_dir + '; ' +
     'Set-Location ' + build_dir + '; ' +
-    '& ' + py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower; ' +
+    '& ' + py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower --no-shared; ' +
     'Copy-Item (Get-ChildItem -Filter "outflow_calc' + ext_pattern + '" -Recurse | Select-Object -First 1).FullName @OUTPUT@'
   ]
   
@@ -31,7 +31,7 @@ if is_windows
     'powershell', '-Command',
     'Copy-Item @INPUT@ ' + build_dir + '; ' +
     'Set-Location ' + build_dir + '; ' +
-    '& ' + py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower; ' +
+    '& ' + py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower --no-shared; ' +
     'Copy-Item (Get-ChildItem -Filter "fast_tracer' + ext_pattern + '" -Recurse | Select-Object -First 1).FullName @OUTPUT@'
   ]
 else
