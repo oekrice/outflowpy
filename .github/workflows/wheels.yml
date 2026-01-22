@@ -91,8 +91,9 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_ENVIRONMENT_WINDOWS: PATH="$PATH;${{ env.GFORTRAN_PATH }}"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            python -c "import zipfile, sys; z=zipfile.ZipFile(sys.argv[1]); print('\\n'.join([f.filename for f in z.filelist]))" {wheel} &&
+            delvewheel repair --analyze-existing -w {dest_dir} {wheel}
           
       - name: Upload wheels
         uses: actions/upload-artifact@v4
