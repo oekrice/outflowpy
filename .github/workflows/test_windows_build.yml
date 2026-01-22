@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: ['3.13']
+        python-version: ['3.12']
 
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_SKIP: "*-win32"
-          CIBW_BUILD: "cp313-win_amd64"
+          CIBW_BUILD: "cp312-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
