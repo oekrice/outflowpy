@@ -88,13 +88,11 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_ENVIRONMENT_WINDOWS: LDFLAGS='-static-libgfortran -static-libgcc'
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair -v
-            --add-path C:\Strawberry\c\bin
-            --lib-sdir .libs
-            -w {dest_dir} {wheel}
-          
+          CIBW_ENVIRONMENT_WINDOWS: >
+            F2PY_NO_SHARED=1
+            LDFLAGS="-static-libgfortran -static-libgcc"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+                    
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
