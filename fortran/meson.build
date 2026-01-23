@@ -1,33 +1,21 @@
 py = import('python').find_installation(pure: false)
-
 ext_suffix = py.get_variable('EXT_SUFFIX')
-# Build directory path
 build_dir = meson.current_build_dir()
-
 is_windows = host_machine.system() == 'windows'
 
 if is_windows
-  # Windows uses .pyd extension
-  ext_pattern = '*.pyd'
-  shell = 'cmd'
-  shell_arg = '/c'
-else
-  # Unix-like uses .so extension
-  ext_pattern = '*.so'
-  shell = 'sh'
-  shell_arg = '-c'
-endif
-
-if is_windows
+  # More robust PowerShell commands that handle different Python versions
   outflow_calc_cmd = [
     'powershell', '-Command',
     'Copy-Item @INPUT@ ' + build_dir + '; ' +
     'Set-Location ' + build_dir + '; ' +
     '$env:F2PY_NO_SHARED="1"; ' +
     '& ' + py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower; ' +
-    '$pyd = Get-ChildItem -Filter "outflow_calc*.pyd" -Recurse | Select-Object -First 1; ' +
+    # Find any .pyd file with outflow_calc in the name
+    '$pyd = Get-ChildItem -Filter "*outflow_calc*.pyd" -Recurse | Select-Object -First 1; ' +
     '$dll = Get-ChildItem -Filter "libfast_tra*.dll" -Recurse | Select-Object -First 1; ' +
     'if ($dll) { Copy-Item $dll.FullName $pyd.Directory.FullName }; ' +
+    # Rename to the expected output name
     'Copy-Item $pyd.FullName @OUTPUT@'
   ]
   
@@ -37,9 +25,11 @@ if is_windows
     'Set-Location ' + build_dir + '; ' +
     '$env:F2PY_NO_SHARED="1"; ' +
     '& ' + py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower; ' +
-    '$pyd = Get-ChildItem -Filter "fast_tracer*.pyd" -Recurse | Select-Object -First 1; ' +
+    # Find any .pyd file with fast_tracer in the name
+    '$pyd = Get-ChildItem -Filter "*fast_tracer*.pyd" -Recurse | Select-Object -First 1; ' +
     '$dll = Get-ChildItem -Filter "libfast_tra*.dll" -Recurse | Select-Object -First 1; ' +
     'if ($dll) { Copy-Item $dll.FullName $pyd.Directory.FullName }; ' +
+    # Rename to the expected output name
     'Copy-Item $pyd.FullName @OUTPUT@'
   ]
 else
