@@ -11,11 +11,11 @@ if is_windows
     'Set-Location ' + build_dir + '; ' +
     '$env:F2PY_NO_SHARED="1"; ' +
     '& ' + py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower; ' +
-    # Find any .pyd file with outflow_calc in the name
+    'Write-Host "Looking for .pyd files:"; Get-ChildItem -Filter "*.pyd" -Recurse | ForEach-Object { Write-Host $_.FullName }; ' +
     '$pyd = Get-ChildItem -Filter "*outflow_calc*.pyd" -Recurse | Select-Object -First 1; ' +
+    'if (-not $pyd) { throw "Could not find outflow_calc .pyd file" }; ' +
     '$dll = Get-ChildItem -Filter "libfast_tra*.dll" -Recurse | Select-Object -First 1; ' +
     'if ($dll) { Copy-Item $dll.FullName $pyd.Directory.FullName }; ' +
-    # Rename to the expected output name
     'Copy-Item $pyd.FullName @OUTPUT@'
   ]
   
