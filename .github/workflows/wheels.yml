@@ -93,7 +93,7 @@ jobs:
             FC=gfortran
           CIBW_CONFIG_SETTINGS_WINDOWS: >
             setup-args=-Dprefer_static=true
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} --add-path . --add-path ./build -w {dest_dir} {wheel}"
                     
       - name: Upload wheels
         uses: actions/upload-artifact@v4
