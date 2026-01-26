@@ -23,24 +23,16 @@ if is_windows
     'powershell', '-Command',
     'Copy-Item @INPUT@ ' + build_dir + '; ' +
     'Set-Location ' + build_dir + '; ' +
-    '$env:F2PY_NO_SHARED="1"; ' +
     '& ' + py.full_path() + ' -m numpy.f2py -c outflow_calc.f90 -m outflow_calc --lower; ' +
-    '$pyd = Get-ChildItem -Filter "outflow_calc*.pyd" -Recurse | Select-Object -First 1; ' +
-    '$dll = Get-ChildItem -Filter "libfast_tra*.dll" -Recurse | Select-Object -First 1; ' +
-    'if ($dll) { Copy-Item $dll.FullName $pyd.Directory.FullName }; ' +
-    'Copy-Item $pyd.FullName @OUTPUT@'
+    'Copy-Item (Get-ChildItem -Filter "outflow_calc' + ext_pattern + '" -Recurse | Select-Object -First 1).FullName @OUTPUT@'
   ]
   
   fast_tracer_cmd = [
     'powershell', '-Command',
     'Copy-Item @INPUT@ ' + build_dir + '; ' +
     'Set-Location ' + build_dir + '; ' +
-    '$env:F2PY_NO_SHARED="1"; ' +
     '& ' + py.full_path() + ' -m numpy.f2py -c fast_tracer.f90 -m fast_tracer --lower; ' +
-    '$pyd = Get-ChildItem -Filter "fast_tracer*.pyd" -Recurse | Select-Object -First 1; ' +
-    '$dll = Get-ChildItem -Filter "libfast_tra*.dll" -Recurse | Select-Object -First 1; ' +
-    'if ($dll) { Copy-Item $dll.FullName $pyd.Directory.FullName }; ' +
-    'Copy-Item $pyd.FullName @OUTPUT@'
+    'Copy-Item (Get-ChildItem -Filter "fast_tracer' + ext_pattern + '" -Recurse | Select-Object -First 1).FullName @OUTPUT@'
   ]
 else
   outflow_calc_cmd = [
