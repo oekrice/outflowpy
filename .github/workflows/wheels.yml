@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-allos:
+  build-linux:
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -48,14 +48,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel
-
       - name: Get gfortran path (Windows)
         if: runner.os == 'Windows'
         id: gfortran
         shell: pwsh
         run: |
-          $gfortranPath = (Get-Command gfortran).Path | Split-Path
-          "dir=$gfortranPath" >> $env:GITHUB_OUTPUT
+          $gfortranDir = Split-Path (Get-Command gfortran).Source
+          echo "dir=$gfortranDir" >> $env:GITHUB_OUTPUT
     
       - name: Build wheels (Linux)
         if: runner.os == 'linux'
@@ -71,12 +70,6 @@ jobs:
           CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
           CIBW_BEFORE_BUILD: brew install gcc@12
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.0 FC=gfortran-12 F90=gfortran-12 F77=gfortran-12
-
-      - name: Add gfortran to PATH for windows
-        if: runner.os == 'Windows'
-        run: |
-          $gfortranPath = (Get-Command gfortran).Path | Split-Path
-          echo "GFORTRAN_PATH=$gfortranPath" >> $env:GITHUB_ENV
           
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
@@ -84,17 +77,12 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_SKIP: "*-win32"
-          CIBW_BUILD: "cp313-win_amd64 cp312-win_amd64 cp311-win_amd64"
+          CIBW_BUILD: "cp313-win_amd64 cp312-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_ENVIRONMENT_WINDOWS: >
-            LDFLAGS="-static-libgfortran -static-libgcc"
-            FC=gfortran
-          CIBW_CONFIG_SETTINGS_WINDOWS: >
-            setup-args=-Dprefer_static=true
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} --add-path . --add-path ./build -w {dest_dir} {wheel}"
-                    
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+          
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
