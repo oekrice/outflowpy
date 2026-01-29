@@ -164,12 +164,10 @@ def plot_image(image_matrix, image_extent, image_parameters, image_fname, off_sc
         plt.show()
     plt.close()
 
-def plot_pyvista(output, fieldlines, fname = './plots/vista.png'):
+def plot_pyvista(output, fieldlines, fname = './plots/vista.png', off_screen = False):
     """
     Plots calculated field lines using pyvista, along with a colourmap on the lower surface corresponding to the photospheric magnetic field.
     """
-
-    off_screen = True
     print('Plotting in pyvista...')
     if off_screen and not os.name == 'nt':
        pv.start_xvfb()

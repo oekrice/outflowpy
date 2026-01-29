@@ -46,6 +46,7 @@ class Output:
         self._common_b_cache = None
         self._rgi = None
 
+
     def _wcs_header(self):
         """
         Construct a world coordinate system describing the outflowpy solution.
@@ -297,7 +298,7 @@ class Output:
         the ``r`` component is located on the cell faces at constant ``r``
         values.
         """
-        br, bs, bp, Sbr, Sbs, Sbp = self._common_b()
+        br, bs, bp, Sbr, Sbs, Sbp, _, _, _ = self._common_b()
         # Remove area factors:
         br = br.copy()
         bs = bs.copy()
@@ -311,6 +312,21 @@ class Output:
         return (br * self.bunit,
                 -bs * self.bunit,
                 bp * self.bunit)
+
+    @property
+    def coords_x(self):
+        """
+        Extended coordinates at cell faces
+
+        Returns
+        -------
+        rcx, scx, pcx
+
+
+        """
+        _, _, _, _, _, _, rcx, scx, pcx = self._common_b()
+
+        return (rcx, scx, pcx)
 
     @property
     @functools.lru_cache(maxsize=1)
@@ -376,7 +392,7 @@ class Output:
         thc = np.zeros(ns + 2) - 1
         thc[1:-1] = np.arccos(sc)
         # Centre of cells in phi (including ghost cells)
-        np.linspace(-0.5 * dp, 2 * np.pi + 0.5 * dp, nphi + 2)
+        phc = np.linspace(-0.5 * dp, 2 * np.pi + 0.5 * dp, nphi + 2)
 
         # Required face normals:
         dnp = np.zeros((ns + 2, 2))
@@ -449,7 +465,8 @@ class Output:
             bp[i, -1, :] = -bp[i1, -2, :]
             bp[i, 0, :] = -bp[i1, 1, :]
 
-        self._common_b_cache = br, bs, bp, Sbr, Sbs, Sbp
+        self._common_b_cache = br, bs, bp, Sbr, Sbs, Sbp, rc, thc, phc
+
         return self._common_b_cache
 
     def get_bvec(self, coords, out_type="spherical"):
