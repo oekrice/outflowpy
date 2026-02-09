@@ -510,7 +510,6 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
         brm_future[:,:] = brm3[:,ncells_start - nphi//2:ncells_start]  #Half-slice in the future direction
         brm_past[:,:] = brm3[:,ncells_start + nphi:ncells_start + 3*nphi//2]
 
-        print(np.shape(brm_centre), np.shape(brm_future), np.shape(brm_past))
         #Find linear proportions of the respective maps
         centre_props = np.concatenate((np.linspace(0.5,1.0,int(nphi//2 + 1)),  np.linspace(1.0,0.5,int(nphi//2 + 1))[1:]))
         #Get these on the cell centres rather than the cell edges

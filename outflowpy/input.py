@@ -72,6 +72,7 @@ class Input:
 
         if polynomial_coeffs is not None:
             print('Calculating outflow speed using specified polynomial coefficients.')
+            print('Selected polynomial type:', polynomial_type)
             #Calculate the wind speed just as a combination of the given polynomial coefficients (with self._grid.rg known already)
             def poly_at_pt(r):
                 #Polynomial value at the explicit point r (don't forget the exponentials!)
@@ -98,15 +99,18 @@ class Input:
             elif polynomial_type == 'raw':
                 vgx = vgx
                 vcx = vcx
+            elif polynomial_type == 'exp':
+                vgx = np.clip(np.exp(vgx) - 1.0, a_min = 0.0, a_max = np.max(np.exp(vgx) - 1.0))
+                vcx = np.clip(np.exp(vcx) - 1.0, a_min = 0.0, a_max = np.max(np.exp(vcx) - 1.0))
             else:
-                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs" and "raw"')
+                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp" and "raw"')
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
 
             self.vg = vgx[1:-1]; self.vcx = vcx; self.vdcx = vdcx
 
-            print('poly', polynomial_coeffs, polynomial_type)
+            print('Polynomial settings', polynomial_coeffs, polynomial_type)
 
         elif mf_constant is not None and corona_temp is not None:
             print('Calculating outflow speed using the parker solution with specified temperature and mf constant')
