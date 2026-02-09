@@ -234,3 +234,11 @@ Calling these 60 and 61
 
 [0.633,-0.006,-4.299,-2.38] are parameters from matching the 2017 eclipse. Seems to have worked OK, but maybe try out on all the eclipses next? Scripts 3d to run and 3a to analyse work it seems.
 
+Monday 9th February:
+
+For editable install:
+
+pip install meson meson-python ninja numpy
+pip install -e . --no-build-isolation
+
+(to avoid ninja errors)
