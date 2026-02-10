@@ -201,7 +201,7 @@ def run_optimisation():
     if os.path.exists("batch_logs/log_%d.txt" % eclipse_year):
         os.remove("batch_logs/log_%d.txt" % eclipse_year)
     initial_parameter_set = np.array([-5.0, 0.0, 0.0, 0.0, 0.0])
-    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.025, {'verb_disp': 1})
+    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.15, {'verb_disp': 1})
     es.optimize(generate_fn)
     es.result_pretty()
 
