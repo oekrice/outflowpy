@@ -68,8 +68,6 @@ def make_angle_histogram(flines, bin_resolution = 10, num = 0, resolution = 512)
             dangle = np.arccos(top/bottom)
 
             radial_difference = dangle
-            #print(radial_difference)
-            xs.append(x); ys.append(y); cs.append(radial_difference)
 
             #This bit for binning
             real_angle = np.arctan2(x, y) + np.pi

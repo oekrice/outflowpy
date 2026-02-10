@@ -77,8 +77,8 @@ def find_eclipse_flines(eclipse_year, field_parameters):
 
     input_map = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)   #Outputs the set of data corresponding to this particular Carrington rotation.
 
-    field_parameters = np.abs(field_parameters)
     outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_type = 'smooth', polynomial_coeffs = field_parameters)
+    #outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 0.0)
 
     print('Min/max outflow speed', np.min(outflow_in.vg), np.max(outflow_in.vg))
 
@@ -121,6 +121,7 @@ def find_error_fn(coeffs, run_id, eclipse_year):
 
     reference_distribution, bin_mask = find_real_angle_distribution(eclipse_year, nbins, doplots = False)
     fieldlines = find_eclipse_flines(eclipse_year, field_parameters = coeffs)
+
     synthetic_means, _ = edge_detection.make_angle_histogram(fieldlines, nbins)
     synthetic_means[bin_mask < 0.5] = np.nan
 
@@ -182,7 +183,7 @@ def generate_fn(parameter_set):
     with open("batch_logs/log_%d.txt" % eclipse_year, "a") as f:
         f.write(" ".join(f"{x:.6f}" for x in save_line) + "\n")
 
-    print('Error fn', error_function)
+    print('Measured error', error_function)
     return error_function
 
 if len(sys.argv) > 1:
@@ -200,13 +201,13 @@ def run_optimisation():
     print('Doing optimisation run on eclipse', eclipse_year)
     if os.path.exists("batch_logs/log_%d.txt" % eclipse_year):
         os.remove("batch_logs/log_%d.txt" % eclipse_year)
-    initial_parameter_set = np.array([-5.0, 0.0, 0.0, 0.0, 0.0])
-    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.15, {'verb_disp': 1})
+    initial_parameter_set = np.array([-5.0, 4.0, 0.0, 0.0, 0.0])
+    es = cma.CMAEvolutionStrategy(initial_parameter_set, 0.25, {'verb_disp': 1})
     es.optimize(generate_fn)
     es.result_pretty()
 
 run_optimisation()
-# for i in range(100):
-#     generate_fn(np.array([0.0,0.0,0.0,0.0,0.0]))
-
+#generate_fn(np.array([-1000.,-1000.,-1000.,-1000.-1000.]))
+#generate_fn(np.array([-1.5,2.5,0.,0.,0.]))
+#generate_fn(np.array([0.,1.,0.,0.,0.]))
 

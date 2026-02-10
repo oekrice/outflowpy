@@ -246,3 +246,13 @@ pip install -e . --no-build-isolation
 Tuesday 10th February:
 
 Determined that exponential polynomials don't work. Alas. Let's think of something more smart...
+
+
+Some tests to see if it's actually converging to what we want.
+
+On 4_optimise:
+PFSS, rss = 5.0, Minmax 0.0, error 0.076
+All zeros, rss = 5.0. Minmax 1.0, error 0.01806, synthetic mean nansum: 341.157, brsum: 524111.2638918188   last fline: -0.211
+Entry 2 = 1.0, rss = 5.0, Minmax 1.5819773681725144 5.033919247166821, error 0.000508276
+
+
