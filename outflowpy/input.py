@@ -99,9 +99,13 @@ class Input:
             elif polynomial_type == 'raw':
                 vgx = vgx
                 vcx = vcx
-            elif polynomial_type == 'exp':
-                vgx = np.clip(np.exp(vgx) - 1.0, a_min = 0.0, a_max = np.max(np.exp(vgx) - 1.0))
-                vcx = np.clip(np.exp(vcx) - 1.0, a_min = 0.0, a_max = np.max(np.exp(vcx) - 1.0))
+            elif polynomial_type == 'smooth':
+                #Remove zero problems
+                vgx = vgx + 1e-6
+                vcx = vcx + 1e-6
+
+                vgx = (vgx*np.exp(vgx))/(np.exp(vgx)-1)
+                vcx = (vcx*np.exp(vcx))/(np.exp(vcx)-1)
             else:
                 raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp" and "raw"')
 

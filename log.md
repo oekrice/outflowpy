@@ -242,3 +242,7 @@ pip install meson meson-python ninja numpy
 pip install -e . --no-build-isolation
 
 (to avoid ninja errors)
+
+Tuesday 10th February:
+
+Determined that exponential polynomials don't work. Alas. Let's think of something more smart...
