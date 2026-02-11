@@ -39,7 +39,7 @@ class Input:
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
     """
-    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, polynomial_coeffs = None, polynomial_type = 'abs'):
+    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, sound_speed = None, polynomial_coeffs = None, polynomial_type = 'abs'):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):
@@ -115,6 +115,25 @@ class Input:
             self.vg = vgx[1:-1]; self.vcx = vcx; self.vdcx = vdcx
 
             print('Polynomial settings', polynomial_coeffs, polynomial_type)
+
+        elif mf_constant is not None and sound_speed is not None:
+            print('Calculating outflow speed using the parker solution with specified sound speed and mf constant')
+
+            #Assuming the solution for the isothermal corona, calculate the sound speed and critical radius etc.
+            #Could import these from astopy.constants but I don't think they're going to change any time soon, so I'll assume it's fine
+            mf_in_sensible_units = mf_constant*(6.957e10)**2 #In seconds/solar radius
+            self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
+            self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
+
+            self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
+
+            #Then finally multiply by the 'wind speed' constant calculated using physics. Should all be roughly order of magnitude 1/10 after this.
+            self.vg = self.vg*self.c_s
+            self.vcx = self.vcx*self.c_s
+            self.vdcx = self.vdcx*self.c_s
+
+        elif sound_speed is not None and corona_temp is not None:
+            raise Exception('Please specify either a sound speed or a corona temperature, but not both.')
 
         elif mf_constant is not None and corona_temp is not None:
             print('Calculating outflow speed using the parker solution with specified temperature and mf constant')
