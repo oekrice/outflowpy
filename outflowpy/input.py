@@ -124,7 +124,7 @@ class Input:
                     vcx[vcmax_ind:] = vcx[vcmax_ind]
 
             else:
-                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp" and "raw"')
+                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp", "smooth", "smooth_monotonic" and "raw"')
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
