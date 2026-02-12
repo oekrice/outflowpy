@@ -106,6 +106,23 @@ class Input:
 
                 vgx = (vgx*np.exp(vgx))/(np.exp(vgx)-1)
                 vcx = (vcx*np.exp(vcx))/(np.exp(vcx)-1)
+            elif polynomial_type == 'smooth_monotonic':
+                #Ensure the 'polynomial' is smooth, nonnegative and monotonically increasing.
+                vgx = vgx + 1e-6
+                vcx = vcx + 1e-6
+
+                vgx = (vgx*np.exp(vgx))/(np.exp(vgx)-1)
+                vcx = (vcx*np.exp(vcx))/(np.exp(vcx)-1)
+
+                #Run through and set all points later than the maximum point TO the maximum point. Hopefully this will select a polynomial which doesn't need this applying...
+                vgmax_ind = np.argmax(vgx)
+                if vgmax_ind != len(vgx) - 1:
+                    vgx[vgmax_ind:] = vgx[vgmax_ind]
+
+                vcmax_ind = np.argmax(vcx)
+                if vcmax_ind != len(vcx) - 1:
+                    vcx[vcmax_ind:] = vcx[vcmax_ind]
+
             else:
                 raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp" and "raw"')
 
@@ -175,6 +192,9 @@ class Input:
             f = interpolate.interp1d(rs_interp, vs_interp, fill_value = "extrapolate")
             vgx = f(np.exp(rgx))
             vcx = f(np.exp(self._grid.rcx))
+
+            vgx = np.clip(vgx, a_min = 0.0, a_max = np.max(vgx))
+            vcx = np.clip(vcx, a_min = 0.0, a_max = np.max(vcx))
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
