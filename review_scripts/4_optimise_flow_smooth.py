@@ -155,7 +155,7 @@ def find_error_fn(coeffs, run_id, eclipse_year):
     plt.plot(synth_distribution)
     plt.close()
 
-    error = np.mean((reference_distribution[1:] - synth_distribution[1:])**2)
+    error = np.mean((reference_distribution[5:] - synth_distribution[5:])**2)
 
     return error
 

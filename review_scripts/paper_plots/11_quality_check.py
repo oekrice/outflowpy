@@ -214,7 +214,7 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
     year_options = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
     poly_values = [0.0,0.0,0.0,0.0,0.0]
 
-    allpolys = np.load(f"./data/batch_logs/optimums.npy")
+    allpolys = np.load(f"./batch_logs/optimums.npy")
 
     eclipse_index = year_options.index(eclipse_year)
 
@@ -351,14 +351,14 @@ years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
 allpolys = []
 years = [2006,2013,2015,2024]
 
-with open(f"./data/batch_logs/optimums.txt") as f:
+with open(f"./batch_logs/optimums.txt") as f:
     for i, line in enumerate(f):
         poly_string = line.strip()
         poly_values = [float(x) for x in poly_string[1:-1].split(",")]
         allpolys.append(poly_values)
 
 allpolys = np.array(allpolys)
-np.save(f"./data/batch_logs/optimums.npy", allpolys)
+np.save(f"./batch_logs/optimums.npy", allpolys)
 
 fig = plt.figure(figsize = (6.9,5.0), constrained_layout = True)
 gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.12, 0.15], figure=fig)
