@@ -259,3 +259,5 @@ Entry 2 = 1.0, rss = 5.0, Minmax 1.5819773681725144 5.033919247166821, error 0.0
 
 PFSS: rss = 1.548722
 Outflow: c_s = 150.2313km/s
+
+Decent results have now come out of the convergence, but there are a couple I'm not too happy with. Will perhaps reduce the random wiggling to start with?
