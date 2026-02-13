@@ -82,6 +82,11 @@ for counter in range(0,1):
 
         ys = (raw_poly*np.exp(raw_poly))/(np.exp(raw_poly)-1)
 
+
+        ymax_ind = np.argmax(ys)
+        if ymax_ind != len(ys) - 1:
+            ys[ymax_ind:] = ys[ymax_ind]
+
         if np.max(ys) > 0.0:
             allys += ys
             ycount += 1
