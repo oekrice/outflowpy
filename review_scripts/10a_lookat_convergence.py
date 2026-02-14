@@ -96,6 +96,8 @@ for counter in range(0,1):
 
         with open(f"./batch_logs/optimums.txt", mode = "a") as f:
             f.write(f"{polynomial_coeffs.tolist()}\n")
+        with open(f"./paper_plots/batch_logs/optimums.txt", mode = "a") as f:
+            f.write(f"{polynomial_coeffs.tolist()}\n")
 
     plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')
 
