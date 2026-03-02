@@ -1,0 +1,77 @@
+name: Build and test all wheels
+
+on:
+  #push:
+  #  branches: [main, master]
+  #pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (host, not build env)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Fortran (Linux)
+        if: runner.os == 'Linux'
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 'latest'
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cibuildwheel
+          
+      - name: Build wheels (Linux)
+        if: runner.os == 'linux'
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
+
+      - name: Install built wheel (Linux/MacOS)
+        if: runner.os == 'linux' || runner.os == 'macOS'
+        run: |
+          python -m pip install --upgrade pip
+          python_version=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          arch=$(uname -m)
+
+          pip install wheelhouse/*${python_version}*${arch}*.whl
+
+      - name: Test imports (Linux/MacOS)
+        if: runner.os == 'linux' || runner.os == 'macOS'
+        run: |
+
+          cd /tmp
+          python -c "from outflowpy import outflow_calc, fast_tracer; print('Imports work!')"
+          python -c "import outflowpy; print(f'Installed at: {outflowpy.__file__}')"
+      
+      - name: Run tests from checkout (Linux/macOS)
+        if: runner.os == 'linux'  || runner.os == 'macOS'
+        run: |
+          # Copy tests to a temporary location, so they use the correct package (rather than the local file)
+          cp -r tests /tmp/tests
+          # Run from there - will use installed package
+          cd /tmp
+          python -m pytest tests/ -v
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name:  wheels-${{ runner.os }}-${{ strategy.job-index }}
+          path: wheelhouse/*.whl
+
+
+          

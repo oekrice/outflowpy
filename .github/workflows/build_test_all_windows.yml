@@ -1,0 +1,91 @@
+name: Build and test all wheels
+
+on:
+  #push:
+  #  branches: [main, master]
+  #pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [uwindows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (host, not build env)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Fortran (Windows)
+        if: runner.os == 'Windows'
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 'latest'
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cibuildwheel
+          
+      - name: Get gfortran path (Windows)
+        if: runner.os == 'Windows'
+        id: gfortran
+        shell: pwsh
+        run: |
+          $gfortranDir = Split-Path (Get-Command gfortran).Source
+          echo "dir=$gfortranDir" >> $env:GITHUB_OUTPUT
+
+      - name: Build wheels (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_SKIP: "*-win32"
+          CIBW_BUILD: "cp313-win_amd64 cp312-win_amd64"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_BEFORE_BUILD: "python -c \"import subprocess; subprocess.run(['gfortran', '--version'])\""
+          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
+
+      - name: Check wheel contents and test Fortran module imports (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
+          
+          # Show what's in the wheel file itself
+          echo "=== WHEEL CONTENTS ==="
+          python -m zipfile -l $wheel.FullName
+          
+          # Install numpy first
+          python -m pip install numpy
+          
+          # Install wheel with verbose output
+          echo "=== INSTALLING WHEEL ==="
+          python -m pip install --force-reinstall --verbose $wheel.FullName
+          #Change to temporary directory
+          cd $env:TEMP
+          
+          # Show package location and ALL files (including .pyd)
+          echo "=== INSTALLED FILES ==="
+          python -c "import outflowpy, os, glob; pkg_dir = os.path.dirname(outflowpy.__file__); print('Package dir:', pkg_dir); all_files = os.listdir(pkg_dir); print('All files:', sorted(all_files)); pyd_files = glob.glob(os.path.join(pkg_dir, '*.pyd')); print('PYD files found:', pyd_files)"
+          
+          # Try importing with full names
+          echo "=== TESTING IMPORTS ==="
+          python -c "import outflowpy.outflow_calc; print('outflow_calc imported successfully')"
+          python -c "import outflowpy.fast_tracer; print('fast_tracer imported successfully')"
+          
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name:  wheels-${{ runner.os }}-${{ strategy.job-index }}
+          path: wheelhouse/*.whl
+
+
+          
