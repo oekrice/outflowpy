@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  build-and-test-macos:
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -32,10 +32,11 @@ jobs:
           echo "FC=$(brew --prefix gcc@13)/bin/gfortran-13" >> $GITHUB_ENV
           
 
-      - name: Install cibuildwheel
+      - name: Install cibuildwheel and pytest
         run: |
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel
+          python -m pip install build pytest
 
       - name: Build wheels (macOS)
         if: runner.os == 'macOS'
