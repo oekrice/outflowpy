@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  build-and-test:
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -92,7 +92,6 @@ jobs:
           python_version=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
           arch=$(uname -m)
 
-          # Example on macOS arm64
           pip install wheelhouse/*${python_version}*${arch}*.whl
 
       - name: Test imports (Linux/MacOS)
