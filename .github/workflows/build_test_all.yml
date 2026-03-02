@@ -84,19 +84,48 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ${{ steps.gfortran.outputs.dir }} -w {dest_dir} {wheel}"
 
-      - name: Test imports
+      - name: Test imports (Linux/MacOS)
+        if: runner.os == 'linux' || runner.os == 'macOS'
         run: |
           cd /tmp
           python -c "from outflowpy import outflow_calc, fast_tracer; print('Imports work!')"
           python -c "import outflowpy; print(f'Installed at: {outflowpy.__file__}')"
       
-      - name: Run tests from checkout
+      - name: Run tests from checkout (Linux/macOS)
+        if: runner.os == 'linux'  || runner.os == 'macOS'
         run: |
-          # Copy tests to a temp location, so they use the correct package (rather than the local file)
+          # Copy tests to a temporary location, so they use the correct package (rather than the local file)
           cp -r tests /tmp/tests
           # Run from there - will use installed package
           cd /tmp
           python -m pytest tests/ -v
+
+      - name: Check wheel contents and test Fortran module imports (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
+          
+          # Show what's in the wheel file itself
+          echo "=== WHEEL CONTENTS ==="
+          python -m zipfile -l $wheel.FullName
+          
+          # Install numpy first
+          python -m pip install numpy
+          
+          # Install wheel with verbose output
+          echo "=== INSTALLING WHEEL ==="
+          python -m pip install --force-reinstall --verbose $wheel.FullName
+          #Change to temporary directory
+          cd $env:TEMP
+          
+          # Show package location and ALL files (including .pyd)
+          echo "=== INSTALLED FILES ==="
+          python -c "import outflowpy, os, glob; pkg_dir = os.path.dirname(outflowpy.__file__); print('Package dir:', pkg_dir); all_files = os.listdir(pkg_dir); print('All files:', sorted(all_files)); pyd_files = glob.glob(os.path.join(pkg_dir, '*.pyd')); print('PYD files found:', pyd_files)"
+          
+          # Try importing with full names
+          echo "=== TESTING IMPORTS ==="
+          python -c "import outflowpy.outflow_calc; print('outflow_calc imported successfully')"
+          python -c "import outflowpy.fast_tracer; print('fast_tracer imported successfully')"
           
       - name: Upload wheels
         uses: actions/upload-artifact@v4
