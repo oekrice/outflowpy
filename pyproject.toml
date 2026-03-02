@@ -9,7 +9,7 @@ build-backend = "mesonpy"
 
 [project]
 name = "outflowpy"
-version = "0.0.6"
+version = "0.0.7"
 description = "Outflow Field Modelling"
 requires-python = ">=3.9"
 dependencies = ["numpy",  "astropy", "matplotlib","sunpy","reproject","mpl_animators","bs4","lxml","zeep","drms","scikit-image", "pyvista", "streamtracer", "sympy"]
