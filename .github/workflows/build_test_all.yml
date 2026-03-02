@@ -89,7 +89,11 @@ jobs:
         if: runner.os == 'linux' || runner.os == 'macOS'
         run: |
           python -m pip install --upgrade pip
-          pip install wheelhouse/*.whl
+          python_version=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          arch=$(uname -m)
+
+          # Example on macOS arm64
+          pip install wheelhouse/*${python_version}*${arch}*.whl
 
       - name: Test imports (Linux/MacOS)
         if: runner.os == 'linux' || runner.os == 'macOS'
