@@ -234,3 +234,46 @@ Calling these 60 and 61
 
 [0.633,-0.006,-4.299,-2.38] are parameters from matching the 2017 eclipse. Seems to have worked OK, but maybe try out on all the eclipses next? Scripts 3d to run and 3a to analyse work it seems.
 
+Monday 9th February:
+
+For editable install:
+
+pip install meson meson-python ninja numpy
+pip install -e . --no-build-isolation
+
+(to avoid ninja errors)
+
+Tuesday 10th February:
+
+Determined that exponential polynomials don't work. Alas. Let's think of something more smart...
+
+
+Some tests to see if it's actually converging to what we want.
+
+On 4_optimise:
+PFSS, rss = 5.0, Minmax 0.0, error 0.076
+All zeros, rss = 5.0. Minmax 1.0, error 0.01806, synthetic mean nansum: 341.157, brsum: 524111.2638918188   last fline: -0.211
+Entry 2 = 1.0, rss = 5.0, Minmax 1.5819773681725144 5.033919247166821, error 0.000508276
+
+2017 Exact match:
+
+PFSS: rss = 1.548722
+Outflow: c_s = 150.2313km/s
+
+Decent results have now come out of the convergence, but there are a couple I'm not too happy with. Will perhaps reduce the random wiggling to start with?
+
+Monday 23rd Feburary:
+
+Almost done with things, but one of the graphs has gone weird. Bugger. The optimised score from Hamilton for 2009 is:
+Score 0.00147
+Parameters: -4.845092,4.249391,-0.238034,1.0796,-0.504064
+Will check that this is recreatable
+
+
+
+
+
+
+
+
+

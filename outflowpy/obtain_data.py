@@ -449,7 +449,7 @@ def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
 
     return rot, crot_fraction
 
-def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cached = False, cache_directory = None):
+def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cached = False, cache_directory = None, interpolate_synoptic_maps=True):
     r"""
     Downloads (without email etc.) the HMI or MDI data corresponding to the specified time
     Obtains three HMI/MDI magnetograms and stiches them together as appropriate.
@@ -488,9 +488,12 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     brm_l, header_l = download_hmi_mdi_crot(crot_number+1, source = source, use_cached = use_cached, cache_dir = cache_directory)
     brm_r, header_r = download_hmi_mdi_crot(crot_number-1, source = source, use_cached = use_cached, cache_dir = cache_directory)
 
-    brm_shift = 0.0*brm
-    nphi = np.shape(brm_shift)[1]
+    brm_centre = 0.0*brm
+    brm_past = np.zeros((np.shape(brm_centre)[0], np.shape(brm_centre)[1]//2))
+    brm_future = 0*brm_past
+    brm_combine = 0.0*brm
 
+    nphi = np.shape(brm_centre)[1]
     #Select the correct part of this map based on the fraction through this particular rotation
     #Shift amounts:
     #0.5 -> 0
@@ -501,10 +504,28 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     ncells_shift = round(nphi*(0.5-crot_fraction))   #This tells it where to position the synoptic map
     ncells_start = nphi + ncells_shift
 
-    brm_shift[:,:] = brm3[:, ncells_start:ncells_start + nphi]
+    brm_centre[:,:] = brm3[:, ncells_start:ncells_start + nphi]
 
+    if interpolate_synoptic_maps:
+        brm_future[:,:] = brm3[:,ncells_start - nphi//2:ncells_start]  #Half-slice in the future direction
+        brm_past[:,:] = brm3[:,ncells_start + nphi:ncells_start + 3*nphi//2]
 
-    del(brm, brm_l, brm_r)
+        #Find linear proportions of the respective maps
+        centre_props = np.concatenate((np.linspace(0.5,1.0,int(nphi//2 + 1)),  np.linspace(1.0,0.5,int(nphi//2 + 1))[1:]))
+        #Get these on the cell centres rather than the cell edges
+        centre_propc = 0.5*(centre_props[1:] + centre_props[:-1])
+        brm_shift = brm_centre*centre_propc[np.newaxis,:]
+        #Add components from the maps either side
+
+        past_propc = centre_propc[nphi//2:] - 0.5
+        future_propc = centre_propc[:nphi//2] - 0.5
+
+        brm_shift[:,:nphi//2] += brm_past[:,:]*past_propc[np.newaxis,:]
+        brm_shift[:,nphi//2:] += brm_future[:,:]*future_propc[np.newaxis,:]
+
+    else:
+        brm_shift = brm_centre
+    del(brm, brm_l, brm_r, brm_past, brm_future, centre_propc, past_propc, future_propc)
 
     data = sh_smooth(brm_shift, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
 
@@ -514,6 +535,30 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     print('Data successfully downloaded, smoothed, interpolated and balanced.')
 
     return brm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

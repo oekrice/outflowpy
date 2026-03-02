@@ -39,7 +39,7 @@ class Input:
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
     """
-    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, polynomial_coeffs = None, polynomial_type = 'abs'):
+    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, sound_speed = None, polynomial_coeffs = None, polynomial_type = 'abs'):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):
@@ -72,6 +72,7 @@ class Input:
 
         if polynomial_coeffs is not None:
             print('Calculating outflow speed using specified polynomial coefficients.')
+            print('Selected polynomial type:', polynomial_type)
             #Calculate the wind speed just as a combination of the given polynomial coefficients (with self._grid.rg known already)
             def poly_at_pt(r):
                 #Polynomial value at the explicit point r (don't forget the exponentials!)
@@ -98,15 +99,58 @@ class Input:
             elif polynomial_type == 'raw':
                 vgx = vgx
                 vcx = vcx
+            elif polynomial_type == 'smooth':
+                #Remove zero problems
+                vgx = vgx + 1e-6
+                vcx = vcx + 1e-6
+
+                vgx = (vgx*np.exp(vgx))/(np.exp(vgx)-1)
+                vcx = (vcx*np.exp(vcx))/(np.exp(vcx)-1)
+            elif polynomial_type == 'smooth_monotonic':
+                #Ensure the 'polynomial' is smooth, nonnegative and monotonically increasing.
+                vgx = vgx + 1e-6
+                vcx = vcx + 1e-6
+
+                vgx = (vgx*np.exp(vgx))/(np.exp(vgx)-1)
+                vcx = (vcx*np.exp(vcx))/(np.exp(vcx)-1)
+
+                #Run through and set all points later than the maximum point TO the maximum point. Hopefully this will select a polynomial which doesn't need this applying...
+                vgmax_ind = np.argmax(vgx)
+                if vgmax_ind != len(vgx) - 1:
+                    vgx[vgmax_ind:] = vgx[vgmax_ind]
+
+                vcmax_ind = np.argmax(vcx)
+                if vcmax_ind != len(vcx) - 1:
+                    vcx[vcmax_ind:] = vcx[vcmax_ind]
+
             else:
-                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs" and "raw"')
+                raise Exception('Polynomial type not recognised. Currently allowed types are "clip", "abs", "exp", "smooth", "smooth_monotonic" and "raw"')
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
 
             self.vg = vgx[1:-1]; self.vcx = vcx; self.vdcx = vdcx
 
-            print('poly', polynomial_coeffs, polynomial_type)
+            print('Polynomial settings', polynomial_coeffs, polynomial_type)
+
+        elif mf_constant is not None and sound_speed is not None:
+            print('Calculating outflow speed using the parker solution with specified sound speed and mf constant')
+
+            #Assuming the solution for the isothermal corona, calculate the sound speed and critical radius etc.
+            #Could import these from astopy.constants but I don't think they're going to change any time soon, so I'll assume it's fine
+            mf_in_sensible_units = mf_constant*(6.957e10)**2 #In seconds/solar radius
+            self.r_c = (6.67408e-11*1.98847542e30/(2*sound_speed**2))/(6.957e8)   #Critical radius in solar radii (code units)
+            self.c_s = mf_in_sensible_units*sound_speed/6.957e8  #Sound speed in seconds/solar radius (code units)
+
+            self.vg, self.vcx, self.vdcx = self._get_parker_wind_speed()
+
+            #Then finally multiply by the 'wind speed' constant calculated using physics. Should all be roughly order of magnitude 1/10 after this.
+            self.vg = self.vg*self.c_s
+            self.vcx = self.vcx*self.c_s
+            self.vdcx = self.vdcx*self.c_s
+
+        elif sound_speed is not None and corona_temp is not None:
+            raise Exception('Please specify either a sound speed or a corona temperature, but not both.')
 
         elif mf_constant is not None and corona_temp is not None:
             print('Calculating outflow speed using the parker solution with specified temperature and mf constant')
@@ -148,6 +192,9 @@ class Input:
             f = interpolate.interp1d(rs_interp, vs_interp, fill_value = "extrapolate")
             vgx = f(np.exp(rgx))
             vcx = f(np.exp(self._grid.rcx))
+
+            vgx = np.clip(vgx, a_min = 0.0, a_max = np.max(vgx))
+            vcx = np.clip(vcx, a_min = 0.0, a_max = np.max(vcx))
 
             vdcx = np.zeros(len(vcx))
             vdcx = (vgx[1:] - vgx[:-1]) / (rgx[1:] - rgx[:-1])
