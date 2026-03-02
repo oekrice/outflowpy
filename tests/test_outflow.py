@@ -81,6 +81,7 @@ def test_potential_fields(test_fname, nrho, rss):
 def test_outflow_fields(test_fname, nrho, rss, mf_constant, corona_temp):
     #Compares fortran and python outflow fields for numerical matches.
     #Tests divergence and that the open flux is reasonable.
+    #Maybe need to make this more stringent in future...
     br = np.loadtxt(f'{test_data}/{test_fname}')
 
     header = outflowpy.utils.carr_cea_wcs_header(Time('2020-1-1'), br.shape)
