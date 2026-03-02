@@ -257,7 +257,7 @@ class Output:
         the ``r`` component is located on the cell faces at constant ``r``
         values.
         """
-        br, bs, bp, Sbr, Sbs, Sbp = self._common_b()
+        br, bs, bp, Sbr, Sbs, Sbp, _, _, _  = self._common_b()
         # Remove area factors:
         br = br.copy()
         bs = bs.copy()
@@ -342,7 +342,7 @@ class Output:
             for Brho. Because the phi dimension is periodic,
             ``bg[0, :, :] == bg[-1, :, :]``.
         """
-        br, bs, bp, Sbr, Sbs, Sbp = self._common_b()
+        br, bs, bp, Sbr, Sbs, Sbp, _, _, _ = self._common_b()
         # Weighted average to grid points:
         brg = br[:-1, :-1, :] + br[1:, :-1, :] + br[1:, 1:, :] + br[:-1, 1:, :]
         bsg = bs[:-1, :, :-1] + bs[1:, :, :-1] + bs[1:, :, 1:] + bs[:-1, :, 1:]
