@@ -1,4 +1,4 @@
-name: Test Outflowpy build
+name: Test Outflowpy imports and pytests
 
 on:
   workflow_dispatch:
