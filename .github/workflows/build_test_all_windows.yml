@@ -58,18 +58,18 @@ jobs:
       - name: Check wheel contents and test Fortran module imports (Windows)
         if: runner.os == 'Windows'
         run: |
-          $wheel = Get-ChildItem wheelhouse/*.whl | Select-Object -First 1
-          
-          # Show what's in the wheel file itself
-          echo "=== WHEEL CONTENTS ==="
-          python -m zipfile -l $wheel.FullName
-          
-          # Install numpy first
-          python -m pip install numpy
-          
-          # Install wheel with verbose output
-          echo "=== INSTALLING WHEEL ==="
-          python -m pip install --force-reinstall --verbose $wheel.FullName
+
+          # Get Python version tag, e.g., cp313
+          $python_version = "cp$([System.Environment]::Version.Major)$([System.Environment]::Version.Minor)"
+
+          # Architecture: Windows uses PROCESSOR_ARCHITECTURE
+          $arch = if ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {"win_amd64"} else {"win32"}
+
+          Write-Host "Installing wheel for $python_version $arch"
+
+          # Install matching wheel
+          pip install wheelhouse/*$python_version*-$arch*.whl
+
           #Change to temporary directory
           cd $env:TEMP
           
