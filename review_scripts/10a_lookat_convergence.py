@@ -63,7 +63,7 @@ for counter in range(0,1):
         for var in range(2, np.size(log_info[0])):
             string = string + str(log_info[-1, var]) + ','
         print('Eclipse', eclipse_number, string)
-
+        print('Score', log_info[best_id, 1])
         polynomial_coeffs = log_info[best_id ,2:]
         #polynomial_coeffs = log_info[-1 ,2:]
 

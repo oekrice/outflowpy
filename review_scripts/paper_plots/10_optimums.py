@@ -21,19 +21,17 @@ nx = 100
 allys = np.zeros((nx))
 ycount = 0
 
-if os.path.exists(f"./data/batch_logs/optimums.txt"):
-    os.remove(f"./data/batch_logs/optimums.txt")
+if os.path.exists(f"./batch_logs/optimums.txt"):
+    os.remove(f"./batch_logs/optimums.txt")
 
 for counter in range(0,1):
     xs = np.linspace(1.0,2.5,nx)  #Basis for the x axis
 
     for ei, eclipse_number in enumerate(years):
 
-        #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs_{source}")
-        #os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/scripts/batch_logs/log_{eclipse_number}.txt ./data/batch_logs")
+        os.system(f"scp -r vgjn10@hamilton8.dur.ac.uk:/home/vgjn10/projects/outflowpy/review_scripts/batch_logs/log_{eclipse_number}.txt ./batch_logs")
 
-        #log_file = './batch_logs/log_%d.txt' % eclipse_number
-        log_file = f'./data/batch_logs/log_{eclipse_number}.txt'
+        log_file = f'./batch_logs/log_{eclipse_number}.txt'
 
         if not os.path.exists(log_file):
             continue
@@ -78,6 +76,11 @@ for counter in range(0,1):
 
         ys = (raw_poly*np.exp(raw_poly))/(np.exp(raw_poly)-1)
 
+
+        ymax_ind = np.argmax(ys)
+        if ymax_ind != len(ys) - 1:
+            ys[ymax_ind:] = ys[ymax_ind]
+
         if np.max(ys) > 0.0:
             allys += ys
             ycount += 1
@@ -85,7 +88,7 @@ for counter in range(0,1):
         plt.plot(xs, ys, linewidth = 2.0, c = colors[2*ei%20 + ei//10], label = f'{eclipse_number}', linestyle = 'dashed')
         #print(log_info[best_id,2:])
 
-        with open(f"./data/batch_logs/optimums.txt", mode = "a") as f:
+        with open(f"./batch_logs/optimums.txt", mode = "a") as f:
             f.write(f"{log_info[-1, 2:].tolist()}\n")
 
     plt.plot(xs, allys/ycount, linewidth = 3.0, c = 'black', label = 'Mean', linestyle = 'solid')

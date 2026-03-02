@@ -261,3 +261,19 @@ PFSS: rss = 1.548722
 Outflow: c_s = 150.2313km/s
 
 Decent results have now come out of the convergence, but there are a couple I'm not too happy with. Will perhaps reduce the random wiggling to start with?
+
+Monday 23rd Feburary:
+
+Almost done with things, but one of the graphs has gone weird. Bugger. The optimised score from Hamilton for 2009 is:
+Score 0.00147
+Parameters: -4.845092,4.249391,-0.238034,1.0796,-0.504064
+Will check that this is recreatable
+
+
+
+
+
+
+
+
+

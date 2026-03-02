@@ -227,7 +227,7 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
     print('Parameters', poly_values, 'year', eclipse_year, 'PFSS:', not(optimised))
 
     if optimised:
-        outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = 'smooth')
+        outflow_in = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = poly_values, polynomial_type = 'smooth_monotonic')
     else:
         outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = 0.0)
 
@@ -252,23 +252,21 @@ def find_eclipse_flines(eclipse_year, optimised = True, rss = 5.0):
     for fi, fline in enumerate(field_lines):
         coords = fline.coords
         coords.representation_type = 'cartesian'
-
         line = np.zeros((2, len(coords)))
         line[0,:] = coords.y/const.R_sun; line[1,:] = coords.z/const.R_sun
 
         transformed_lines.append([line[0,:], line[1,:]])
 
-        #For every point along the line, log the position (do angle from the top, clockwise?. Maybe just arctan2 is best) and the angle
         for i in range(1,len(line[0])-1):
-
             x = line[0][i]; y = line[1][i]
             angle = np.arctan2(np.abs(y), np.abs(x))
             dx = line[0][i+1] - line[0][i-1]
             dy = line[1][i+1] - line[1][i-1]
-            #Make sure that the angle is always less than pi/2, as it doesn't matter which direction the line was traced.
-            dangle = np.arctan2(np.abs(dy), np.abs(dx)) #This is the direction. Which could be off by pi/2, I suppose.
-            #Let's establish a precedent. All ys are +ve, and all xs are +ve
-            radial_difference = np.abs(dangle - angle)
+
+            top = np.abs(x*dx + y*dy)
+            bottom = np.sqrt(x**2 + y**2)*np.sqrt(dx**2 + dy**2)
+
+            dangle = np.arccos(top/bottom)
 
     return transformed_lines
 
@@ -328,11 +326,11 @@ def compare_angles(year):
 
     rbins = np.linspace(1.0, 2.5, 31)
     rcs = 0.5*(rbins[1:] + rbins[:-1])
-    ax.plot(rcs[1:], real_distribution[1:], label = "Reference image", c= 'black', linewidth = 0.85)
-    ax.plot(rcs[1:], pfss_distribution[1:], label = "PFSS, $r_{ss} = 5.0R_\odot$", c = colors[3], linestyle = 'dashed', linewidth = 0.85)
-    ax.plot(rcs[1:], pfss_in_distribution[1:], label = "PFSS, $r_{ss} = 2.5R_\odot$", c = colors[3], linewidth = 0.85)
-    ax.plot(rcs[1:], outflow_distribution[1:], label = "Outflow, $r_{ss} = 5.0R_\odot$", c = colors[0], linestyle = 'dashed', linewidth = 0.85)
-    ax.plot(rcs[1:], outflow_in_distribution[1:], label = "Outflow, $r_{ss} = 2.5R_\odot$", c = colors[0], linewidth = 0.85)
+    ax.plot(rcs[1:], real_distribution[1:]*180/np.pi, label = "Reference image", c= 'black', linewidth = 0.85)
+    ax.plot(rcs[1:], pfss_distribution[1:]*180/np.pi, label = "PFSS, $r_{ss} = 5.0R_\odot$", c = colors[3], linestyle = 'dashed', linewidth = 0.85)
+    ax.plot(rcs[1:], pfss_in_distribution[1:]*180/np.pi, label = "PFSS, $r_{ss} = 2.5R_\odot$", c = colors[3], linewidth = 0.85)
+    ax.plot(rcs[1:], outflow_distribution[1:]*180/np.pi, label = "Outflow, $r_{ss} = 5.0R_\odot$", c = colors[0], linestyle = 'dashed', linewidth = 0.85)
+    ax.plot(rcs[1:], outflow_in_distribution[1:]*180/np.pi, label = "Outflow, $r_{ss} = 2.5R_\odot$", c = colors[0], linewidth = 0.85)
 
     #plt.plot(np.linspace(0.0,1.0), label = "Reference image", c= 'black')
     # ax.plot(np.linspace(0.0,1.0), label = "Reference image", c= 'black')
@@ -344,7 +342,7 @@ def compare_angles(year):
     #plt.title(f"{year} eclipse")
     #plt.ylim(ymin = 0.0)
     ax.set_xlim(1.0, 2.5)
-    ax.set_ylim(0.0, 1.0)
+    ax.set_ylim(0.0, 60)
     return
 
 years = [2006,2008,2009,2010,2012,2013,2015,2016,2017,2019,2023,2024]
@@ -380,7 +378,7 @@ for yi, year in enumerate(years):
 legend_ax = fig.add_subplot(gs[3, :])
 legend_ax.axis("off")
 
-fig.supylabel('Avg. deviation from radial direction (radians)')
+fig.supylabel('Avg. deviation from radial direction (degrees)')
 
 xlabel_ax = fig.add_subplot(gs[2, :])
 xlabel_ax.axis("off")
