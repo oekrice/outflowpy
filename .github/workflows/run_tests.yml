@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-linux:
+  run_pytest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
       - name: Run tests from checkout
         run: |
           # Copy tests to a temp location, so they use the correct package (rather than the local file)
-          cp -r outflowpy/tests /tmp/tests
+          cp -r tests /tmp/tests
           # Run from there - will use installed package
           cd /tmp
           python -m pytest tests/ -v
