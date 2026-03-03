@@ -6,6 +6,7 @@ build:
     python: "3.13"
   apt_packages:
     - gfortran
+    - build-essential
 
 python:
   install:
