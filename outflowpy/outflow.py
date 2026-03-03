@@ -174,7 +174,7 @@ class magnetic_field:
 
 def outflow(input):
     r"""
-    Compute outflow field.
+    Compute outflow field using pure Python routines.
 
     Extrapolates a 3D outflow field using an eigenfunction method in :math:`r,s,p`
     coordinates, on the dumfric grid
@@ -189,6 +189,10 @@ def outflow(input):
     Returns
     -------
     out : :class:`Output`
+
+    The output should have zero current to machine precision,
+    when computed with the DuMFriC staggered discretization.
+
 
     """
 
@@ -258,7 +262,7 @@ def outflow(input):
 
 def outflow_fortran(input, existing_fname = None):
     r"""
-    Compute outflow field using the precompiled Fortran routine -- this is just a python wrapper.
+    Compute outflow field using the precompiled Fortran routine -- much faster than the python alternative.
 
     Extrapolates a 3D outflow field using an eigenfunction method in :math:`r,s,p`
     coordinates, on the dumfric grid

@@ -93,7 +93,7 @@ def _bfield_from_afield(input, alr, als, alp):
 
 def pfss(input):
     r"""
-    Compute PFSS model.
+    Compute PFSS field using the code from pfsspy.
 
     Extrapolates a 3D PFSS using an eigenfunction method in :math:`r,s,p`
     coordinates, on the dumfric grid

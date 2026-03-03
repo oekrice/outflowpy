@@ -191,7 +191,7 @@ def _scale_hmi(hmi_input):
 
     return hmi_output
 
-def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_dir = None):
+def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_dir = None, scale_hmi = True):
     r"""
     Downloads the raw HMI data with Carrington rotation number 'crot_number'.
 
@@ -203,7 +203,11 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
         If specified, ensures that the data comes from either 'MDI' or 'HMI'. This stops a mismatch if the maps are stitched together.
     use_cached (optional): bool
         If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
-    
+    cache_dir (optional): string
+        Directory in which to save cached downloads. If None, will save to ./_download_cache.
+    scale_hmi (optional): bool
+        If True, scales the HMI data such that they are calibrated to MDI.
+
     Returns
     -------
     data : array
@@ -216,6 +220,7 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
     -----
     If the specified rotation is less than 2098, the data downloaded willl be from MDI. If not, HMI.
     This information will hopefully be contained within the header so it can be 'corrected' in due course.
+    The output here will not be smoothed in time, leading to a discontinuity on the far side of the sun. If this is undesirable, specify an observation time instead.
     """
 
     if crot_number < 1909 or crot_number > 2299:
@@ -278,12 +283,22 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
 
 def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_cached = False, cache_directory = None):
     r"""
-    Downloads (without email etc.) the HMI or MDI data matching the rotation number above
+    Downloads (without email etc.) the HMI or MDI data matching the specified rotation number, applies smoothing using legendre polynomials and interpolates to a new grid size
 
     Parameters
     ----------
     crot_number : int
         Carrington rotation number
+    ns_target : int
+        Target number of grid cells in latitudinal direction
+    nphi_target : int
+        Target number of grid cells in longitudinal direction
+    smooth : float
+        Smoothing factor for the data interpolation.
+    use_cached (optional): bool
+        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
+    cache_dir (optional): string
+        Directory in which to save cached downloads. If None, will save to ./_download_cache.
 
     Returns
     -------
@@ -459,6 +474,18 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     ----------
     obs_time : string
         String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss
+    ns_target : int
+        Target number of grid cells in latitudinal direction
+    nphi_target : int
+        Target number of grid cells in longitudinal direction
+    smooth : float
+        Smoothing factor for the data interpolation.
+    use_cached (optional): bool
+        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
+    cache_dir (optional): string
+        Directory in which to save cached downloads. If None, will save to ./_download_cache.
+    interpolate_synoptic_maps (optional): bool
+        If True, will use the synoptic maps either side of the observation time to smooth the data in time, removing discontinutities and allowing for flux emergence.
 
     Returns
     -------

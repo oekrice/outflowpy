@@ -28,18 +28,33 @@ class Input:
         Number of cells in the radial direction on which to calculate the 3D solution.
     rss : float
         Radius of the source surface, in units of solar radius
-    corona_temp : float 
-        Temperature of the corona for the implicit solar wind solution (see paper for details)
-    mf_constant : float
+    corona_temp (optional): float
+        Temperature of the corona for the implicit solar wind solution (in K, see paper for details)
+    mf_constant (optional): float
         Magnetofrictional constant factor 
+    sound_speed (optional): float
+        Sound speed of the parker solution in km/s
+    polynomial_coeffs (optional): array
+        coefficients of the specified polynomial outflow profile
+    polynomial_type (optional): string
+        One of 'abs', 'clip', 'raw', 'smooth' or 'smooth_monotonic'. See one of the examples for details.
 
     Notes
     -----
     The input must be on a regularly spaced grid in :math:`\phi` and
     :math:`s = \cos (\theta)`. See `outflowpy.grid` for more
     information on the coordinate system.
+
+    There are various options for calculating the outflow speed profile. If no extra arguments are provided, then the optimum profile for matching eclipse photographs is used. Alternatively:
+
+    If mf_constant = 0.0, then a PFSS solution is calculated.
+    If mf_constant != 0.0 and either of corona_temp or sound_speed is specified, a Parker wind profile is calculated based on these parameters.
+    If polynomial_coeffs are specified, the profile is calculated as a polynomial with these coeficcients.
+    Polynomial_type determines how this polynomial is transformed to ensure it is nonnegative. See examples for details.
+
+
     """
-    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, sound_speed = None, polynomial_coeffs = None, polynomial_type = 'abs'):
+    def __init__(self, br, nr, rss, corona_temp = None, mf_constant = None, sound_speed = None, polynomial_coeffs = None, polynomial_type = 'smooth_monotonic'):
         if not isinstance(br, sunpy.map.GenericMap):
             raise ValueError('br must be a sunpy Map object')
         if np.any(~np.isfinite(br.data)):

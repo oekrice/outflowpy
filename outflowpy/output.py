@@ -316,7 +316,7 @@ class Output:
     @property
     def coords_x(self):
         """
-        Extended coordinates at cell faces
+        Extended coordinates at cell faces.
 
         Returns
         -------
