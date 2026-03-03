@@ -1,7 +1,7 @@
 import functools
 
 import numpy as np
-from outflowpy.outflow import findls, findms
+from outflowpy.outflow import _findls, _findms
 
 class Grid:
     r"""
@@ -30,11 +30,11 @@ class Grid:
         self.nr = nr
         self.rss = rss
         #Calculate eigenvalues and functions on this grid, so it doesn't need to be done again'
-        self.ms, self.trigs = findms(self.pc, self.dp)
+        self.ms, self.trigs = _findms(self.pc, self.dp)
         self.ls = np.zeros((len(self.ms),len(self.sg)-1))
         self.legs = np.zeros((len(self.ms),self.ns,self.ns))
         for i in range(len(self.ms)):
-            self.ls[i],self.legs[i]  = findls(self.ms[i], self.sc, self.sg, self.ds, self.ns)
+            self.ls[i],self.legs[i]  = _findls(self.ms[i], self.sc, self.sg, self.ds, self.ns)
 
     @property
     def ds(self):

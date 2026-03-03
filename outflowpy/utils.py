@@ -232,7 +232,22 @@ def _check_projection(m, proj_code, error=False):
     return True
 
 def find_eclipse_time(eclipse_year):
-    #Find the eclipse date corresponding to the specified year
+    """
+    Find the eclipse date corresponding to the specified year (of the 12 eclipses considered in our paper, 2006-2024).
+    Returns an error if an unsuitable year is requested.
+    This function will likely be improved in future releases.
+
+    Parameters
+    ----------
+    eclipse_year : int
+        Year of the desired eclipse
+
+    Returns
+    __________
+    date : string
+        Date of eclipse. Format is YYYY-MM-DDT00:00:00
+    """
+
     dates = ['2006-03-29',
              '2008-08-01',
              '2009-07-22',

@@ -12,7 +12,7 @@ from astropy.io import fits
 from scipy.interpolate import RegularGridInterpolator
 import outflowpy
 
-def findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appropriate derivative
+def _findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appropriate derivative
     vc = self.rc*0
     vs = self.rs*0
     vd = self.rc*0
@@ -27,7 +27,7 @@ def findvs(self, Paras):  #finds staggered v_out, unstaggered v_out and the appr
 Return the array corresponding to the lower boundary, based upon a specified function passed to this one
 """
 
-def find_lower_boundary(self, lbound_fn):
+def _find_lower_boundary(self, lbound_fn):
     s, p = np.meshgrid(self.sc[1:-1], self.pc[1:-1],indexing='ij')
     #psi0 is the lower boundary condition, with dimensions equal to that of s and p above
     psi0 = lbound_fn(s, p)
@@ -41,7 +41,7 @@ def find_lower_boundary(self, lbound_fn):
 Calculate the eigenvalues and eigenvectors in the azimuthal directionp. The eigenvales are integers in the infinite limit but are not necessarily so here.
 """
 
-def findms(pc, dp): 
+def _findms(pc, dp):
     # - We have to combine the eigenvectors from both the cosines and the sines, hence this is more complicated than the equivalent in the latitudinal directionp.
     num = len(pc)
     dvals = 2*np.ones((num))
@@ -72,7 +72,7 @@ def findms(pc, dp):
 Calculate eigenvalues and eigenvectors in the latitudinal direction
 """
 
-def findls(m, sc, sg, ds, ns):
+def _findls(m, sc, sg, ds, ns):
     sigc = np.sqrt(1-sc**2) #sigma evaluated at the cell midpoints
     sigs = np.sqrt(1-sg**2)
     evals = -sigs[1:-1]**2  
@@ -89,7 +89,7 @@ def findls(m, sc, sg, ds, ns):
 Find the coefficients cmn in order to match the lower boundary condition
 """
 
-def coeff(br0, q,p):
+def _coeff(br0, q,p):
     lhs = np.sum(br0*q[:,np.newaxis]*p[np.newaxis,:])
     rhs = np.sum(q[:,np.newaxis]*q[:,np.newaxis]*p[np.newaxis,:]*p[np.newaxis,:])
     return lhs/rhs
@@ -98,7 +98,7 @@ def coeff(br0, q,p):
 Calculate the required functions in the radial direction. Not an eigenvalue problem, unlike in the other directions.
 """
 
-def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy the lower boundary conditionp.
+def _findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy the lower boundary conditionp.
     #The exact calculation here shouldn't affect the solenoidal condition on B (that is ensured when calculating Q).
     hcx = np.zeros(len(rcx)) #Initialise grid. Hc is the only function with on-centre grid points
 
@@ -117,60 +117,12 @@ def findh(l, rcx, vcx, vdcx, dr):  #finds the H function, normalised to satisfy 
 
     return hcx/grad
 
-def findg(hc,l, rg): #finds the G function from H using the specified scheme from the notes.
+def _findg(hc,l, rg): #finds the G function from H using the specified scheme from the notes.
     gs = rg*0
     gs[0] = 1  #lower boundary condition on G
     for i in range(1,len(gs)):
         gs[i] = np.exp(-2*rg[i])*(0.5*l*hc[i]*(np.exp(2*rg[i]) - np.exp(2*rg[i-1])) + gs[i-1]*np.exp(2*rg[i-1]))
     return gs
-
-"""
-Function to calculate the magnetic field, using all of the above functions.
-"""
-
-class magnetic_field:   
-    def __init__(self, Paras):
-        self.v1 = Paras.v1
-        self.nr = Paras.nr
-        self.ns = Paras.ns
-        self.nphi = Paras.nphi
-        self.rcrit = Paras.r_c
-        self.rss = Paras.rss
-        self.r0, self.r1 = np.log(1.0), np.log(Paras.rss) #radius limit
-        self.s0, self.s1 = -1,1       #theta limit
-        self.p0, self.p1 = 0,2*np.pi   #phi limit
-        #calculate step sizes
-        self.dr = (self.r1-self.r0)/self.nr
-        self.ds = (self.s1-self.s0)/self.ns
-        self.dp = (self.p1-self.p0)/self.nphi
-        #coordinate axes on gridpoints
-        self.rs = np.linspace(self.r0,self.r1,Paras.nr+1)  
-        self.ss = np.linspace(self.s0,self.s1,Paras.ns+1)
-        self.ps = np.linspace(self.p0,self.p1,Paras.nphi+1)
-        #coordinate axes on grid faces
-        self.rc = np.linspace(self.r0-self.dr/2,self.r1 + self.dr/2,self.nr+2) 
-        self.sc = np.linspace(self.s0-self.ds/2,self.s1 + self.ds/2,self.ns+2)
-        self.sc[0] = self.sc[1]; self.sc[-1] = self.sc[-2]
-        self.pc = np.linspace(self.p0-self.dp/2,self.p1 + self.dp/2,self.nphi+2)
-        
-        self.vs, self.vc, self.vd = self.findvs(Paras)
-
-        def areas(self): #returns the areas of faces as a 3d array
-            r,s,p = np.meshgrid(self.rs,self.ss,self.ps,indexing='ij')
-            Sr = np.exp(2*r[:,1:,1:])*self.ds*self.dp
-            Ss = 0.5 * (np.exp(2*r[1:,:,1:]) - np.exp(2*r[:-1,:,1:])) * np.sqrt(np.ones((self.nr,self.ns+1,self.nphi))-s[:-1,:,1:]**2) * self.dp
-            Sp = 0.5 * (np.exp(2*r[1:,1:,:]) - np.exp(2*r[:-1,1:,:])) * (np.arcsin(s[1:,1:,:])-np.arcsin(s[1:,:-1,:]))
-            return Sr, Ss, Sp
-
-        self.Sr, self.Ss, self.Sp = areas(self)
-        
-        def volume(self): #used only in the energy calculation. The volume of each grid 'cube' is actually the same so this isn't necessary. But if a different coordinates system is used this can be modified.
-            r,s,p = np.meshgrid(self.rs,self.sc[1:-1],self.pc[1:-1],indexing='ij')   #3d r box
-            V = (4/3)*(np.exp(3*r[1:]) - np.exp(3*r[:-1]))*self.ds*self.dp
-            return V
-    
-        self.V = volume(self)    
-    
 
 def outflow(input):
     r"""
@@ -220,7 +172,7 @@ def outflow(input):
     for i in range(len(_ls)):
         for j in range(len(_ls[i])):
             count += 1
-            _cml[i][j] = coeff(br0, _legs[i,:,j], _trigs[:,i])  #Calculate boundary coefficients (based on orthogonality)
+            _cml[i][j] = _coeff(br0, _legs[i,:,j], _trigs[:,i])  #Calculate boundary coefficients (based on orthogonality)
 
 
             if abs(_cml[i][j]) < 1e-10:
@@ -233,8 +185,8 @@ def outflow(input):
                 _p = np.zeros((input.grid.nphi + 2))
                 _p[1:-1] = _trigs[:,i]     # Trig functions
                 _p[0] = _p[-2]; _p[-1] = _p[1]
-                _hcx = findh(_ls[i][j], input.grid.rcx, input.vcx, input.vdcx, input.grid.dr)     # Radial functions
-                _gg = findg(_hcx,_ls[i][j],input.grid.rg)
+                _hcx = _findh(_ls[i][j], input.grid.rcx, input.vcx, input.vdcx, input.grid.dr)     # Radial functions
+                _gg = _findg(_hcx,_ls[i][j],input.grid.rg)
 
                 #Then add on each mode to the magnetic fields, differentiating as appropriate. THIS IS THE SLOW BIT! Not sure how it can be improved in python though              
                 br += _cml[i,j] * _gg[:, np.newaxis, np.newaxis] * _q[np.newaxis, 1:-1, np.newaxis] * _p[np.newaxis, np.newaxis, 1:-1]

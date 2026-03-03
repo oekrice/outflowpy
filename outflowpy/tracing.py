@@ -240,6 +240,7 @@ class FastTracer(Tracer):
     step_size : float
         Step size as a fraction of numerical grid cell size at the equator.
         Must be less than the number of radial coordinate cells.
+
     """
     def __init__(self, max_steps='auto', step_size=1):
 
