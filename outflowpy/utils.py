@@ -16,10 +16,6 @@ from scipy.stats import qmc
 from scipy.interpolate import interp1d
 
 def random_seed_sampler(output, nseeds, r_skew, rss):
-    """
-    Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
-    """
-
     r"""
     Returns a list of sampled seeds for use in the field line tracer, 'randomly' distributed according to the latin hypercube method and weighted radially.
 
@@ -63,8 +59,15 @@ def random_seed_sampler(output, nseeds, r_skew, rss):
     return seeds
 
 def equal_seed_sampler(output, nseeds, r_start):
-    """
-    Returns equally distributed seeds starting from a given altitude r_start
+    r"""
+    Returns equally distributed seeds in the plane of view, starting from a given altitude r_start
+
+
+
+    Returns
+    -------
+    seeds : SkyCoord object
+        List of coordinates in the astropy coordinate format.
     """
 
     dtheta = np.pi/(nseeds//2)
@@ -85,9 +88,27 @@ def equal_seed_sampler(output, nseeds, r_start):
     return seeds
 
 def plane_seed_sampler(output, nseeds, r_skew, rss):
+    r"""
+    Returns a list of sampled seeds for use in the field line tracer, 'randomly' distributed according to the latin hypercube method and weighted radially.
+    Returns seeds weighted by their significance based on the Thomson Scattering effect, rather than randomly in the direction of view.
+
+    Parameters
+    ----------
+    output : output object
+        Output object from the outflow field or pfss calculation
+    nseeds : int
+        Number of field line seeds
+    r_skew : float
+        Skew factor towards more seeds being selected lower in the domain. Set to zero for no skew.
+    rss : float
+        Maximum altitude of sampled seeds (can be lower than the source-surface height)
+
+    Returns
+    -------
+    seeds : SkyCoord object
+        List of coordinates in the astropy coordinate format.
     """
-    Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
-    """
+
     sampler = qmc.LatinHypercube(d=3)
     sample = sampler.random(n = nseeds)
 
@@ -128,11 +149,32 @@ def plane_seed_sampler(output, nseeds, r_skew, rss):
 
     return seeds
 
-def load_sampled_seeds(output, nseeds):
+def load_sampled_seeds(output, nseeds, fname = None):
+    r"""
+    Loads an existing randomly-generated selection of seeds, to be used for generating consistent plots etc.
+    Outputs are weighted based on the Thomson scattering factor (this may later become optional)
+
+    Parameters
+    ----------
+    output : output object
+        Output object from the outflow field or pfss calculation
+    nseeds : int
+        Number of field line seeds (takes the first nseeds from the sample)
+    fname (optional) : string
+        File name for sample seed location
+
+    Returns
+    -------
+    seeds : SkyCoord object
+        List of coordinates in the astropy coordinate format.
+
     """
-    Loads in existing random seeds, to be used for reproducibility reasons
-    """
-    sample_scaled = np.loadtxt('./data/sample_plane_seeds.txt')[:nseeds]
+
+    if fname is None:
+        BASE_DIR = Path(__file__).resolve().parent
+        fname = BASE_DIR / "data" / "sample_plane_seeds.txt"
+
+    sample_scaled = np.loadtxt(fname)[:nseeds]
     lons, lats, rs = [], [], []
 
     #Create distribution for thomson scattering effect.

@@ -34,6 +34,8 @@ subdir('fortran')
 py.install_sources(
   [
     'outflowpy/data/opt_flow.txt',
+    'outflowpy/data/sample_seeds.txt',
+    'outflowpy/data/sample_plane_seeds.txt',
     # Add any other data files here
   ],
   subdir: 'outflowpy/data'
