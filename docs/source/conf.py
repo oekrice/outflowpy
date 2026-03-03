@@ -42,6 +42,13 @@ autodoc_default_options = {
     "show-inheritance": True,
 }
 
-# -- Temporary debugging thing
+# -- Neaten up how the functions are listed and things
+autodoc_member_order = "groupwise"
+add_function_parentheses = False
+
+html_theme_options = {
+    "navigation_depth": 4,
+}
+
 import outflowpy
 print("NAMESPACE:", [x for x in dir(outflowpy) if not x.startswith("_")])
