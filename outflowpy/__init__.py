@@ -25,7 +25,7 @@ import sys, types
 sys.modules['sunpy.tests'] = types.ModuleType('sunpy.tests')
 sys.modules['sunpy.tests.self_test'] = types.ModuleType('sunpy.tests.self_test')
 
-__all__ = ['Input', 'Output']
+__all__ = ['Input', 'Output', 'pfss', 'outflow']
 #__all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc', 'fast_tracer']#'FortranTracer', 'PythonTracer', 'FastTracer', 'pfss', 'outflow', 'outflow_fortran', 'prepare_hmi_mdi_crot', 'download_hmi_mdi_crot','prepare_hmi_mdi_time','outflow_calc', 'fast_tracer']
 
 

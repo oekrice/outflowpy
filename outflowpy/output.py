@@ -14,7 +14,7 @@ _MAG_CMAP = 'RdBu'
 
 class Output:
     '''
-    Output of PFSS modelling.
+    Output of outflow/PFSS calculations.
 
     Parameters
     ----------
@@ -31,7 +31,7 @@ class Output:
 
     Notes
     -----
-    Instances of this class are intended to be created by `outflowpy.outflow`, and
+    Instances of this class are intended to be created by `outflowpy.outflow` or `outflowpy.pfss', and
     not by users.
     '''
     def __init__(self, br, bs, bp, grid, input_map=None):
