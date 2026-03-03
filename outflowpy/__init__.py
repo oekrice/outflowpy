@@ -18,14 +18,14 @@ from .input import Input
 from .output import Output
 from .pfss import pfss
 from .outflow import outflow, outflow_fortran
-from .obtain_data import prepare_hmi_mdi_time, prepare_hmi_mid_crot, download_hmi_mdi_crot
+from .obtain_data import prepare_hmi_mdi_time, prepare_hmi_mdi_crot, download_hmi_mdi_crot
 from .tracing import FortranTracer, PythonTracer, FastTracer
 
 import sys, types
 sys.modules['sunpy.tests'] = types.ModuleType('sunpy.tests')
 sys.modules['sunpy.tests.self_test'] = types.ModuleType('sunpy.tests.self_test')
 
-__all__ = ['Input', 'Output', 'FortranTracer', 'PythonTracer', 'FastTracer', 'pfss', 'outflow', 'outflow_fortran', 'prepare_hmi_mid_crot', 'download_hmi_mdi_crot','prepare_hmi_mdi_time','outflow_calc', 'fast_tracer']
+__all__ = ['Input', 'Output', 'pfss', 'outflow', 'outflow_calc', 'fast_tracer']#'FortranTracer', 'PythonTracer', 'FastTracer', 'pfss', 'outflow', 'outflow_fortran', 'prepare_hmi_mdi_crot', 'download_hmi_mdi_crot','prepare_hmi_mdi_time','outflow_calc', 'fast_tracer']
 
 
 from ._version import get_versions
