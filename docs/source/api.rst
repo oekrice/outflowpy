@@ -30,3 +30,9 @@ API Reference
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: outflowpy.obtain_data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
