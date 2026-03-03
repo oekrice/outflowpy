@@ -3,7 +3,7 @@
 # -- Project information
 
 project = 'Outflowpy'
-copyright = '2026, Oliver Rice'
+copyright = '2026, Oliver Rice, with some elements used from PFSSpy (David Stansby)'
 author = 'Oliver Rice'
 
 release = '0.0'
@@ -34,3 +34,7 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+# -- Temporary debugging thing
+import outflowpy
+print("NAMESPACE:", [x for x in dir(outflowpy) if not x.startswith("_")])

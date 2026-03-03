@@ -37,7 +37,7 @@ class Input:
     polynomial_coeffs (optional): array
         coefficients of the specified polynomial outflow profile
     polynomial_type (optional): string
-        One of 'abs', 'clip', 'raw', 'smooth' or 'smooth_monotonic'. See one of the examples for details.
+        One of 'abs', 'clip', 'raw', 'smooth' or 'smooth_monotonic'. See the example scripts for details.
 
     Notes
     -----
