@@ -18,6 +18,8 @@ from .input import Input
 from .output import Output
 from .pfss import pfss
 from .outflow import outflow, outflow_fortran
+from .obtain_data import prepare_hmi_mdi_time, prepare_hmi_mid_crot, download_hmi_mdi_crot
+from .tracing import FortranTracer, PythonTracer, FastTracer
 
 import sys, types
 sys.modules['sunpy.tests'] = types.ModuleType('sunpy.tests')
