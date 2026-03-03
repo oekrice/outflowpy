@@ -19,6 +19,27 @@ def random_seed_sampler(output, nseeds, r_skew, rss):
     """
     Returns a list of nseeds seeds, 'randomly' distributed according to the latin hypercube method and weighted radially
     """
+
+    r"""
+    Returns a list of sampled seeds for use in the field line tracer, 'randomly' distributed according to the latin hypercube method and weighted radially.
+
+    Parameters
+    ----------
+    output : output object
+        Output object from the outflow field or pfss calculation
+    nseeds : int
+        Number of field line seeds
+    r_skew : float
+        Skew factor towards more seeds being selected lower in the domain. Set to zero for no skew.
+    rss : float
+        Maximum altitude of sampled seeds (can be lower than the source-surface height)
+
+    Returns
+    -------
+    seeds : SkyCoord object
+        List of coordinates in the astropy coordinate format.
+    """
+
     sampler = qmc.LatinHypercube(d=3)
     sample = sampler.random(n = nseeds)
 
