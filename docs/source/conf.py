@@ -35,6 +35,13 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
+# -- Add 'undocumented' functions
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
+}
+
 # -- Temporary debugging thing
 import outflowpy
 print("NAMESPACE:", [x for x in dir(outflowpy) if not x.startswith("_")])
