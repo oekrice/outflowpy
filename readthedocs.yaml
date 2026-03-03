@@ -5,7 +5,7 @@ build:
   tools:
     python: "3.13"
   apt_packages:
-    -gfortran
+    - gfortran
 
 python:
   install:
