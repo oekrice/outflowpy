@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: Outflowpy
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Rice
+    given-names: Oliver
+version: 0.1.0
+doi: 10.5281/zenodo.18864821
+date-released: 2026-03-04
+url: "https://github.com/oekrice/outflowpy"
