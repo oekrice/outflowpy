@@ -1,7 +1,7 @@
 Basic Dipole Calculation, Tracing and Plotting
 ==============================================
 
-This example demonstrates most of the functionality of outflowpy for a basic dipole solution using the default outflow profile
+This example demonstrates most of the functionality of outflowpy for a basic dipole solution using the default outflow profile.
 
 .. code-block:: python
 
@@ -73,3 +73,9 @@ This example demonstrates most of the functionality of outflowpy for a basic dip
 
     plt.tight_layout()
     plt.show()
+
+.. figure:: images/0_dipole_plot.png
+   :width: 600px
+   :align: center
+
+   Expected script output
