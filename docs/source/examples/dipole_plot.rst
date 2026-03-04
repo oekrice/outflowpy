@@ -37,7 +37,7 @@ This example demonstrates most of the functionality of outflowpy for a basic dip
     outflow_in = outflowpy.Input(input_map, nrho, rss)
 
     #Compute the field (this uses the Fortran module)
-    outflow_out = outflowpy.outflow_fortran(outflow_in)
+    outflow_out = outflowpy.outflow(outflow_in)
 
     #Find field line seeds (in the plane of view) and trace the field lines (using the Fortran 'FastTracer' in native spherical coordinates)
     seeds = outflowpy.utils.equal_seed_sampler(outflow_out, 100, 1.5)
