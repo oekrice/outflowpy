@@ -55,8 +55,8 @@ def test_potential_fields(test_fname, nrho, rss):
 
     #Make the three output fields
     pfss_out = outflowpy.pfss(outflow_in)
-    python_out = outflowpy.outflow(outflow_in)
-    fortran_out = outflowpy.outflow_fortran(outflow_in)
+    python_out = outflowpy.outflow_python(outflow_in)
+    fortran_out = outflowpy.outflow(outflow_in)
 
     pfss_profile = find_oflux_profile(outflow_in, pfss_out)
     python_profile = find_oflux_profile(outflow_in, python_out)
@@ -89,8 +89,8 @@ def test_outflow_fields(test_fname, nrho, rss, mf_constant, corona_temp):
 
     outflow_in = outflowpy.Input(input_map, nrho, rss, mf_constant = mf_constant, corona_temp = corona_temp)
 
-    python_out = outflowpy.outflow(outflow_in)
-    fortran_out = outflowpy.outflow_fortran(outflow_in)
+    python_out = outflowpy.outflow_python(outflow_in)
+    fortran_out = outflowpy.outflow(outflow_in)
 
     np.testing.assert_allclose(fortran_out.br, python_out.br, atol=1e-10, rtol=0)   #Ensure the python and fortran match perfectly
 

@@ -52,7 +52,7 @@ This example shows the various methods for generating outflow profiles and plots
 
     #Generate outflow profiles using specified polynomials
     ax = axs[1]
-    #Specify polynomial coefficients (these are randomly picked to illustrate the differences between the types)
+    #Specify polynomial coefficients (these are unrealistically picked merely to illustrate the differences between the types)
     coeffs = [-14, 8, 1.5, 1.5, -1.0]
     #Raw polynomial (will create errors if negative -- as this does)
     outflow_in_raw = outflowpy.Input(input_map, nrho, rss, polynomial_coeffs = coeffs, polynomial_type = 'raw')

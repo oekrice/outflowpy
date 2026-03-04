@@ -11,6 +11,24 @@ This example downloads the data for either a specified time (of the 2017 eclipse
     import numpy as np
 
 
+    #Specify resolutions for the input (nrho doesn't matter in this case, as only care about the lower boundary data)
+    ns = 180
+    nphi = 360
+    nrho = 60
+
+    #Specify observation time
+    obs_time = "2017-08-21T00:00:00"
+
+    #Download and prepare the data for this time
+    hmi_map_time = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
+    hmi_map_time_raw = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True, interpolate_synoptic_maps=False)
+    hmi_map_crot = outflowpy.obtain_data.prepare_hmi_mdi_crot(2194, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
+
+    #Create the Input objects. Outflow profile doesn't matter so just specify PFSS.
+    outflow_in_time = outflowpy.Input(hmi_map_time, nrho, 2.5, mf_constant = 0.0)
+    outflow_in_time_raw = outflowpy.Input(hmi_map_time_raw, nrho, 2.5, mf_constant = 0.0)
+    outflow_in_crot = outflowpy.Input(hmi_map_crot, nrho, 2.5, mf_constant = 0.0)
+
     #Define the plotting function
     def plot_boundary_data(ax, data, title):
         lon_edges = np.linspace(-np.pi, np.pi, nphi+1)
@@ -31,24 +49,6 @@ This example downloads the data for either a specified time (of the 2017 eclipse
         ax.set_title(title)
 
         return
-
-    #Specify resolutions for the out
-    ns = 180
-    nphi = 360
-    nrho = 60
-
-    #Specify observation time
-    obs_time = "2017-08-21T00:00:00"
-
-    #Download and prepare the data for this time
-    hmi_map_time = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
-    hmi_map_time_raw = outflowpy.obtain_data.prepare_hmi_mdi_time(obs_time, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True, interpolate_synoptic_maps=False)
-    hmi_map_crot = outflowpy.obtain_data.prepare_hmi_mdi_crot(2194, ns, nphi, smooth = 1.0*5e-2/nphi, use_cached = True)
-
-    #Create the Input objects. Outflow profile doesn't matter so just specify PFSS.
-    outflow_in_time = outflowpy.Input(hmi_map_time, nrho, 2.5, mf_constant = 0.0)
-    outflow_in_time_raw = outflowpy.Input(hmi_map_time_raw, nrho, 2.5, mf_constant = 0.0)
-    outflow_in_crot = outflowpy.Input(hmi_map_crot, nrho, 2.5, mf_constant = 0.0)
 
     #Plot this boundary data
     fig, axs = plt.subplots(3,1, subplot_kw = {"projection": "mollweide"}, figsize = (6.9, 10.0))
