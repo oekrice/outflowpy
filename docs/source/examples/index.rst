@@ -6,4 +6,4 @@ Example Scripts
    :maxdepth: 1
 
    dipole_plot
-
+   data_download

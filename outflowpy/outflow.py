@@ -124,7 +124,7 @@ def _findg(hc,l, rg): #finds the G function from H using the specified scheme fr
         gs[i] = np.exp(-2*rg[i])*(0.5*l*hc[i]*(np.exp(2*rg[i]) - np.exp(2*rg[i-1])) + gs[i-1]*np.exp(2*rg[i-1]))
     return gs
 
-def outflow(input):
+def outflow_python(input):
     r"""
     Compute outflow field using pure Python routines.
 
@@ -212,7 +212,7 @@ def outflow(input):
     
     return outflowpy.Output(br, bs, bp, input.grid, input.map)
 
-def outflow_fortran(input, existing_fname = None):
+def outflow(input, existing_fname = None):
     r"""
     Compute outflow field using the precompiled Fortran routine -- much faster than the python alternative.
 

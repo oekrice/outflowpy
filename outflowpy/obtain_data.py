@@ -1,7 +1,3 @@
-"""
-This file contains the code to download a specific Carrington rotation. 
-For now I'll use the resampling method of pfsspy, although Anthony's one is superior so I'll switch to that later.
-"""
 import sys 
 
 import drms
@@ -456,7 +452,6 @@ def _find_crot_numbers(obs_time, use_cached = False, cache_directory = None):
     time_index = np.searchsorted(end_times, datetime.fromisoformat(obs_time))
     rot = int(crots[time_index])   #This is the rotation at this time
 
-    print(obs_time, crots[time_index], start_times[time_index], end_times[time_index])
     crot_fraction = (datetime.fromisoformat(obs_time) - start_times[time_index])/(end_times[time_index] - start_times[time_index])  #Distance through this Carrington rotation
 
     if rot < 1909 or rot > 2299:
@@ -549,10 +544,12 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
 
         brm_shift[:,:nphi//2] += brm_past[:,:]*past_propc[np.newaxis,:]
         brm_shift[:,nphi//2:] += brm_future[:,:]*future_propc[np.newaxis,:]
+        del(brm, brm_l, brm_r, brm_past, brm_future, centre_propc, past_propc, future_propc)
 
     else:
         brm_shift = brm_centre
-    del(brm, brm_l, brm_r, brm_past, brm_future, centre_propc, past_propc, future_propc)
+        del(brm, brm_l, brm_r, brm_past, brm_future)
+
 
     data = sh_smooth(brm_shift, ns_target = ns_target, nphi_target = nphi_target, smooth = smooth)
 

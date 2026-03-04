@@ -17,7 +17,7 @@ import outflowpy.plotting
 from .input import Input
 from .output import Output
 from .pfss import pfss
-from .outflow import outflow, outflow_fortran
+from .outflow import outflow_python, outflow
 from .obtain_data import prepare_hmi_mdi_time, prepare_hmi_mdi_crot, download_hmi_mdi_crot
 from .tracing import FortranTracer, PythonTracer, FastTracer
 

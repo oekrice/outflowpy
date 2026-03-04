@@ -74,5 +74,7 @@ This example demonstrates most of the functionality of outflowpy for a basic dip
     plt.tight_layout()
     plt.show()
 
+Expected output:
+
 .. image:: images/0_dipole_plot.png
 
