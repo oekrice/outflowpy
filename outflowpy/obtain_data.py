@@ -198,7 +198,7 @@ def download_hmi_mdi_crot(crot_number, source = None, use_cached = False, cache_
     Parameters
     ----------
     crot_number : int
-        Carrington rotation number
+        Carrington rotation number.
     source (optional): string
         If specified, ensures that the data comes from either 'MDI' or 'HMI'. This stops a mismatch if the maps are stitched together.
     use_cached (optional): bool
@@ -288,16 +288,16 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_
     Parameters
     ----------
     crot_number : int
-        Carrington rotation number
+        Carrington rotation number.
     ns_target : int
-        Target number of grid cells in latitudinal direction
+        Target number of grid cells in latitudinal direction.
     nphi_target : int
-        Target number of grid cells in longitudinal direction
+        Target number of grid cells in longitudinal direction.
     smooth : float
         Smoothing factor for the data interpolation.
-    use_cached (optional): bool
-        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
-    cache_dir (optional): string
+    use_cached (optional) : bool
+        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it.
+    cache_dir (optional) : string
         Directory in which to save cached downloads. If None, will save to ./_download_cache.
 
     Returns
@@ -307,7 +307,7 @@ def prepare_hmi_mdi_crot(crot_number, ns_target, nphi_target, smooth = 0.0, use_
 
     Notes
     -----
-    Must be in the allowable range of Carrington rotations
+    Must be in the allowable range of Carrington rotations.
     Outputs a sunpy map object
     """
     
@@ -475,13 +475,13 @@ def prepare_hmi_mdi_time(obs_time, ns_target, nphi_target, smooth = 0.0, use_cac
     obs_time : string
         String corresponding to the observation time. Format is YYYY-MM-DDThh:mm:ss
     ns_target : int
-        Target number of grid cells in latitudinal direction
+        Target number of grid cells in latitudinal direction.
     nphi_target : int
-        Target number of grid cells in longitudinal direction
+        Target number of grid cells in longitudinal direction.
     smooth : float
         Smoothing factor for the data interpolation.
     use_cached (optional): bool
-        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it
+        If True, will attempt to find cached data, and if it doesn't exist will instead download and save it.
     cache_dir (optional): string
         Directory in which to save cached downloads. If None, will save to ./_download_cache.
     interpolate_synoptic_maps (optional): bool

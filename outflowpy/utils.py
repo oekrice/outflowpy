@@ -60,8 +60,7 @@ def random_seed_sampler(output, nseeds, r_skew, rss):
 
 def equal_seed_sampler(output, nseeds, r_start):
     r"""
-    Returns equally distributed seeds in the plane of view, starting from a given altitude r_start
-
+    Returns equally distributed seeds in the plane of view, at a given altitude r_start.
 
 
     Returns
@@ -149,7 +148,7 @@ def plane_seed_sampler(output, nseeds, r_skew, rss):
 
     return seeds
 
-def load_sampled_seeds(output, nseeds, fname = None):
+def load_sampled_seeds(output, nseeds, fname = None, thomson_weighting = True):
     r"""
     Loads an existing randomly-generated selection of seeds, to be used for generating consistent plots etc.
     Outputs are weighted based on the Thomson scattering factor (this may later become optional)
@@ -162,6 +161,8 @@ def load_sampled_seeds(output, nseeds, fname = None):
         Number of field line seeds (takes the first nseeds from the sample)
     fname (optional) : string
         File name for sample seed location
+    thomson_weighting (optional) : bool
+        If True, weights the field line locations based on their Thomson Scattering angle. If False, starts the field line locations at right angles to the view angle.
 
     Returns
     -------
@@ -188,11 +189,15 @@ def load_sampled_seeds(output, nseeds, fname = None):
 
     for seed in sample_scaled:
         if seed[0] < 0.0:
-            lons.append(-g(abs(seed[0])) * u.rad)
-            #lons.append(-np.pi/2 * u.rad)
+            if thomson_weighting:
+                lons.append(-g(abs(seed[0])) * u.rad)
+            else:
+                lons.append(-np.pi/2 * u.rad)
         else:
-            lons.append(g(abs(seed[0])) * u.rad)
-            #lons.append(np.pi/2 * u.rad)
+            if thomson_weighting:
+                lons.append(g(abs(seed[0])) * u.rad)
+            else:
+                lons.append(np.pi/2 * u.rad)
 
         lat = seed[1]
         lat = lat - np.pi/2

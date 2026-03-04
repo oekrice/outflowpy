@@ -16,21 +16,6 @@ class Tracer(abc.ABC):
     """
     Abstract base class for a streamline tracer.
     """
-    @abc.abstractmethod
-    def trace(self, seeds, output):
-        """
-        Parameters
-        ----------
-        seeds : astropy.coordinates.SkyCoord
-            Coordinaes of the magnetic field seed points.
-        output : outflowpy.Output
-            outflow field output.
-
-        Returns
-        -------
-        streamlines : FieldLines
-            Traced field lines.
-        """
 
     @staticmethod
     def validate_seeds(seeds):
@@ -146,6 +131,20 @@ class FortranTracer(Tracer):
         return vector_grid
 
     def trace(self, seeds, output):
+        """
+        Parameters
+        ----------
+        seeds : astropy.coordinates.SkyCoord
+            Coordinaes of the magnetic field seed points.
+        output : outflowpy.Output
+            outflow field output.
+
+        Returns
+        -------
+        streamlines : FieldLines
+            Traced field lines.
+        """
+
         if self.max_steps == 'auto':
             self.tracer.max_steps = int(4 * output.grid.nr / self.step_size)
 
@@ -206,6 +205,19 @@ class PythonTracer(Tracer):
         self.rtol = rtol
 
     def trace(self, seeds, output):
+        """
+        Parameters
+        ----------
+        seeds : astropy.coordinates.SkyCoord
+            Coordinaes of the magnetic field seed points.
+        output : outflowpy.Output
+            outflow field output.
+
+        Returns
+        -------
+        streamlines : FieldLines
+            Traced field lines.
+        """
         self.validate_seeds(seeds)
         x, y, z = self.coords_to_xyz(seeds, output)
         seeds = np.atleast_2d(np.stack((x, y, z), axis=-1))
@@ -223,8 +235,7 @@ class PythonTracer(Tracer):
 
 class FastTracer(Tracer):
     r"""
-    Alas the name FortranTracer has already been used, and it's probably worth keeping it as such for backwards compatibility.
-    This 'FastTracer' will use my/Anthony's Fortran code, which should be in the correct geometry (I'm not sure about the existing FortranTracer in this regard).
+    FastTracer uses Fortran routines in the native spherical coordinate system (rather than tracing in cartesian coordinates and transforming as for the other tracers), so works well at/near the poles. Also includes the option to save out a synthetic 'image' matrrix rather than the field lines themselves.
 
     Parameters
     ----------
@@ -249,7 +260,33 @@ class FastTracer(Tracer):
         self.max_steps = max_steps
         max_steps = 1 if max_steps == 'auto' else max_steps
 
-    def trace(self, seeds, output, parameters = None, save_flag = True, image_resolution = 500, image_extent = None, generate_image = False):
+    def trace(self, seeds, output, generate_image = False, save_flag = True, parameters = None, image_resolution = 500, image_extent = None):
+        """
+        Parameters
+        ----------
+        seeds : astropy.coordinates.SkyCoord
+            Coordinaes of the magnetic field seed points.
+        output : outflowpy.Output
+            Outflow field output.
+        parameters (optional) : numpy.ndarray
+            Array of shape (4,) specifying the parameters (see Paper II) for image generation. If None will use default values
+        image_resolution (optional) : int
+            The resolution of the generated image matrix in both dimentions
+        image_extent (optional) : float
+            The altitude of the extent of the image matrix. If None, will be set to the source surface height
+        generate_image (optional) : bool
+            If True, outputs an image matrix
+        save_flag (optional) : bool
+            If True, outputs the field line coordinates. Unwise for many field lines as this takes a lot of memory.
+
+
+        Returns
+        -------
+        streamlines : FieldLines
+            Traced field lines. If save_flag = False will only output one field line.
+        image_matrix : numpy.ndarray
+            Matrix of the generated image values, shape (image_resolution, image_resolution). Only produced if generate_image=True.
+        """
         self.max_steps = int(20 * output.grid.nr / self.step_size)
 
         self.validate_seeds(seeds)
@@ -266,13 +303,6 @@ class FastTracer(Tracer):
         #For the fortran code it is probably preferable to input as x,y,z coordinates rather than on the grid, so I'll convert them to that.
         seeds = np.atleast_2d(np.stack((x,y,z), axis=-1))
 
-        # Get a grid
-
-        #THIS NEEDS TO BE IN MY FORMAT.
-        #vector_grid = self.vector_grid(output)
-
-        # Do the tracing
-        #
         # Normalise step size to the radial cell size, so step size is a
         # fraction of the radial cell size.
         self.ds = self.step_size * output.grid._grid_spacing[2]
