@@ -6,4 +6,8 @@ Example Scripts
    :maxdepth: 1
 
    dipole_plot
-   data_download
+   plot_comparison
+   plot_openflux
+   plot_outflow_speeds
+   plot_surface
+   
