@@ -6,8 +6,8 @@ project = 'Outflowpy'
 copyright = '2026, Oliver Rice, with some elements used from PFSSpy (David Stansby)'
 author = 'Oliver Rice'
 
-release = '0.0'
-version = '0.0.7'
+release = '0.1'
+version = '0.1.0'
 
 # -- General configuration
 

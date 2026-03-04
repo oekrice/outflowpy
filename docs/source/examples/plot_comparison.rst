@@ -6,6 +6,7 @@ This script calculates PFSS and Outflow fields, traces field lines and plots the
 .. code-block:: python
 
     import outflowpy
+
     import numpy as np
     import random
     import matplotlib.pyplot as plt

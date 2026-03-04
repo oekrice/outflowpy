@@ -17,4 +17,6 @@ For detailed instructions and examples of scripts using outflowpy, please see th
 
 ![Field line plot of a dipolar outflow field](example_images/test1.png)
 
+## Contact
 
+For any queries, comments, bug reports or suggestions for improvements, please contact oliver.e.rice "at" durham.ac.uk. This is my first attempt at creating a Python package so I appreciate it is quite rough and ready in places!
