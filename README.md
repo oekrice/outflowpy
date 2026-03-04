@@ -1,6 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18864821.svg)](https://doi.org/10.5281/zenodo.18864821)
 [![Documentation Status](https://app.readthedocs.org/projects/outflowpy/badge/?version=latest)](https://outflowpy.readthedocs.io/)
 [![CI](https://github.com/oekrice/outflowpy/actions/workflows/test_and_build.yml/badge.svg)](https://github.com/oekrice/outflowpy/actions/workflows/test_and_build.yml)
+[![PyPI version](https://img.shields.io/pypi/v/outflowpy.svg)](https://pypi.org/project/outflowpy/)
 
 A python package for calculating 'outflow fields', as defined in our paper 'Global Coronal Equilibria with Solar Wind Outflow' (https://iopscience.iop.org/article/10.3847/1538-4357/ac2c71), developed primarily by Oliver Rice with Anthony Yeates as the project lead. The package is designed to be compatible in many ways with the existing 'pfsspy' code by David Stansby (https://github.com/dstansby/pfsspy), whereby essentially PFSS fields are regarded a special case of our new model.
 
