@@ -1,0 +1,77 @@
+name: Build and test all wheels (macos)
+
+on:
+  #push:
+  #  branches: [main, master]
+  #pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test-macos:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (host, not build env)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+
+      - name: Set up Fortran (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Use Homebrew's gcc which should have better compatibility
+          brew install gcc@13
+          # Set to use this specific version
+          echo "FC=$(brew --prefix gcc@13)/bin/gfortran-13" >> $GITHUB_ENV
+          
+
+      - name: Install cibuildwheel and pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cibuildwheel
+          python -m pip install build pytest
+
+      - name: Build wheels (macOS)
+        if: runner.os == 'macOS'
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
+          CIBW_BEFORE_BUILD: brew install gcc@12
+          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.0 FC=gfortran-12 F90=gfortran-12 F77=gfortran-12
+
+      - name: Install built wheel (Linux/MacOS)
+        if: runner.os == 'linux' || runner.os == 'macOS'
+        run: |
+          python -m pip install --upgrade pip
+          python_version=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          arch=$(uname -m)
+
+          pip install wheelhouse/*${python_version}*${arch}*.whl
+
+      - name: Test imports (Linux/MacOS)
+        if: runner.os == 'linux' || runner.os == 'macOS'
+        run: |
+
+          cd /tmp
+          python -c "from outflowpy import outflow_calc, fast_tracer; print('Imports work!')"
+          python -c "import outflowpy; print(f'Installed at: {outflowpy.__file__}')"
+      
+      - name: Run tests from checkout (Linux/macOS)
+        if: runner.os == 'linux'  || runner.os == 'macOS'
+        run: |
+          # Copy tests to a temporary location, so they use the correct package (rather than the local file)
+          cp -r tests /tmp/tests
+          # Run from there - will use installed package
+          cd /tmp
+          python -m pytest tests/ -v
+
+
+
+          
