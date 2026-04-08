@@ -8,12 +8,18 @@ on:
 
 jobs:
   build-and-test-macos:
-    runs-on: ${{ matrix.os }}
+
     
     strategy:
       matrix:
-        os: [macos-13, macos-14]
-
+        include:
+          - os: macos-13
+            arch: x86_64
+          - os: macos-14
+            arch: arm64
+            
+    runs-on: ${{ matrix.os }}
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +48,7 @@ jobs:
         if: runner.os == 'macOS'
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_MACOS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: brew install gcc@12
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=11.0 FC=gfortran-13 F90=gfortran-13 F77=gfortran-13
 
