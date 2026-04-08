@@ -1,4 +1,4 @@
-name: Build and test all wheels (macos)
+name: MacOS Build test
 
 on:
   #push:
